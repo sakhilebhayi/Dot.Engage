@@ -17,21 +17,29 @@ Route::middleware([
 ])->group(function () {
 
     // ── Dashboard ───────────────────────────────────────────────────────────
+    // Scoped to the authenticated user's current team — a prior pass (commit
+    // 5dae85f) added these queries without team scoping, which leaked
+    // cross-tenant aggregate counts (every team's contracts/conversations/
+    // sessions) into every team's dashboard. Fixed here.
     Route::get('/dashboard', function () {
+        $teamId = \Illuminate\Support\Facades\Auth::user()->currentTeam->id;
+
         $stats = [
-            'total_contracts'       => \App\Models\Contract::count(),
-            'pending_signatures'    => \App\Models\Contract::where('status', 'pending')->count(),
-            'signed_contracts'      => \App\Models\Contract::where('status', 'signed')->count(),
-            'active_conversations'  => \App\Models\Conversation::whereNotNull('last_message_at')->count(),
-            'active_video_sessions' => \App\Models\VideoSession::whereIn('status', ['waiting', 'active'])->count(),
+            'total_contracts'       => \App\Models\Contract::where('team_id', $teamId)->count(),
+            'pending_signatures'    => \App\Models\Contract::where('team_id', $teamId)->where('status', 'pending')->count(),
+            'signed_contracts'      => \App\Models\Contract::where('team_id', $teamId)->where('status', 'signed')->count(),
+            'active_conversations'  => \App\Models\Conversation::where('team_id', $teamId)->whereNotNull('last_message_at')->count(),
+            'active_video_sessions' => \App\Models\VideoSession::where('team_id', $teamId)->whereIn('status', ['waiting', 'active'])->count(),
         ];
 
         $recentContracts = \App\Models\Contract::with('creator')
+            ->where('team_id', $teamId)
             ->latest()
             ->limit(5)
             ->get();
 
         $activeConversations = \App\Models\Conversation::withCount('participants')
+            ->where('team_id', $teamId)
             ->whereNotNull('last_message_at')
             ->orderByDesc('last_message_at')
             ->limit(5)

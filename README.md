@@ -4,11 +4,11 @@
 
 <br /><br />
 
-**Manage clients, schedule sessions, and close contracts — all in one place.**
+**Share contracts, chat, and get them signed — live on a call or async.**
 
 <br />
 
-![Laravel](https://img.shields.io/badge/Laravel-12-FF2D20?style=flat-square&logo=laravel&logoColor=white) ![PHP](https://img.shields.io/badge/PHP-8.4-777BB4?style=flat-square&logo=php&logoColor=white) ![Livewire](https://img.shields.io/badge/Livewire-3-FB70A9?style=flat-square) ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-336791?style=flat-square&logo=postgresql&logoColor=white)
+![Laravel](https://img.shields.io/badge/Laravel-13-FF2D20?style=flat-square&logo=laravel&logoColor=white) ![PHP](https://img.shields.io/badge/PHP-8.3%2B-777BB4?style=flat-square&logo=php&logoColor=white) ![Livewire](https://img.shields.io/badge/Livewire-3-FB70A9?style=flat-square) ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-infodot-336791?style=flat-square&logo=postgresql&logoColor=white)
 
 <br /><br />
 
@@ -20,40 +20,42 @@
 
 ## What is Dot.Engage?
 
-Dot.Engage is the client relationship and engagement platform in the InfoDot ecosystem. Service businesses manage their entire client lifecycle — from first proposal to signed contract to completed session — in a single, unified workspace.
+Dot.Engage is a business contract-sharing, real-time chat, and video-call document-signing platform in the InfoDot ecosystem. A team uploads a contract, shares it with colleagues or a client, discusses it over real-time chat, and gets it signed — either from a standalone signature pad or live during a video call, with the signature captured the moment it happens.
 
 ## Core Features
 
-- Client CRM — profiles, notes, and communication history
-- Session scheduling with calendar sync and reminders
-- Proposal builder with e-signature acceptance
-- Contract management — draft, send, track, and archive
-- Real-time chat with clients via Reverb
-- Invoicing linked to completed sessions (Dot.Billing integration)
-- Progress tracking dashboards per client
-- Ecosystem SSO from InfoDot hub
+- Contract upload, versioning, and team-scoped sharing
+- Canvas-based e-signature capture (`signature_pad`), stored on a private disk and streamed back only to authorized viewers
+- Real-time team chat via Laravel Reverb, with unread badges and file attachments
+- Video calls (Daily.co, with a Reverb-signalling fallback when no Daily.co key is configured) with in-call document viewing and in-call signing
+- Signed-contract PDF generation and email delivery
+- Real-time notifications (contract shared/signed, message received, video session invite)
+- Ecosystem SSO from the InfoDot hub via a single-use `PersonalAccessToken` handoff
 
 ## Domain Models
 
-- **Client** — contact profile with status
-- **Session** — scheduled engagement with notes
-- **Proposal** — scoped offer with pricing
-- **Contract** — signed agreement with versioning
+- **Contract** — uploaded document with status (`draft`/`pending`/`signed`), versioning, and expiry
+- **ContractSignature** / **VideoSessionSignature** — a captured e-signature, either standalone or during a live call
+- **Conversation** / **Message** — team-scoped real-time chat, 1:1 or group
+- **VideoSession** — a call, optionally linked to a contract for live signing
+
+There is no Client/Proposal/Session-scheduling/CRM layer in this repository — an earlier draft of this README described that as the product; it did not match the actual code and has been corrected here. See [`wiki.md`](wiki.md) for the full, code-verified breakdown.
 
 ## Tech Stack
 
-| Layer | Technology |
-|---|---|
-| Framework | Laravel 12 |
-| Language | PHP 8.4 |
-| Frontend | Livewire 3 · Alpine.js 3 · Tailwind CSS |
-| Database | PostgreSQL 16 (shared across ecosystem) |
-| Realtime | Laravel Reverb |
-| Auth | Laravel Sanctum (InfoDot SSO) |
-| AI | Anthropic Claude (`claude-sonnet-4-6`) |
-| Storage | AWS S3 / Local (Flysystem) |
-| Search | Laravel Scout · Meilisearch |
-| Queue | Redis · Laravel Horizon |
+| Layer | Technology | Notes |
+|---|---|---|
+| Framework | Laravel 13, PHP 8.3+ | `composer.json` requires `^8.3` |
+| Frontend | Livewire 3 · Alpine.js 3 · Tailwind CSS | |
+| Database | PostgreSQL, `DB_DATABASE=infodot` | Shared instance across the ecosystem |
+| Realtime | Laravel Reverb | Wired to real broadcast events (contract signed, message sent, video session started/ended, in-call signature requests) |
+| Video | Daily.co (`@daily-co/daily-js`), Reverb-signalling fallback | Degrades gracefully with no `DAILY_API_KEY` configured |
+| Documents | Spatie MediaLibrary, `barryvdh/laravel-dompdf` | Signed-contract PDF generation |
+| Auth | Laravel Sanctum (InfoDot SSO) | |
+| Queue | Database driver (`QUEUE_CONNECTION=database`) | |
+| Storage | Local/Flysystem, private disks for contracts/signatures/attachments | AWS credentials are present in `.env.example` but S3 is not the configured default disk |
+
+No AI integration, no search service (Scout/Meilisearch), and no Redis/Horizon queue exist in this repository — all three appeared in a previous draft of this README without corresponding code and have been removed.
 
 ## Quick Start
 
@@ -68,11 +70,11 @@ php artisan migrate
 php artisan serve
 ```
 
-> **Ecosystem SSO:** Set `DB_*` env vars to the shared InfoDot PostgreSQL instance and `APP_URL=https://engage.infodot.app`. Users authenticated through InfoDot gain access automatically via Sanctum handoff tokens.
+> **Ecosystem SSO:** Set `DB_*` env vars to the shared InfoDot PostgreSQL instance (`DB_DATABASE=infodot`) and `APP_URL=https://engage.infodot.app`. Users authenticated through InfoDot gain access automatically via a one-time Sanctum token handoff at `/auth/ecosystem`.
 
 ## Ecosystem
 
-**Dot.Engage** is one of **21 platforms** in the InfoDot ecosystem, connected via shared PostgreSQL and Sanctum SSO. Visit [InfoDot](https://github.com/sakhileb/InfoDot) to explore the full platform map.
+**Dot.Engage** is part of the InfoDot ecosystem, connected via shared PostgreSQL and Sanctum SSO. Visit [InfoDot](https://github.com/sakhileb/InfoDot) to explore the full platform map, and see [`wiki.md`](wiki.md) for this platform's own knowledge base, including a security-scan and ethical-engagement writeup.
 
 ## License
 

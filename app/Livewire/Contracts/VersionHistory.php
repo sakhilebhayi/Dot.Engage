@@ -2,12 +2,19 @@
 
 namespace App\Livewire\Contracts;
 
+use App\Models\Contract;
 use App\Models\ContractVersion;
 use Livewire\Component;
 
 class VersionHistory extends Component
 {
     public int $contractId;
+
+    public function mount(int $contractId): void
+    {
+        $this->contractId = $contractId;
+        $this->authorize('view', Contract::findOrFail($contractId));
+    }
 
     public function render()
     {

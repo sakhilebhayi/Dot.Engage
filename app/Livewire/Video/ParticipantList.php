@@ -9,6 +9,12 @@ class ParticipantList extends Component
 {
     public int $sessionId;
 
+    public function mount(int $sessionId): void
+    {
+        $this->sessionId = $sessionId;
+        $this->authorize('view', VideoSession::findOrFail($sessionId));
+    }
+
     public function refresh(): void {}
 
     public function render()
