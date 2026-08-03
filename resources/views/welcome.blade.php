@@ -46,7 +46,11 @@
         </nav>
 
         <!-- ─── Hero ────────────────────────────────────────────────────── -->
-        <section style="padding-top: 110px; padding-bottom: 90px; background: linear-gradient(135deg, #1B2878 0%, #1e3799 50%, #1B2878 100%); color: #ffffff; overflow: hidden; position: relative;">
+        <section style="padding-top: 110px; padding-bottom: 90px; color: #ffffff; overflow: hidden; position: relative;">
+            <!-- Photographic Background: real man-signing-a-document-with-a-pen photo by Jakub Żerdzicki (@jakubzerdzicki), unsplash.com/photos/man-signing-a-document-with-a-pen-QI6NLgN5XnM -->
+            <div style="position: absolute; inset: 0; background-image: url('https://images.unsplash.com/photo-1763729805496-b5dbf7f00c79?q=80&w=2400&auto=format&fit=crop'); background-size: cover; background-position: center;"></div>
+            <div style="position: absolute; inset: 0; background: linear-gradient(135deg, rgba(27,40,120,0.94) 0%, rgba(30,55,153,0.9) 50%, rgba(27,40,120,0.88) 100%);"></div>
+            <div style="position: absolute; inset: 0; background: linear-gradient(90deg, rgba(27,40,120,0.55) 0%, rgba(27,40,120,0.2) 55%, rgba(27,40,120,0.05) 100%);"></div>
             <!-- Decorative blobs -->
             <div style="position: absolute; top: -80px; right: -80px; width: 420px; height: 420px; background: rgba(245,194,0,0.08); border-radius: 50%; filter: blur(60px); pointer-events: none;"></div>
             <div style="position: absolute; bottom: -80px; left: -80px; width: 420px; height: 420px; background: rgba(245,194,0,0.06); border-radius: 50%; filter: blur(60px); pointer-events: none;"></div>
@@ -208,8 +212,11 @@
         </section>
 
         <!-- ─── CTA Banner ────────────────────────────────────────────────── -->
-        <section style="padding: 80px 24px; background: linear-gradient(135deg, #1B2878, #1e3799);">
-            <div style="max-width: 680px; margin: 0 auto; text-align: center;">
+        <section style="padding: 80px 24px; position: relative; overflow: hidden;">
+            <!-- Photographic Background: real woman-waving-during-a-video-call-on-her-laptop photo by Vitaly Gariev (@silverkblack), unsplash.com/photos/woman-waving-during-a-video-call-on-her-laptop-nSj0hdQUrW0 -->
+            <div style="position: absolute; inset: 0; background-image: url('https://images.unsplash.com/photo-1752650733337-cb0189176fb9?q=80&w=2400&auto=format&fit=crop'); background-size: cover; background-position: center;"></div>
+            <div style="position: absolute; inset: 0; background: linear-gradient(135deg, rgba(27,40,120,0.92), rgba(30,55,153,0.9));"></div>
+            <div style="max-width: 680px; margin: 0 auto; text-align: center; position: relative;">
                 <h2 style="font-size: clamp(1.8rem, 3.5vw, 2.6rem); font-weight: 800; color: #ffffff; margin: 0 0 16px 0;">Ready to engage smarter?</h2>
                 <p style="color: #bfcae8; font-size: 1.05rem; line-height: 1.6; margin: 0 0 36px 0;">Join businesses that close deals faster and more securely with dot.engage.</p>
                 @if (Route::has('register'))

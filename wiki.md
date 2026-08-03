@@ -1,6 +1,6 @@
 ---
 title: Dot.Engage — Platform Wiki
-version: 0.1.0
+version: 0.2.0
 status: draft
 owners: [Engage Platform Lead]
 platform-id: dot-engage
@@ -138,6 +138,7 @@ Given that this platform stores signature images and contract documents, any agg
 
 | Version | Date | Author | Change |
 |---|---|---|---|
+| 0.2.0 | 2026-08-03 | Sakhile Bhayi | Marketing welcome page visual pass on `resources/views/welcome.blade.php`. The nav/hero/footer logo `<img>` tags already pointed at the real `images/dot_engage.png` asset (wired in the 0.1.0 pass), so no change was needed there. Replaced the two remaining flat CSS `linear-gradient` section backgrounds with real photography plus a dark-navy gradient overlay for text contrast: the Hero section now uses a contract-signing photo by Jakub Żerdzicki (@jakubzerdzicki, unsplash.com/photos/man-signing-a-document-with-a-pen-QI6NLgN5XnM), and the closing CTA banner uses a video-call photo by Vitaly Gariev (@silverkblack, unsplash.com/photos/woman-waving-during-a-video-call-on-her-laptop-nSj0hdQUrW0) — both chosen to match the platform's real contract/chat/video-signing domain per §1, not the "campaign" mislabel in the Dot.Brain registry. Both image URLs were verified with `curl -sI` returning `HTTP/2 200` before being committed. No copy, layout, or non-visual markup was touched. |
 | 0.1.0 | 2026-08-02 | Engage Platform Lead | Initial platform-owned wiki. Verified SSO contract and DB naming, fixed a real cross-tenant dashboard data leak left by the prior "fix" commit, added missing Policy-based authorization to three Livewire components (`VersionHistory`, `InCallDocumentViewer`, `ParticipantList`), wired the real logo into favicons across both layouts, ran the ethical-engagement check (clean), and corrected the README's fabricated tech-stack claims (AI, search, queue). |
 
 ## Open Questions
