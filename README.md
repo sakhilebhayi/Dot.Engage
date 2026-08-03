@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="docs/logo.svg" alt="Dot.Engage" width="320" />
+<img src="public/images/dot_engage.png" alt="Dot.Engage" width="220" />
 
 <br /><br />
 
