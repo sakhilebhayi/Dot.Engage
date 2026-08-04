@@ -3,7 +3,6 @@
 namespace App\Livewire\Contracts;
 
 use App\Models\Contract;
-use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -30,10 +29,8 @@ class ContractList extends Component
 
     public function render()
     {
-        $teamId = Auth::user()->currentTeam->id;
-
-        $contracts = Contract::where('team_id', $teamId)
-            ->when($this->search, fn ($q) => $q->where('title', 'like', "%{$this->search}%"))
+        // HasTeamScope on Contract already scopes this to the current team.
+        $contracts = Contract::when($this->search, fn ($q) => $q->where('title', 'like', "%{$this->search}%"))
             ->when($this->statusFilter, fn ($q) => $q->where('status', $this->statusFilter))
             ->latest()
             ->paginate(10);

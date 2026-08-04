@@ -109,11 +109,16 @@ class SignatureTest extends TestCase
 
         $pixelPng = base64_encode("\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01\x08\x02\x00\x00\x00\x90wS\xde\x00\x00\x00\x0cIDATx\x9cc\xf8\x0f\x00\x00\x01\x01\x00\x05\x18\xd8N\x00\x00\x00\x00IEND\xaeB`\x82");
 
+        // Contract::findOrFail() inside SignatureController now runs through
+        // HasTeamScope, so an outsider's currentTeam never matches this
+        // contract's team_id -- the lookup itself fails before the Gate
+        // check runs, so this is a 404 (not found) rather than a 403
+        // (found but forbidden).
         $this->actingAs($outsider, 'sanctum')
             ->postJson('/api/signatures', [
                 'contract_id'    => $contract->id,
                 'signature_data' => 'data:image/png;base64,' . $pixelPng,
-            ])->assertStatus(403);
+            ])->assertStatus(404);
     }
 
     public function test_all_signatures_marks_contract_as_signed_and_dispatches_event(): void
@@ -175,9 +180,13 @@ class SignatureTest extends TestCase
             'file_path'  => 'test.pdf',
         ]);
 
+        // ContractPdfController resolves {contract} via implicit route-model
+        // binding, which now runs through HasTeamScope -- an outsider's
+        // currentTeam never matches, so binding itself fails before the
+        // Gate::authorize('view', ...) call is reached: 404, not 403.
         $this->actingAs($outsider, 'sanctum')
             ->get("/api/contracts/{$contract->id}/pdf")
-            ->assertStatus(403);
+            ->assertStatus(404);
     }
 
     // -----------------------------------------------------------------------

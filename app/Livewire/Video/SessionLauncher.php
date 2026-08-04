@@ -41,8 +41,8 @@ class SessionLauncher extends Component
 
     public function render()
     {
-        $teamContracts = Contract::where('team_id', Auth::user()->currentTeam->id)
-            ->whereIn('status', ['draft', 'pending'])
+        // HasTeamScope on Contract already scopes this to the current team.
+        $teamContracts = Contract::whereIn('status', ['draft', 'pending'])
             ->latest()->get();
 
         return view('livewire.video.session-launcher', compact('teamContracts'));
