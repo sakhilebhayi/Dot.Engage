@@ -13,17 +13,39 @@
         <link rel="apple-touch-icon" href="{{ asset('apple-touch-icon.png') }}">
 
         <!-- Fonts -->
-        <link rel="preconnect" href="https://fonts.bunny.net">
-        <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700&display=swap" rel="stylesheet" />
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700;800&family=Karla:wght@400;500;600;700&family=Martian+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
 
         <!-- Styles -->
         @livewireStyles
+
+        <style>
+            :root {
+                --paper: #f5f5f2;
+                --panel: #fdfdfb;
+                --ink: #171b3d;
+                --ink-soft: #565a78;
+                --gold: #c99a1a;
+                --gold-bright: #e8bb2c;
+                --navy: #171b3d;
+                --navy-soft: #454a78;
+                --line: rgba(23, 27, 61, 0.12);
+                --font-display: 'Sora', ui-sans-serif, sans-serif;
+                --font-body: 'Karla', system-ui, sans-serif;
+                --font-mono: 'Martian Mono', ui-monospace, monospace;
+            }
+            html { background: var(--paper); }
+            body { font-family: var(--font-body); background: var(--paper); color: var(--ink); margin: 0; padding: 0; }
+            .font-display { font-family: var(--font-display); }
+            .font-mono { font-family: var(--font-mono); }
+        </style>
     </head>
-    <body class="font-sans text-slate-800 antialiased" style="font-family: 'Inter', sans-serif; background-color: #f1f5f9;">
-        <div>
+    <body class="font-body text-[var(--ink)] antialiased">
+        <div class="font-body text-[var(--ink)]">
             {{ $slot }}
         </div>
 

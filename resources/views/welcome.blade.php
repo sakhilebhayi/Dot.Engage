@@ -138,16 +138,20 @@
 
         <!-- Hero -->
         <section class="relative pt-32 pb-16 sm:pb-24 px-5 sm:px-8 overflow-hidden">
-            <div class="max-w-[1400px] mx-auto">
+            <!-- Photo: a man signing a document with a pen, by Jakub Żerdzicki (@jakubzerdzicki), unsplash.com/photos/man-signing-a-document-with-a-pen-QI6NLgN5XnM -->
+            <div class="absolute inset-0 bg-cover bg-center" style="background-image: url('https://images.unsplash.com/photo-1752650733337-cb0189176fb9?q=80&w=2400&auto=format&fit=crop');"></div>
+            <div class="absolute inset-0" style="background: linear-gradient(100deg, rgba(23,27,61,0.92) 0%, rgba(23,27,61,0.80) 32%, rgba(23,27,61,0.45) 55%, rgba(23,27,61,0.18) 75%, rgba(23,27,61,0.02) 92%);"></div>
+            <div class="absolute inset-0" style="background: linear-gradient(180deg, rgba(23,27,61,0) 0%, rgba(23,27,61,0.10) 55%, rgba(23,27,61,0.35) 80%, #f5f5f2 100%);"></div>
+            <div class="relative z-10 max-w-[1400px] mx-auto">
                 <div class="grid lg:grid-cols-[1.05fr_0.95fr] gap-14 lg:gap-10 items-center">
                     <div class="reveal" data-reveal>
                         <p class="font-mono text-xs tracking-[0.18em] uppercase text-[var(--gold)] mb-6">
                             Contracts, chat &amp; e-signatures
                         </p>
-                        <h1 class="font-display font-semibold text-4xl sm:text-5xl lg:text-6xl leading-[1.05] tracking-tight text-[var(--ink)] mb-6">
+                        <h1 class="font-display font-semibold text-4xl sm:text-5xl lg:text-6xl leading-[1.05] tracking-tight text-[var(--paper)] mb-6">
                             Share it.<br>Talk it through.<br>Sign it live.
                         </h1>
-                        <p class="text-lg text-[var(--ink-soft)] leading-relaxed max-w-xl mb-10">
+                        <p class="text-lg text-[var(--paper)] leading-relaxed max-w-xl mb-10">
                             Dot.Engage is where teams upload contracts, share them with clients, negotiate terms over real-time chat or a live video call, and capture legally-relevant e-signatures — from a signature pad or directly inside the call.
                         </p>
 
@@ -156,7 +160,7 @@
                                 <a href="{{ route('register') }}" class="press px-7 py-3.5 bg-[var(--ink)] hover:bg-[var(--navy-soft)] text-white font-display font-semibold rounded-full transition-colors">
                                     Create account
                                 </a>
-                                <a href="#conversations" class="press flex items-center gap-2 px-7 py-3.5 text-[var(--ink)] font-medium rounded-full border border-[var(--line)] hover:border-[var(--navy-soft)] transition-colors">
+                                <a href="#conversations" class="press flex items-center gap-2 px-7 py-3.5 text-[var(--paper)] font-medium rounded-full border border-[rgba(245,245,242,0.35)] hover:border-[var(--navy-soft)] transition-colors">
                                     See how signing works
                                 </a>
                             </div>
@@ -290,11 +294,14 @@
 
         <!-- CTA -->
         <section class="relative py-28 sm:py-36 px-5 sm:px-8 overflow-hidden">
+            <!-- Photo: a woman waving during a video call on her laptop, by Vitaly Gariev (@silverkblack), unsplash.com/photos/woman-waving-during-a-video-call-on-her-laptop-nSj0hdQUrW0 -->
+            <div class="absolute inset-0 bg-cover bg-center" style="background-image: url('https://images.unsplash.com/photo-1763729805496-b5dbf7f00c79?q=80&w=2400&auto=format&fit=crop');"></div>
+            <div class="absolute inset-0" style="background: linear-gradient(180deg, #f5f5f2 0%, rgba(23,27,61,0.80) 20%, rgba(23,27,61,0.85) 50%, rgba(23,27,61,0.80) 80%, #f5f5f2 100%);"></div>
             <div class="relative z-10 max-w-2xl mx-auto text-center reveal" data-reveal>
-                <h2 class="font-display font-semibold text-3xl sm:text-4xl text-[var(--ink)] leading-tight mb-5">
+                <h2 class="font-display font-semibold text-3xl sm:text-4xl text-[var(--paper)] leading-tight mb-5">
                     Get the next contract signed this week
                 </h2>
-                <p class="text-[var(--ink-soft)] leading-relaxed mb-10 max-w-lg mx-auto">
+                <p class="text-[var(--paper)] leading-relaxed mb-10 max-w-lg mx-auto">
                     Sign in with your Dot Ecosystem account or create one to upload your first contract.
                 </p>
 
@@ -303,7 +310,7 @@
                         <a href="{{ route('register') }}" class="press px-8 py-3.5 bg-[var(--ink)] hover:bg-[var(--navy-soft)] text-white font-display font-semibold rounded-full transition-colors">
                             Create account
                         </a>
-                        <a href="{{ route('login') }}" class="press px-8 py-3.5 text-[var(--ink)] font-medium rounded-full border border-[var(--line)] hover:border-[var(--navy-soft)] transition-colors">
+                        <a href="{{ route('login') }}" class="press px-8 py-3.5 text-[var(--paper)] font-medium rounded-full border border-[rgba(245,245,242,0.35)] hover:border-[var(--navy-soft)] transition-colors">
                             Sign in
                         </a>
                     </div>
