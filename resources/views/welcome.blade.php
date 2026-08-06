@@ -1,247 +1,342 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="scroll-smooth">
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Dot.Engage — Share the contract. Talk it through. Sign it live.</title>
+        <meta name="description" content="Upload contracts, share them with clients, negotiate terms over real-time chat or a live video call, and capture legally-relevant e-signatures — from a signature pad or directly inside the call.">
 
-        <title>dot.engage — Smart Contract & Communication Platform</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700;800&family=Karla:wght@400;500;600;700&family=Martian+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 
-        <!-- Fonts -->
-        <link rel="preconnect" href="https://fonts.bunny.net">
-        <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700,800&display=swap" rel="stylesheet" />
-
-        <!-- Styles / Scripts -->
         @if (file_exists(public_path('build/manifest.json')) || file_exists(public_path('hot')))
             @vite(['resources/css/app.css', 'resources/js/app.js'])
         @endif
-    </head>
-    <body style="font-family: 'Inter', sans-serif; background-color: #ffffff; color: #1B2878; margin: 0; padding: 0;">
+        <script defer src="https://unpkg.com/alpinejs@3.10.2/dist/cdn.min.js"></script>
 
-        <!-- ─── Navigation ─────────────────────────────────────────────── -->
-        <nav style="position: fixed; top: 0; left: 0; right: 0; z-index: 50; background: rgba(255,255,255,0.97); backdrop-filter: blur(8px); border-bottom: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
-            <div style="max-width: 1200px; margin: 0 auto; padding: 0 24px; display: flex; align-items: center; justify-content: space-between; height: 68px;">
-                <a href="/" style="display: flex; align-items: center; text-decoration: none;">
-                    <img src="{{ asset('images/dot_engage.png') }}" alt="dot.engage" style="height: 40px; width: auto;">
+        <style>
+            :root {
+                --paper: #f5f5f2;
+                --panel: #fdfdfb;
+                --ink: #171b3d;
+                --ink-soft: #565a78;
+                --gold: #c99a1a;
+                --gold-bright: #e8bb2c;
+                --navy: #171b3d;
+                --navy-soft: #454a78;
+                --line: rgba(23, 27, 61, 0.12);
+                --font-display: 'Sora', ui-sans-serif, sans-serif;
+                --font-body: 'Karla', system-ui, sans-serif;
+                --font-mono: 'Martian Mono', ui-monospace, monospace;
+                --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+            }
+            html { background: var(--paper); }
+            body { font-family: var(--font-body); background: var(--paper); color: var(--ink); margin: 0; padding: 0; }
+            .font-display { font-family: var(--font-display); }
+            .font-mono { font-family: var(--font-mono); }
+
+            .press { transition: transform 160ms var(--ease-out); }
+            .press:active { transform: scale(0.97); }
+
+            @media (prefers-reduced-motion: no-preference) {
+                .reveal {
+                    opacity: 0;
+                    transform: translateY(14px);
+                    transition: opacity 600ms var(--ease-out), transform 600ms var(--ease-out);
+                }
+                .reveal.is-visible { opacity: 1; transform: translateY(0); }
+                .draw-path {
+                    stroke-dasharray: 400;
+                    stroke-dashoffset: 400;
+                    transition: stroke-dashoffset 1300ms var(--ease-out) 300ms;
+                }
+                .draw-path.is-visible { stroke-dashoffset: 0; }
+            }
+            @media (prefers-reduced-motion: reduce) {
+                .reveal { opacity: 1; transform: none; }
+                .draw-path { stroke-dashoffset: 0; }
+            }
+
+            @media (hover: hover) and (pointer: fine) {
+                .row-hover:hover { background: rgba(23, 27, 61, 0.025); }
+                .link-underline { background-size: 0% 1px; }
+                .link-underline:hover { background-size: 100% 1px; }
+            }
+            .link-underline {
+                background-image: linear-gradient(currentColor, currentColor);
+                background-position: 0 100%;
+                background-repeat: no-repeat;
+                transition: background-size 220ms var(--ease-out);
+            }
+        </style>
+    </head>
+    <body class="antialiased">
+
+        <!-- Nav -->
+        <header
+            x-data="{ scrolled: false, mobileMenuOpen: false }"
+            @scroll.window="scrolled = window.pageYOffset > 24"
+            :class="scrolled ? 'bg-[#f5f5f2]/95 backdrop-blur-md border-b border-[var(--line)]' : 'border-b border-transparent'"
+            class="fixed top-0 left-0 right-0 z-50 transition-colors duration-300"
+        >
+            <nav class="max-w-[1400px] mx-auto px-5 sm:px-8 py-3 flex items-center justify-between">
+                <a href="/" class="flex items-center press">
+                    <img src="{{ asset('images/logo.png') }}" alt="Dot.Engage" class="h-14 sm:h-[4.5rem] w-auto">
                 </a>
 
+                <div class="hidden md:flex items-center gap-8 font-mono text-[13px] tracking-wide uppercase text-[var(--ink-soft)]">
+                    <a href="#contracts" class="link-underline hover:text-[var(--ink)] pb-0.5">Contracts</a>
+                    <a href="#conversations" class="link-underline hover:text-[var(--ink)] pb-0.5">Conversations</a>
+                </div>
+
                 @if (Route::has('login'))
-                    <div style="display: flex; align-items: center; gap: 12px;">
+                    <div class="flex items-center gap-3">
                         @auth
-                            <a href="{{ url('/dashboard') }}" style="padding: 9px 22px; background-color: #1B2878; color: #ffffff; font-size: 14px; font-weight: 600; border-radius: 10px; text-decoration: none; transition: background 0.15s;">
+                            <a href="{{ url('/dashboard') }}" class="press flex items-center gap-2 px-5 py-2.5 bg-[var(--ink)] hover:bg-[var(--navy-soft)] text-white text-sm font-display font-semibold rounded-full transition-colors">
                                 Dashboard
                             </a>
                         @else
-                            <a href="{{ route('login') }}" style="padding: 9px 18px; color: #1B2878; font-size: 14px; font-weight: 500; text-decoration: none;">
-                                Log in
+                            <a href="{{ route('login') }}" class="hidden sm:block text-sm font-medium text-[var(--ink-soft)] hover:text-[var(--ink)] transition-colors">
+                                Sign in
                             </a>
                             @if (Route::has('register'))
-                                <a href="{{ route('register') }}" style="padding: 9px 22px; background-color: #F5C200; color: #1B2878; font-size: 14px; font-weight: 700; border-radius: 10px; text-decoration: none; box-shadow: 0 2px 6px rgba(245,194,0,0.35);">
-                                    Get Started
+                                <a href="{{ route('register') }}" class="press px-5 py-2.5 bg-[var(--ink)] hover:bg-[var(--navy-soft)] text-white text-sm font-display font-semibold rounded-full transition-colors">
+                                    Create account
                                 </a>
                             @endif
                         @endauth
+
+                        <button @click="mobileMenuOpen = !mobileMenuOpen" class="md:hidden press p-2 -mr-2 text-[var(--ink)]" aria-label="Toggle menu">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path x-show="!mobileMenuOpen" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M4 7h16M4 12h16M4 17h16"></path>
+                                <path x-show="mobileMenuOpen" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
                     </div>
                 @endif
+            </nav>
+
+            <div x-show="mobileMenuOpen"
+                 x-transition:enter="transition ease-out duration-150"
+                 x-transition:enter-start="opacity-0"
+                 x-transition:enter-end="opacity-100"
+                 x-transition:leave="transition ease-in duration-100"
+                 x-transition:leave-start="opacity-100"
+                 x-transition:leave-end="opacity-0"
+                 class="md:hidden border-t border-[var(--line)] bg-[var(--paper)]"
+                 style="display: none;">
+                <div class="flex flex-col px-5 py-4 gap-1 font-mono text-sm uppercase tracking-wide">
+                    <a href="#contracts" class="px-3 py-2.5 text-[var(--ink-soft)] hover:text-[var(--ink)]">Contracts</a>
+                    <a href="#conversations" class="px-3 py-2.5 text-[var(--ink-soft)] hover:text-[var(--ink)]">Conversations</a>
+                    @guest
+                        <a href="{{ route('login') }}" class="px-3 py-2.5 text-[var(--ink-soft)] hover:text-[var(--ink)]">Sign in</a>
+                    @endguest
+                </div>
             </div>
-        </nav>
+        </header>
 
-        <!-- ─── Hero ────────────────────────────────────────────────────── -->
-        <section style="padding-top: 110px; padding-bottom: 90px; color: #ffffff; overflow: hidden; position: relative;">
-            <!-- Photographic Background: real man-signing-a-document-with-a-pen photo by Jakub Żerdzicki (@jakubzerdzicki), unsplash.com/photos/man-signing-a-document-with-a-pen-QI6NLgN5XnM -->
-            <div style="position: absolute; inset: 0; background-image: url('https://images.unsplash.com/photo-1763729805496-b5dbf7f00c79?q=80&w=2400&auto=format&fit=crop'); background-size: cover; background-position: center;"></div>
-            <div style="position: absolute; inset: 0; background: linear-gradient(135deg, rgba(27,40,120,0.94) 0%, rgba(30,55,153,0.9) 50%, rgba(27,40,120,0.88) 100%);"></div>
-            <div style="position: absolute; inset: 0; background: linear-gradient(90deg, rgba(27,40,120,0.55) 0%, rgba(27,40,120,0.2) 55%, rgba(27,40,120,0.05) 100%);"></div>
-            <!-- Decorative blobs -->
-            <div style="position: absolute; top: -80px; right: -80px; width: 420px; height: 420px; background: rgba(245,194,0,0.08); border-radius: 50%; filter: blur(60px); pointer-events: none;"></div>
-            <div style="position: absolute; bottom: -80px; left: -80px; width: 420px; height: 420px; background: rgba(245,194,0,0.06); border-radius: 50%; filter: blur(60px); pointer-events: none;"></div>
-
-            <div style="max-width: 1200px; margin: 0 auto; padding: 0 24px; position: relative;">
-                <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 56px; justify-content: space-between;">
-
-                    <!-- Left: copy -->
-                    <div style="flex: 1; min-width: 280px;">
-                        <div style="display: inline-flex; align-items: center; gap: 8px; background: rgba(245,194,0,0.15); border: 1px solid rgba(245,194,0,0.3); border-radius: 999px; padding: 6px 16px; font-size: 13px; font-weight: 600; color: #F5C200; margin-bottom: 24px;">
-                            <span style="width: 8px; height: 8px; background: #F5C200; border-radius: 50%; animation: pulse 2s infinite;"></span>
-                            Smart Business Platform
-                        </div>
-
-                        <h1 style="font-size: clamp(2.2rem, 5vw, 3.6rem); font-weight: 800; line-height: 1.15; margin: 0 0 20px 0; letter-spacing: -0.02em;">
-                            Contracts.<br>
-                            <span style="color: #F5C200;">Chat. Sign.</span><br>
-                            Done.
+        <!-- Hero -->
+        <section class="relative pt-32 pb-16 sm:pb-24 px-5 sm:px-8 overflow-hidden">
+            <div class="max-w-[1400px] mx-auto">
+                <div class="grid lg:grid-cols-[1.05fr_0.95fr] gap-14 lg:gap-10 items-center">
+                    <div class="reveal" data-reveal>
+                        <p class="font-mono text-xs tracking-[0.18em] uppercase text-[var(--gold)] mb-6">
+                            Contracts, chat &amp; e-signatures
+                        </p>
+                        <h1 class="font-display font-semibold text-4xl sm:text-5xl lg:text-6xl leading-[1.05] tracking-tight text-[var(--ink)] mb-6">
+                            Share it.<br>Talk it through.<br>Sign it live.
                         </h1>
-
-                        <p style="font-size: 1.1rem; color: #bfcae8; line-height: 1.7; max-width: 480px; margin: 0 0 36px 0;">
-                            dot.engage brings contract management, real-time messaging, and video-call document signing into one seamless platform.
+                        <p class="text-lg text-[var(--ink-soft)] leading-relaxed max-w-xl mb-10">
+                            Dot.Engage is where teams upload contracts, share them with clients, negotiate terms over real-time chat or a live video call, and capture legally-relevant e-signatures — from a signature pad or directly inside the call.
                         </p>
 
-                        <div style="display: flex; flex-wrap: wrap; gap: 14px;">
-                            @if (Route::has('register'))
-                                <a href="{{ route('register') }}" style="padding: 14px 32px; background-color: #F5C200; color: #1B2878; font-size: 15px; font-weight: 700; border-radius: 12px; text-decoration: none; box-shadow: 0 4px 16px rgba(245,194,0,0.4);">
-                                    Start for Free &rarr;
+                        @guest
+                            <div class="flex flex-wrap items-center gap-4">
+                                <a href="{{ route('register') }}" class="press px-7 py-3.5 bg-[var(--ink)] hover:bg-[var(--navy-soft)] text-white font-display font-semibold rounded-full transition-colors">
+                                    Create account
                                 </a>
-                            @endif
-                            @if (Route::has('login'))
-                                <a href="{{ route('login') }}" style="padding: 14px 32px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #ffffff; font-size: 15px; font-weight: 500; border-radius: 12px; text-decoration: none;">
-                                    Sign In
+                                <a href="#conversations" class="press flex items-center gap-2 px-7 py-3.5 text-[var(--ink)] font-medium rounded-full border border-[var(--line)] hover:border-[var(--navy-soft)] transition-colors">
+                                    See how signing works
                                 </a>
-                            @endif
-                        </div>
+                            </div>
+                        @endguest
                     </div>
 
-                    <!-- Right: logo graphic -->
-                    <div style="flex-shrink: 0;">
-                        <div style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 28px; padding: 40px; backdrop-filter: blur(8px);">
-                            <img src="{{ asset('images/dot_engage.png') }}" alt="dot.engage" style="width: 260px; max-width: 100%; height: auto; filter: drop-shadow(0 8px 32px rgba(0,0,0,0.3));">
-                        </div>
-                    </div>
+                    <!-- Signature element: the speech-bubble icon from the real logo mark, carrying a signature scrawl — chat and e-signature in one shape -->
+                    <div class="reveal" data-reveal>
+                        <div class="relative rounded-[2rem] border border-[var(--line)] bg-[var(--panel)] p-6 sm:p-8 shadow-[0_30px_60px_-30px_rgba(23,27,61,0.25)]">
+                            <div class="flex items-center justify-between mb-6 font-mono text-[11px] tracking-[0.12em] uppercase text-[var(--ink-soft)]">
+                                <span>Contract #118</span>
+                                <span>Pending</span>
+                            </div>
 
-                </div>
-            </div>
-        </section>
-
-        <!-- ─── Stats strip ─────────────────────────────────────────────── -->
-        <section style="background: #F5C200; padding: 20px 24px;">
-            <div style="max-width: 1200px; margin: 0 auto; display: flex; flex-wrap: wrap; justify-content: center; gap: 40px;">
-                <div style="text-align: center;">
-                    <div style="font-size: 1.6rem; font-weight: 800; color: #1B2878;">100%</div>
-                    <div style="font-size: 13px; font-weight: 600; color: #1B2878; opacity: 0.75;">Paperless Signing</div>
-                </div>
-                <div style="text-align: center;">
-                    <div style="font-size: 1.6rem; font-weight: 800; color: #1B2878;">Real-time</div>
-                    <div style="font-size: 13px; font-weight: 600; color: #1B2878; opacity: 0.75;">Messaging</div>
-                </div>
-                <div style="text-align: center;">
-                    <div style="font-size: 1.6rem; font-weight: 800; color: #1B2878;">One Platform</div>
-                    <div style="font-size: 13px; font-weight: 600; color: #1B2878; opacity: 0.75;">End-to-End</div>
-                </div>
-            </div>
-        </section>
-
-        <!-- ─── Features ─────────────────────────────────────────────────── -->
-        <section style="padding: 90px 24px; background: #f8fafc;">
-            <div style="max-width: 1200px; margin: 0 auto;">
-                <div style="text-align: center; margin-bottom: 56px;">
-                    <h2 style="font-size: clamp(1.7rem, 3vw, 2.4rem); font-weight: 800; color: #1B2878; margin: 0 0 12px 0;">Everything you need to close deals faster</h2>
-                    <p style="color: #64748b; font-size: 1.05rem; max-width: 520px; margin: 0 auto; line-height: 1.6;">One unified workspace for your entire contract lifecycle — from creation to signed delivery.</p>
-                </div>
-
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 28px;">
-
-                    <!-- Card 1: Contracts -->
-                    <div style="background: #ffffff; border-radius: 20px; padding: 36px 32px; border: 1px solid #e2e8f0; box-shadow: 0 2px 8px rgba(0,0,0,0.04); transition: box-shadow 0.2s;">
-                        <div style="width: 52px; height: 52px; background: rgba(245,194,0,0.15); border-radius: 14px; display: flex; align-items: center; justify-content: center; margin-bottom: 20px;">
-                            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#F5C200" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                                <polyline points="14 2 14 8 20 8"/>
-                                <line x1="16" y1="13" x2="8" y2="13"/>
-                                <line x1="16" y1="17" x2="8" y2="17"/>
-                                <polyline points="10 9 9 9 8 9"/>
+                            <svg viewBox="0 0 400 260" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-full h-auto" aria-hidden="true">
+                                <rect x="0.5" y="0.5" width="399" height="259" rx="14" stroke="var(--line)" stroke-dasharray="4 4"/>
+                                <!-- speech bubble, echoing the logo's chat icon -->
+                                <path d="M60 60 Q60 40 80 40 L320 40 Q340 40 340 60 L340 150 Q340 170 320 170 L140 170 L100 205 L108 170 L80 170 Q60 170 60 150 Z"
+                                    stroke="var(--navy)" stroke-width="2.5" fill="var(--panel)"/>
+                                <!-- signature scrawl inside the bubble -->
+                                <path
+                                    class="draw-path"
+                                    data-reveal
+                                    d="M95 115 C 105 90, 120 90, 125 110 C 130 130, 140 95, 150 100 C 160 105, 155 130, 170 120 C 185 110, 190 95, 205 100 C 220 105, 210 130, 230 120 C 250 110, 260 95, 285 100"
+                                    stroke="var(--gold)"
+                                    stroke-width="3"
+                                    stroke-linecap="round"
+                                    fill="none"
+                                />
                             </svg>
-                        </div>
-                        <h3 style="font-size: 1.15rem; font-weight: 700; color: #1B2878; margin: 0 0 10px 0;">Smart Contracts</h3>
-                        <p style="color: #64748b; font-size: 0.93rem; line-height: 1.7; margin: 0;">Upload, share, and track contracts with full version history. Send to clients in seconds with a secure link.</p>
-                    </div>
 
-                    <!-- Card 2: Chat -->
-                    <div style="background: #ffffff; border-radius: 20px; padding: 36px 32px; border: 1px solid #e2e8f0; box-shadow: 0 2px 8px rgba(0,0,0,0.04);">
-                        <div style="width: 52px; height: 52px; background: rgba(27,40,120,0.08); border-radius: 14px; display: flex; align-items: center; justify-content: center; margin-bottom: 20px;">
-                            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#1B2878" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-                            </svg>
+                            <div class="flex items-center justify-between mt-6 pt-6 border-t border-[var(--line)]">
+                                <span class="font-mono text-[11px] tracking-wide text-[var(--ink-soft)]">Signed during video call</span>
+                                <span class="font-mono text-[11px] tracking-wide text-[var(--gold)] font-medium">2 of 3 signed</span>
+                            </div>
                         </div>
-                        <h3 style="font-size: 1.15rem; font-weight: 700; color: #1B2878; margin: 0 0 10px 0;">Real-time Messaging</h3>
-                        <p style="color: #64748b; font-size: 0.93rem; line-height: 1.7; margin: 0;">Stay connected with clients through secure, instant conversations with file attachments — all in one place.</p>
                     </div>
-
-                    <!-- Card 3: Video Signing -->
-                    <div style="background: #ffffff; border-radius: 20px; padding: 36px 32px; border: 1px solid #e2e8f0; box-shadow: 0 2px 8px rgba(0,0,0,0.04);">
-                        <div style="width: 52px; height: 52px; background: rgba(245,194,0,0.15); border-radius: 14px; display: flex; align-items: center; justify-content: center; margin-bottom: 20px;">
-                            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#F5C200" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <polygon points="23 7 16 12 23 17 23 7"/>
-                                <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
-                            </svg>
-                        </div>
-                        <h3 style="font-size: 1.15rem; font-weight: 700; color: #1B2878; margin: 0 0 10px 0;">Video-Call Signing</h3>
-                        <p style="color: #64748b; font-size: 0.93rem; line-height: 1.7; margin: 0;">Request and capture document signatures during live video sessions — no printing, no delays.</p>
-                    </div>
-
                 </div>
             </div>
         </section>
 
-        <!-- ─── How It Works ─────────────────────────────────────────────── -->
-        <section style="padding: 90px 24px; background: #ffffff;">
-            <div style="max-width: 900px; margin: 0 auto;">
-                <div style="text-align: center; margin-bottom: 56px;">
-                    <h2 style="font-size: clamp(1.7rem, 3vw, 2.4rem); font-weight: 800; color: #1B2878; margin: 0 0 12px 0;">How dot.engage works</h2>
-                    <p style="color: #64748b; font-size: 1.05rem; max-width: 480px; margin: 0 auto; line-height: 1.6;">Three simple steps from upload to signed contract.</p>
+        <!-- Contracts / Conversations -->
+        <section class="py-24 sm:py-28 px-5 sm:px-8">
+            <div class="max-w-[1400px] mx-auto">
+                <div class="max-w-2xl mb-16 reveal" data-reveal>
+                    <p class="font-mono text-xs tracking-[0.18em] uppercase text-[var(--gold)] mb-4">What it's built from</p>
+                    <h2 class="font-display font-semibold text-3xl sm:text-4xl text-[var(--ink)] leading-tight">
+                        The deal and the conversation, in the same place
+                    </h2>
                 </div>
 
-                <div style="display: flex; flex-wrap: wrap; gap: 0; position: relative;">
-
-                    <!-- Step 1 -->
-                    <div style="flex: 1; min-width: 220px; text-align: center; padding: 24px 20px;">
-                        <div style="width: 56px; height: 56px; background: #1B2878; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; font-size: 1.4rem; font-weight: 800; color: #F5C200;">1</div>
-                        <h4 style="font-size: 1rem; font-weight: 700; color: #1B2878; margin: 0 0 8px 0;">Upload Your Contract</h4>
-                        <p style="color: #64748b; font-size: 0.88rem; line-height: 1.6; margin: 0;">Drag and drop your PDF or document into the platform.</p>
+                <div class="grid lg:grid-cols-2 gap-x-16">
+                    <div id="contracts">
+                        <h3 class="font-display font-semibold text-xl text-[var(--ink)] mb-1">Contracts</h3>
+                        <p class="text-sm text-[var(--ink-soft)] mb-6">Upload, version, and sign.</p>
+                        <div class="border-t border-[var(--line)]">
+                            @php
+                                $contractItems = [
+                                    ['tag' => 'Contract', 'title' => 'Draft, pending, or signed', 'body' => 'An uploaded document with a title, description, and expiry, held on a private file path with soft-delete history.'],
+                                    ['tag' => 'Signature', 'title' => 'Captured signatures', 'body' => 'Each team member\'s signature on a contract records the image, IP address, and a signed timestamp.'],
+                                    ['tag' => 'Version', 'title' => 'Version history', 'body' => 'Every re-uploaded contract file keeps a version entry, so nobody signs the wrong draft.'],
+                                ];
+                            @endphp
+                            @foreach ($contractItems as $item)
+                                <div class="row-hover border-b border-[var(--line)] px-1 py-6 transition-colors reveal" data-reveal>
+                                    <p class="font-mono text-[11px] tracking-[0.14em] uppercase text-[var(--navy)] mb-2">{{ $item['tag'] }}</p>
+                                    <h4 class="font-display font-semibold text-lg text-[var(--ink)] mb-1.5">{{ $item['title'] }}</h4>
+                                    <p class="text-[var(--ink-soft)] leading-relaxed text-sm">{{ $item['body'] }}</p>
+                                </div>
+                            @endforeach
+                        </div>
                     </div>
 
-                    <!-- Arrow -->
-                    <div style="display: flex; align-items: center; padding: 0 4px; color: #F5C200; font-size: 1.5rem; font-weight: 900;">›</div>
-
-                    <!-- Step 2 -->
-                    <div style="flex: 1; min-width: 220px; text-align: center; padding: 24px 20px;">
-                        <div style="width: 56px; height: 56px; background: #F5C200; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; font-size: 1.4rem; font-weight: 800; color: #1B2878;">2</div>
-                        <h4 style="font-size: 1rem; font-weight: 700; color: #1B2878; margin: 0 0 8px 0;">Share &amp; Discuss</h4>
-                        <p style="color: #64748b; font-size: 0.88rem; line-height: 1.6; margin: 0;">Send to clients and collaborate via real-time chat.</p>
+                    <div id="conversations" class="mt-14 lg:mt-0">
+                        <h3 class="font-display font-semibold text-xl text-[var(--ink)] mb-1">Conversations &amp; calls</h3>
+                        <p class="text-sm text-[var(--ink-soft)] mb-6">Negotiate, then close, without leaving the thread.</p>
+                        <div class="border-t border-[var(--line)]">
+                            @php
+                                $conversationItems = [
+                                    ['tag' => 'Chat', 'title' => 'Real-time conversations', 'body' => '1:1 or group threads, team-scoped, with messages that can carry a file attachment or link straight to a contract.'],
+                                    ['tag' => 'Video', 'title' => 'Live video sessions', 'body' => 'A call moves through waiting, active, and ended — and can be tied to a contract for signing while everyone is still on the line.'],
+                                    ['tag' => 'In-call signing', 'title' => 'Sign without hanging up', 'body' => 'A signature captured live during a call is recorded the same way as one from the standalone signature pad.'],
+                                ];
+                            @endphp
+                            @foreach ($conversationItems as $item)
+                                <div class="row-hover border-b border-[var(--line)] px-1 py-6 transition-colors reveal" data-reveal>
+                                    <p class="font-mono text-[11px] tracking-[0.14em] uppercase text-[var(--gold)] mb-2">{{ $item['tag'] }}</p>
+                                    <h4 class="font-display font-semibold text-lg text-[var(--ink)] mb-1.5">{{ $item['title'] }}</h4>
+                                    <p class="text-[var(--ink-soft)] leading-relaxed text-sm">{{ $item['body'] }}</p>
+                                </div>
+                            @endforeach
+                        </div>
                     </div>
-
-                    <!-- Arrow -->
-                    <div style="display: flex; align-items: center; padding: 0 4px; color: #F5C200; font-size: 1.5rem; font-weight: 900;">›</div>
-
-                    <!-- Step 3 -->
-                    <div style="flex: 1; min-width: 220px; text-align: center; padding: 24px 20px;">
-                        <div style="width: 56px; height: 56px; background: #1B2878; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; font-size: 1.4rem; font-weight: 800; color: #F5C200;">3</div>
-                        <h4 style="font-size: 1rem; font-weight: 700; color: #1B2878; margin: 0 0 8px 0;">Sign on Video Call</h4>
-                        <p style="color: #64748b; font-size: 0.88rem; line-height: 1.6; margin: 0;">Collect legally-binding signatures live during your call.</p>
-                    </div>
-
                 </div>
             </div>
         </section>
 
-        <!-- ─── CTA Banner ────────────────────────────────────────────────── -->
-        <section style="padding: 80px 24px; position: relative; overflow: hidden;">
-            <!-- Photographic Background: real woman-waving-during-a-video-call-on-her-laptop photo by Vitaly Gariev (@silverkblack), unsplash.com/photos/woman-waving-during-a-video-call-on-her-laptop-nSj0hdQUrW0 -->
-            <div style="position: absolute; inset: 0; background-image: url('https://images.unsplash.com/photo-1752650733337-cb0189176fb9?q=80&w=2400&auto=format&fit=crop'); background-size: cover; background-position: center;"></div>
-            <div style="position: absolute; inset: 0; background: linear-gradient(135deg, rgba(27,40,120,0.92), rgba(30,55,153,0.9));"></div>
-            <div style="max-width: 680px; margin: 0 auto; text-align: center; position: relative;">
-                <h2 style="font-size: clamp(1.8rem, 3.5vw, 2.6rem); font-weight: 800; color: #ffffff; margin: 0 0 16px 0;">Ready to engage smarter?</h2>
-                <p style="color: #bfcae8; font-size: 1.05rem; line-height: 1.6; margin: 0 0 36px 0;">Join businesses that close deals faster and more securely with dot.engage.</p>
-                @if (Route::has('register'))
-                    <a href="{{ route('register') }}" style="display: inline-block; padding: 16px 44px; background-color: #F5C200; color: #1B2878; font-size: 15px; font-weight: 700; border-radius: 12px; text-decoration: none; box-shadow: 0 4px 20px rgba(245,194,0,0.45);">
-                        Create Your Free Account &rarr;
-                    </a>
-                @endif
+        <!-- Ecosystem -->
+        <section class="py-24 sm:py-28 px-5 sm:px-8 bg-[var(--ink)]">
+            <div class="max-w-[1400px] mx-auto">
+                <div class="grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)] gap-12 lg:gap-20">
+                    <div class="reveal" data-reveal>
+                        <p class="font-mono text-xs tracking-[0.18em] uppercase text-[var(--gold-bright)] mb-4">Part of the Dot Ecosystem</p>
+                        <h2 class="font-display font-semibold text-3xl sm:text-4xl text-white leading-tight mb-5">
+                            Built on real-time infrastructure, not a polling loop
+                        </h2>
+                        <p class="text-[#c4c6dc] leading-relaxed max-w-sm">
+                            Chat and video signalling run on Laravel Reverb with real broadcast events wired end to end — further along than most platforms in the ecosystem, where Reverb is often configured but unused.
+                        </p>
+                    </div>
+
+                    <div class="grid sm:grid-cols-2 gap-x-10">
+                        @php
+                            $capabilities = [
+                                ['title' => 'Team-scoped by design', 'body' => 'Contracts, conversations, and video sessions are all scoped to your current team at the query level.'],
+                                ['title' => 'Graceful video fallback', 'body' => 'Daily.co powers video when configured; without it, the platform falls back to a Reverb-only signalling path.'],
+                                ['title' => 'Signed PDF delivery', 'body' => 'A completed contract is rendered to PDF once every required signature is captured.'],
+                                ['title' => 'Ecosystem single sign-on', 'body' => 'A one-time Sanctum token minted elsewhere in the ecosystem logs you straight into your dashboard.'],
+                            ];
+                        @endphp
+                        @foreach ($capabilities as $c)
+                            <div class="py-6 border-t border-[rgba(255,255,255,0.14)] reveal" data-reveal>
+                                <h3 class="font-display font-medium text-base text-white mb-1.5">{{ $c['title'] }}</h3>
+                                <p class="text-sm text-[#c4c6dc] leading-relaxed">{{ $c['body'] }}</p>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
             </div>
         </section>
 
-        <!-- ─── Footer ────────────────────────────────────────────────────── -->
-        <footer style="background: #ffffff; border-top: 1px solid #e2e8f0; padding: 32px 24px;">
-            <div style="max-width: 1200px; margin: 0 auto; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px;">
-                <img src="{{ asset('images/dot_engage.png') }}" alt="dot.engage" style="height: 32px; width: auto;">
-                <p style="font-size: 13px; color: #94a3b8; margin: 0;">&copy; {{ date('Y') }} dot.engage &middot; All rights reserved.</p>
+        <!-- CTA -->
+        <section class="relative py-28 sm:py-36 px-5 sm:px-8 overflow-hidden">
+            <div class="relative z-10 max-w-2xl mx-auto text-center reveal" data-reveal>
+                <h2 class="font-display font-semibold text-3xl sm:text-4xl text-[var(--ink)] leading-tight mb-5">
+                    Get the next contract signed this week
+                </h2>
+                <p class="text-[var(--ink-soft)] leading-relaxed mb-10 max-w-lg mx-auto">
+                    Sign in with your Dot Ecosystem account or create one to upload your first contract.
+                </p>
+
+                @guest
+                    <div class="flex flex-wrap justify-center gap-4">
+                        <a href="{{ route('register') }}" class="press px-8 py-3.5 bg-[var(--ink)] hover:bg-[var(--navy-soft)] text-white font-display font-semibold rounded-full transition-colors">
+                            Create account
+                        </a>
+                        <a href="{{ route('login') }}" class="press px-8 py-3.5 text-[var(--ink)] font-medium rounded-full border border-[var(--line)] hover:border-[var(--navy-soft)] transition-colors">
+                            Sign in
+                        </a>
+                    </div>
+                @endguest
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="py-14 px-5 sm:px-8 border-t border-[var(--line)]">
+            <div class="max-w-[1400px] mx-auto flex flex-col sm:flex-row items-center justify-between gap-6">
+                <a href="/" class="flex items-center">
+                    <img src="{{ asset('images/logo.png') }}" alt="Dot.Engage" class="h-11 w-auto opacity-90">
+                </a>
+                <p class="font-mono text-xs tracking-wide text-[var(--ink-soft)]">
+                    &copy; {{ date('Y') }} Dot.Engage. Contracts, chat, and e-signatures for the Dot Ecosystem.
+                </p>
             </div>
         </footer>
 
-        <style>
-            @keyframes pulse {
-                0%, 100% { opacity: 1; }
-                50% { opacity: 0.4; }
+        <script>
+            if (window.matchMedia('(prefers-reduced-motion: no-preference)').matches && 'IntersectionObserver' in window) {
+                const io = new IntersectionObserver((entries) => {
+                    entries.forEach((entry) => {
+                        if (entry.isIntersecting) {
+                            entry.target.classList.add('is-visible');
+                            io.unobserve(entry.target);
+                        }
+                    });
+                }, { threshold: 0.15, rootMargin: '0px 0px -40px 0px' });
+                document.querySelectorAll('[data-reveal]').forEach((el) => io.observe(el));
+            } else {
+                document.querySelectorAll('[data-reveal]').forEach((el) => el.classList.add('is-visible'));
             }
-            a { transition: opacity 0.15s ease; }
-        </style>
-
+        </script>
     </body>
 </html>
