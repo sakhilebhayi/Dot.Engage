@@ -82,7 +82,11 @@
         >
             <nav class="max-w-[1400px] mx-auto px-5 sm:px-8 py-3 flex items-center justify-between">
                 <a href="/" class="flex items-center press">
-                    <img src="{{ asset('images/logo.png') }}" alt="Dot.Engage" class="h-14 sm:h-[4.5rem] w-auto">
+                    {{-- Header overlays a hero photo with a ~92%-opacity dark
+                         --ink scrim at this exact position (unlike the
+                         footer below, which sits on the page's light paper
+                         and keeps the default logo). --}}
+                    <img src="{{ asset('images/logo-light.png') }}" alt="Dot.Engage" class="h-14 sm:h-[4.5rem] w-auto">
                 </a>
 
                 <div class="hidden md:flex items-center gap-8 font-mono text-[13px] tracking-wide uppercase text-[var(--ink-soft)]">
