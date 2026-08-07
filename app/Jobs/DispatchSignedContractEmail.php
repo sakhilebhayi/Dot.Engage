@@ -14,6 +14,7 @@ class DispatchSignedContractEmail implements ShouldQueue
     use Queueable;
 
     public int $tries = 5;
+
     public int $backoff = 60;
 
     public function __construct(public readonly Contract $contract) {}
@@ -24,17 +25,18 @@ class DispatchSignedContractEmail implements ShouldQueue
      */
     public function handle(): void
     {
-        $contract   = $this->contract->load(['creator', 'signatures.user', 'versions']);
+        $contract = $this->contract->load(['creator', 'signatures.user', 'versions']);
         $signedVersion = $contract->versions()->orderByDesc('version_number')->first();
 
         if (! $signedVersion) {
-            Log::warning('DispatchSignedContractEmail: no version found for contract ' . $contract->id);
+            Log::warning('DispatchSignedContractEmail: no version found for contract '.$contract->id);
+
             return;
         }
 
         // Collect unique recipients: all signers + the creator.
         $recipients = $contract->signatures
-            ->map(fn($s) => $s->user)
+            ->map(fn ($s) => $s->user)
             ->push($contract->creator)
             ->unique('id');
 
@@ -44,6 +46,6 @@ class DispatchSignedContractEmail implements ShouldQueue
             );
         }
 
-        Log::info('DispatchSignedContractEmail: queued ' . $recipients->count() . ' emails for contract ' . $contract->id);
+        Log::info('DispatchSignedContractEmail: queued '.$recipients->count().' emails for contract '.$contract->id);
     }
 }

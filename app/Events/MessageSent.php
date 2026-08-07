@@ -22,7 +22,7 @@ class MessageSent implements ShouldBroadcast
     public function broadcastOn(): array
     {
         return [
-            new PrivateChannel('conversation.' . $this->message->conversation_id),
+            new PrivateChannel('conversation.'.$this->message->conversation_id),
         ];
     }
 
@@ -34,12 +34,12 @@ class MessageSent implements ShouldBroadcast
     public function broadcastWith(): array
     {
         return [
-            'id'              => $this->message->id,
+            'id' => $this->message->id,
             'conversation_id' => $this->message->conversation_id,
-            'user_id'         => $this->message->user_id,
-            'body'            => $this->message->body,
-            'type'            => $this->message->type,
-            'created_at'      => $this->message->created_at->toIso8601String(),
+            'user_id' => $this->message->user_id,
+            'body' => $this->message->body,
+            'type' => $this->message->type,
+            'created_at' => $this->message->created_at->toIso8601String(),
         ];
     }
 }

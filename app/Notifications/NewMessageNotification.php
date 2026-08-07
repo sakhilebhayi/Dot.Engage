@@ -21,14 +21,14 @@ class NewMessageNotification extends Notification implements ShouldQueue
 
     public function toMail(object $notifiable): MailMessage
     {
-        $sender      = $this->message->sender;
-        $preview     = str($this->message->body)->limit(120)->toString();
-        $url         = route('chat.show', $this->message->conversation_id);
+        $sender = $this->message->sender;
+        $preview = str($this->message->body)->limit(120)->toString();
+        $url = route('chat.show', $this->message->conversation_id);
 
         return (new MailMessage)
-            ->subject('New message from ' . $sender->name)
-            ->greeting('Hi ' . $notifiable->name . '!')
-            ->line($sender->name . ' sent you a message:')
+            ->subject('New message from '.$sender->name)
+            ->greeting('Hi '.$notifiable->name.'!')
+            ->line($sender->name.' sent you a message:')
             ->line("> {$preview}")
             ->action('View Conversation', $url)
             ->line('Reply directly in Dot.Engage.');
@@ -37,12 +37,12 @@ class NewMessageNotification extends Notification implements ShouldQueue
     public function toArray(object $notifiable): array
     {
         return [
-            'type'            => 'new_message',
-            'message_id'      => $this->message->id,
+            'type' => 'new_message',
+            'message_id' => $this->message->id,
             'conversation_id' => $this->message->conversation_id,
-            'sender_id'       => $this->message->user_id,
-            'sender_name'     => $this->message->sender->name,
-            'preview'         => str($this->message->body)->limit(80)->toString(),
+            'sender_id' => $this->message->user_id,
+            'sender_name' => $this->message->sender->name,
+            'preview' => str($this->message->body)->limit(80)->toString(),
         ];
     }
 }

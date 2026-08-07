@@ -2,10 +2,12 @@
 
 namespace App\Console\Commands;
 
+use App\Jobs\ArchiveVideoSession;
 use App\Models\VideoSession;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Log;
 
 #[Signature('dotengage:clean-expired-sessions
@@ -16,11 +18,11 @@ class CleanExpiredVideoSessions extends Command
 {
     public function handle(): int
     {
-        $hours   = (int) $this->option('hours');
-        $dryRun  = $this->option('dry-run');
-        $cutoff  = now()->subHours($hours);
+        $hours = (int) $this->option('hours');
+        $dryRun = $this->option('dry-run');
+        $cutoff = now()->subHours($hours);
 
-        /** @var \Illuminate\Database\Eloquent\Collection<int, VideoSession> $staleSessions */
+        /** @var Collection<int, VideoSession> $staleSessions */
         $staleSessions = VideoSession::query()
             ->whereIn('status', ['waiting', 'active'])
             ->where('updated_at', '<', $cutoff)
@@ -28,12 +30,13 @@ class CleanExpiredVideoSessions extends Command
 
         if ($staleSessions->isEmpty()) {
             $this->info('No stale video sessions found.');
+
             return self::SUCCESS;
         }
 
         $this->table(
             ['ID', 'Room', 'Status', 'Last Updated'],
-            $staleSessions->map(fn($s) => [
+            $staleSessions->map(fn ($s) => [
                 $s->id,
                 $s->room_id,
                 $s->status,
@@ -42,7 +45,8 @@ class CleanExpiredVideoSessions extends Command
         );
 
         if ($dryRun) {
-            $this->warn('[dry-run] ' . $staleSessions->count() . ' session(s) would be cleaned.');
+            $this->warn('[dry-run] '.$staleSessions->count().' session(s) would be cleaned.');
+
             return self::SUCCESS;
         }
 
@@ -51,18 +55,18 @@ class CleanExpiredVideoSessions extends Command
 
         foreach ($staleSessions as $session) {
             $session->update([
-                'status'   => 'ended',
+                'status' => 'ended',
                 'ended_at' => $session->ended_at ?? now(),
             ]);
 
-            \App\Jobs\ArchiveVideoSession::dispatch($session);
+            ArchiveVideoSession::dispatch($session);
             $bar->advance();
         }
 
         $bar->finish();
         $this->newLine();
-        $this->info('Cleaned ' . $staleSessions->count() . ' stale session(s).');
-        Log::info('CleanExpiredVideoSessions: cleaned ' . $staleSessions->count() . ' sessions older than ' . $hours . 'h.');
+        $this->info('Cleaned '.$staleSessions->count().' stale session(s).');
+        Log::info('CleanExpiredVideoSessions: cleaned '.$staleSessions->count().' sessions older than '.$hours.'h.');
 
         return self::SUCCESS;
     }

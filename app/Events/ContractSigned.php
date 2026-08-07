@@ -25,7 +25,7 @@ class ContractSigned implements ShouldBroadcast
     public function broadcastOn(): array
     {
         return [
-            new PrivateChannel('team.' . $this->contract->team_id),
+            new PrivateChannel('team.'.$this->contract->team_id),
         ];
     }
 
@@ -37,10 +37,10 @@ class ContractSigned implements ShouldBroadcast
     public function broadcastWith(): array
     {
         return [
-            'contract_id'    => $this->contract->id,
+            'contract_id' => $this->contract->id,
             'contract_title' => $this->contract->title,
-            'contract_status'=> $this->contract->status,
-            'signed_by_id'   => $this->signature->user_id,
+            'contract_status' => $this->contract->status,
+            'signed_by_id' => $this->signature->user_id,
         ];
     }
 }

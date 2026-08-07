@@ -35,7 +35,8 @@ class ProcessContractUpload implements ShouldQueue
         $path = $this->contract->file_path;
 
         if (! $path || ! Storage::disk('contracts')->exists($path)) {
-            Log::warning('ProcessContractUpload: file not found for contract ' . $this->contract->id);
+            Log::warning('ProcessContractUpload: file not found for contract '.$this->contract->id);
+
             return;
         }
 
@@ -43,10 +44,10 @@ class ProcessContractUpload implements ShouldQueue
         $size = Storage::disk('contracts')->size($path);
 
         $this->contract->update([
-            'status'    => 'pending',
+            'status' => 'pending',
             'file_size' => $size,
         ]);
 
-        Log::info('ProcessContractUpload: contract ' . $this->contract->id . ' processed (' . $size . ' bytes).');
+        Log::info('ProcessContractUpload: contract '.$this->contract->id.' processed ('.$size.' bytes).');
     }
 }

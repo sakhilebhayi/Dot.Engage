@@ -9,6 +9,7 @@ use Livewire\Component;
 class ConversationList extends Component
 {
     public string $search = '';
+
     public ?int $selectedId = null;
 
     public function select(int $conversationId): void

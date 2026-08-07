@@ -29,18 +29,18 @@ class VideoTokenController extends Controller
         Gate::authorize('join', $session);
 
         return response()->json([
-            'channel'     => 'video-session.' . $session->id,
-            'room_id'     => $session->room_id,
-            'session_id'  => $session->id,
+            'channel' => 'video-session.'.$session->id,
+            'room_id' => $session->room_id,
+            'session_id' => $session->id,
             'contract_id' => $session->contract_id,
             'reverb' => [
                 'app_key' => config('reverb.apps.apps.0.key'),
-                'host'    => config('reverb.servers.reverb.host'),
-                'port'    => config('reverb.servers.reverb.port'),
-                'scheme'  => config('reverb.servers.reverb.scheme', 'http'),
+                'host' => config('reverb.servers.reverb.host'),
+                'port' => config('reverb.servers.reverb.port'),
+                'scheme' => config('reverb.servers.reverb.scheme', 'http'),
             ],
             'user' => [
-                'id'   => $request->user()->id,
+                'id' => $request->user()->id,
                 'name' => $request->user()->name,
             ],
         ]);

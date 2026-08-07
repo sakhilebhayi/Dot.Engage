@@ -26,6 +26,7 @@ class UnreadBadge extends Component
     public function render()
     {
         $this->count = $this->getUnreadCount();
+
         return view('livewire.chat.unread-badge');
     }
 }

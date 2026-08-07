@@ -3,21 +3,23 @@
 namespace App\Livewire\Contracts;
 
 use App\Models\Contract;
+use App\Notifications\ContractSharedNotification;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Notification;
-use App\Notifications\ContractSharedNotification;
 use Livewire\Component;
 
 class ShareModal extends Component
 {
     public int $contractId;
+
     public bool $show = false;
+
     public array $selectedUsers = [];
 
     public function share(): void
     {
         $this->validate([
-            'selectedUsers'   => 'required|array|min:1',
+            'selectedUsers' => 'required|array|min:1',
             'selectedUsers.*' => 'integer|exists:users,id',
         ]);
 
@@ -34,7 +36,7 @@ class ShareModal extends Component
 
     public function render()
     {
-        $contract    = Contract::findOrFail($this->contractId);
+        $contract = Contract::findOrFail($this->contractId);
         $teamMembers = Auth::user()->currentTeam->allUsers()
             ->where('id', '!=', Auth::id());
 

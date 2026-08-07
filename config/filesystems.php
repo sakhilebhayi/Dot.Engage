@@ -74,31 +74,31 @@ return [
 
         // Uploaded and versioned contract documents (PDF / DOCX).
         'contracts' => [
-            'driver'     => 'local',
-            'root'       => storage_path('app/private/contracts'),
-            'serve'      => false,
-            'throw'      => true,
-            'report'     => false,
+            'driver' => 'local',
+            'root' => storage_path('app/private/contracts'),
+            'serve' => false,
+            'throw' => true,
+            'report' => false,
             'visibility' => 'private',
         ],
 
         // Base64-derived signature PNG images captured from the canvas pad.
         'signatures' => [
-            'driver'     => 'local',
-            'root'       => storage_path('app/private/signatures'),
-            'serve'      => false,
-            'throw'      => true,
-            'report'     => false,
+            'driver' => 'local',
+            'root' => storage_path('app/private/signatures'),
+            'serve' => false,
+            'throw' => true,
+            'report' => false,
             'visibility' => 'private',
         ],
 
         // Files attached to chat messages (images, documents, etc.).
         'message-attachments' => [
-            'driver'     => 'local',
-            'root'       => storage_path('app/private/message-attachments'),
-            'serve'      => false,
-            'throw'      => true,
-            'report'     => false,
+            'driver' => 'local',
+            'root' => storage_path('app/private/message-attachments'),
+            'serve' => false,
+            'throw' => true,
+            'report' => false,
             'visibility' => 'private',
         ],
 

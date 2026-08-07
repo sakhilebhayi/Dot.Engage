@@ -47,19 +47,19 @@ class DailyCoService
     private function getOrCreateRoom(string $name): ?array
     {
         $response = Http::withToken($this->apiKey)
-            ->get(self::BASE_URL . "/rooms/{$name}");
+            ->get(self::BASE_URL."/rooms/{$name}");
 
         if ($response->successful()) {
             return $response->json();
         }
 
         $response = Http::withToken($this->apiKey)
-            ->post(self::BASE_URL . '/rooms', [
-                'name'       => $name,
+            ->post(self::BASE_URL.'/rooms', [
+                'name' => $name,
                 'properties' => [
                     'max_participants' => 50,
-                    'enable_chat'      => true,
-                    'exp'              => now()->addHours(8)->timestamp,
+                    'enable_chat' => true,
+                    'exp' => now()->addHours(8)->timestamp,
                 ],
             ]);
 
@@ -69,11 +69,11 @@ class DailyCoService
     private function createToken(string $roomName, string $userName): ?string
     {
         $response = Http::withToken($this->apiKey)
-            ->post(self::BASE_URL . '/meeting-tokens', [
+            ->post(self::BASE_URL.'/meeting-tokens', [
                 'properties' => [
                     'room_name' => $roomName,
                     'user_name' => $userName,
-                    'exp'       => now()->addHours(4)->timestamp,
+                    'exp' => now()->addHours(4)->timestamp,
                 ],
             ]);
 

@@ -25,7 +25,7 @@ class VideoSession extends Model
     {
         return [
             'started_at' => 'datetime',
-            'ended_at'   => 'datetime',
+            'ended_at' => 'datetime',
         ];
     }
 

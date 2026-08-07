@@ -21,7 +21,7 @@ class VideoSessionStarted implements ShouldBroadcast
     public function broadcastOn(): array
     {
         return [
-            new PrivateChannel('team.' . $this->session->team_id),
+            new PrivateChannel('team.'.$this->session->team_id),
         ];
     }
 
@@ -33,11 +33,11 @@ class VideoSessionStarted implements ShouldBroadcast
     public function broadcastWith(): array
     {
         return [
-            'session_id'   => $this->session->id,
-            'room_id'      => $this->session->room_id,
+            'session_id' => $this->session->id,
+            'room_id' => $this->session->room_id,
             'initiated_by' => $this->session->initiated_by,
-            'contract_id'  => $this->session->contract_id,
-            'started_at'   => $this->session->started_at?->toIso8601String(),
+            'contract_id' => $this->session->contract_id,
+            'started_at' => $this->session->started_at?->toIso8601String(),
         ];
     }
 }

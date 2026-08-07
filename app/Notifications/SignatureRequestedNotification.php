@@ -28,9 +28,9 @@ class SignatureRequestedNotification extends Notification implements ShouldQueue
         $url = route('video.room', ['room' => $this->session->room_id]);
 
         return (new MailMessage)
-            ->subject('Your signature is requested on ' . $this->contract->title)
-            ->greeting('Hi ' . $notifiable->name . '!')
-            ->line('You have been asked to sign the contract **' . $this->contract->title . '** during an active video session.')
+            ->subject('Your signature is requested on '.$this->contract->title)
+            ->greeting('Hi '.$notifiable->name.'!')
+            ->line('You have been asked to sign the contract **'.$this->contract->title.'** during an active video session.')
             ->action('Join Session & Sign', $url)
             ->line('The session is live — please join as soon as possible.');
     }
@@ -38,10 +38,10 @@ class SignatureRequestedNotification extends Notification implements ShouldQueue
     public function toArray(object $notifiable): array
     {
         return [
-            'type'           => 'signature_requested',
-            'session_id'     => $this->session->id,
-            'room_id'        => $this->session->room_id,
-            'contract_id'    => $this->contract->id,
+            'type' => 'signature_requested',
+            'session_id' => $this->session->id,
+            'room_id' => $this->session->room_id,
+            'contract_id' => $this->contract->id,
             'contract_title' => $this->contract->title,
         ];
     }

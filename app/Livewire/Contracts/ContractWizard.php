@@ -5,7 +5,6 @@ namespace App\Livewire\Contracts;
 use App\Jobs\ProcessContractUpload;
 use App\Models\Contract;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 
@@ -14,31 +13,36 @@ class ContractWizard extends Component
     use WithFileUploads;
 
     public ?int $contractId = null;
+
     public int $step = 1;
+
     public string $title = '';
+
     public string $description = '';
+
     public ?string $expiresAt = null;
+
     public $file = null;
 
-    public function mount(int $contractId = null): void
+    public function mount(?int $contractId = null): void
     {
         if ($contractId) {
             $contract = Contract::findOrFail($contractId);
             $this->authorize('update', $contract);
-            $this->contractId  = $contractId;
-            $this->title       = $contract->title;
+            $this->contractId = $contractId;
+            $this->title = $contract->title;
             $this->description = $contract->description ?? '';
-            $this->expiresAt   = $contract->expires_at?->format('Y-m-d');
+            $this->expiresAt = $contract->expires_at?->format('Y-m-d');
         }
     }
 
     protected function rules(): array
     {
         return [
-            'title'       => 'required|string|max:255',
+            'title' => 'required|string|max:255',
             'description' => 'nullable|string|max:2000',
-            'expiresAt'   => 'nullable|date|after:today',
-            'file'        => 'nullable|file|mimes:pdf,doc,docx|max:20480',
+            'expiresAt' => 'nullable|date|after:today',
+            'file' => 'nullable|file|mimes:pdf,doc,docx|max:20480',
         ];
     }
 
@@ -73,13 +77,13 @@ class ContractWizard extends Component
             $this->authorize('update', $contract);
 
             $updates = [
-                'title'       => $this->title,
+                'title' => $this->title,
                 'description' => $this->description,
-                'expires_at'  => $this->expiresAt,
+                'expires_at' => $this->expiresAt,
             ];
             if ($filePath) {
                 $updates['file_path'] = $filePath;
-                $updates['status']    = 'draft';
+                $updates['status'] = 'draft';
             }
             $contract->update($updates);
 
@@ -89,13 +93,13 @@ class ContractWizard extends Component
         } else {
             // Create new contract.
             $contract = Contract::create([
-                'team_id'     => Auth::user()->currentTeam->id,
-                'created_by'  => Auth::id(),
-                'title'       => $this->title,
+                'team_id' => Auth::user()->currentTeam->id,
+                'created_by' => Auth::id(),
+                'title' => $this->title,
                 'description' => $this->description,
-                'file_path'   => $filePath,
-                'expires_at'  => $this->expiresAt,
-                'status'      => 'draft',
+                'file_path' => $filePath,
+                'expires_at' => $this->expiresAt,
+                'status' => 'draft',
             ]);
 
             if ($filePath) {

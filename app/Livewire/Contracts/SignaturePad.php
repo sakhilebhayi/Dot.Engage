@@ -24,23 +24,23 @@ class SignaturePad extends Component
         $this->authorize('sign', $contract);
 
         // Decode and store the image on the private signatures disk.
-        $data     = preg_replace('/^data:image\/\w+;base64,/', '', $signatureData);
-        $decoded  = base64_decode($data);
-        $filename = 'sig_' . Auth::id() . '_' . Str::uuid() . '.png';
+        $data = preg_replace('/^data:image\/\w+;base64,/', '', $signatureData);
+        $decoded = base64_decode($data);
+        $filename = 'sig_'.Auth::id().'_'.Str::uuid().'.png';
         Storage::disk('signatures')->put($filename, $decoded);
 
         $signature = ContractSignature::create([
-            'contract_id'          => $contractId,
-            'user_id'              => Auth::id(),
+            'contract_id' => $contractId,
+            'user_id' => Auth::id(),
             'signature_image_path' => $filename,
-            'ip_address'           => request()->ip(),
-            'user_agent'           => request()->userAgent(),
-            'signed_at'            => now(),
+            'ip_address' => request()->ip(),
+            'user_agent' => request()->userAgent(),
+            'signed_at' => now(),
         ]);
 
         // Mark as signed if all team members have signed.
         $teamMemberCount = $contract->team->allUsers()->count();
-        $signatureCount  = $contract->signatures()->count();
+        $signatureCount = $contract->signatures()->count();
 
         if ($signatureCount >= $teamMemberCount) {
             $contract->update(['status' => 'signed']);

@@ -19,7 +19,7 @@ class LogVideoSession implements ShouldQueue
         if ($session->ended_at === null) {
             $session->update([
                 'ended_at' => now(),
-                'status'   => 'ended',
+                'status' => 'ended',
             ]);
         }
 

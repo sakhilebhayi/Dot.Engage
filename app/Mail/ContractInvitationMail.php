@@ -7,7 +7,6 @@ use App\Models\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
-use Illuminate\Mail\Mailables\Attachment;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
@@ -25,7 +24,7 @@ class ContractInvitationMail extends Mailable implements ShouldQueue
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: $this->invitedBy->name . ' has shared a contract with you — ' . $this->contract->title,
+            subject: $this->invitedBy->name.' has shared a contract with you — '.$this->contract->title,
         );
     }
 
@@ -34,10 +33,10 @@ class ContractInvitationMail extends Mailable implements ShouldQueue
         return new Content(
             markdown: 'emails.contract-invitation',
             with: [
-                'contract'   => $this->contract,
-                'invitedBy'  => $this->invitedBy,
-                'recipient'  => $this->recipient,
-                'reviewUrl'  => route('contracts.show', $this->contract),
+                'contract' => $this->contract,
+                'invitedBy' => $this->invitedBy,
+                'recipient' => $this->recipient,
+                'reviewUrl' => route('contracts.show', $this->contract),
             ],
         );
     }

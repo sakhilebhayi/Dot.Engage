@@ -13,9 +13,9 @@ class SendMessageNotification implements ShouldQueue
 
     public function handle(MessageSent $event): void
     {
-        $message      = $event->message;
+        $message = $event->message;
         $conversation = $message->conversation;
-        $senderId     = $message->user_id;
+        $senderId = $message->user_id;
 
         // Notify every participant in the conversation except the sender.
         $conversation->participants()

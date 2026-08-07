@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Notifications;
 
+use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 
@@ -11,16 +12,17 @@ class NotificationBell extends Component
 
     public function refresh(): void
     {
-        /** @var \App\Models\User $user */
+        /** @var User $user */
         $user = Auth::user();
         $this->unreadCount = $user->unreadNotifications()->count();
     }
 
     public function render()
     {
-        /** @var \App\Models\User $user */
+        /** @var User $user */
         $user = Auth::user();
         $this->unreadCount = $user->unreadNotifications()->count();
+
         return view('livewire.notifications.notification-bell');
     }
 }

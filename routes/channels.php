@@ -61,8 +61,7 @@ Broadcast::channel('video-session.{sessionId}', function ($user, $sessionId) {
 
     // Return user info so presence channel can expose participant list.
     return [
-        'id'   => $user->id,
+        'id' => $user->id,
         'name' => $user->name,
     ];
 });
-

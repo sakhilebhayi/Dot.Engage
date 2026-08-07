@@ -11,6 +11,7 @@ use Livewire\Component;
 class SessionLauncher extends Component
 {
     public ?int $contractId = null;
+
     public string $joinRoomId = '';
 
     public function create(): void
@@ -18,12 +19,12 @@ class SessionLauncher extends Component
         $this->authorize('create', VideoSession::class);
 
         $session = VideoSession::create([
-            'team_id'      => Auth::user()->currentTeam->id,
+            'team_id' => Auth::user()->currentTeam->id,
             'initiated_by' => Auth::id(),
-            'room_id'      => Str::uuid()->toString(),
-            'status'       => 'active',
-            'contract_id'  => $this->contractId ?: null,
-            'started_at'   => now(),
+            'room_id' => Str::uuid()->toString(),
+            'status' => 'active',
+            'contract_id' => $this->contractId ?: null,
+            'started_at' => now(),
         ]);
 
         $this->redirect(route('video.room', ['room' => $session->room_id]));

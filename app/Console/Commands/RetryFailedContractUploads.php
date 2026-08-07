@@ -7,6 +7,7 @@ use App\Models\Contract;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Log;
 
 #[Signature('dotengage:retry-failed-uploads
@@ -17,11 +18,11 @@ class RetryFailedContractUploads extends Command
 {
     public function handle(): int
     {
-        $limit  = (int) $this->option('limit');
+        $limit = (int) $this->option('limit');
         $dryRun = $this->option('dry-run');
 
         // Contracts that never moved past draft are considered failed uploads.
-        /** @var \Illuminate\Database\Eloquent\Collection<int, Contract> $stuck */
+        /** @var Collection<int, Contract> $stuck */
         $stuck = Contract::query()
             ->where('status', 'draft')
             ->whereNotNull('file_path')
@@ -31,12 +32,13 @@ class RetryFailedContractUploads extends Command
 
         if ($stuck->isEmpty()) {
             $this->info('No stuck contract uploads found.');
+
             return self::SUCCESS;
         }
 
         $this->table(
             ['ID', 'Title', 'File Path', 'Created At'],
-            $stuck->map(fn($c) => [
+            $stuck->map(fn ($c) => [
                 $c->id,
                 $c->title,
                 $c->file_path,
@@ -45,7 +47,8 @@ class RetryFailedContractUploads extends Command
         );
 
         if ($dryRun) {
-            $this->warn('[dry-run] ' . $stuck->count() . ' contract(s) would be retried.');
+            $this->warn('[dry-run] '.$stuck->count().' contract(s) would be retried.');
+
             return self::SUCCESS;
         }
 
@@ -59,8 +62,8 @@ class RetryFailedContractUploads extends Command
 
         $bar->finish();
         $this->newLine();
-        $this->info('Dispatched ' . $stuck->count() . ' ProcessContractUpload job(s).');
-        Log::info('RetryFailedContractUploads: dispatched ' . $stuck->count() . ' jobs.');
+        $this->info('Dispatched '.$stuck->count().' ProcessContractUpload job(s).');
+        Log::info('RetryFailedContractUploads: dispatched '.$stuck->count().' jobs.');
 
         return self::SUCCESS;
     }

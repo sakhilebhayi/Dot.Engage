@@ -1,6 +1,10 @@
 <?php
 
 use App\Http\Controllers\Auth\EcosystemAuthController;
+use App\Models\Contract;
+use App\Models\Conversation;
+use App\Models\VideoSession;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
 use Laravel\Jetstream\Jetstream;
@@ -33,23 +37,23 @@ Route::middleware([
     // cross-tenant aggregate counts (every team's contracts/conversations/
     // sessions) into every team's dashboard. Fixed here.
     Route::get('/dashboard', function () {
-        $teamId = \Illuminate\Support\Facades\Auth::user()->currentTeam->id;
+        $teamId = Auth::user()->currentTeam->id;
 
         $stats = [
-            'total_contracts'       => \App\Models\Contract::where('team_id', $teamId)->count(),
-            'pending_signatures'    => \App\Models\Contract::where('team_id', $teamId)->where('status', 'pending')->count(),
-            'signed_contracts'      => \App\Models\Contract::where('team_id', $teamId)->where('status', 'signed')->count(),
-            'active_conversations'  => \App\Models\Conversation::where('team_id', $teamId)->whereNotNull('last_message_at')->count(),
-            'active_video_sessions' => \App\Models\VideoSession::where('team_id', $teamId)->whereIn('status', ['waiting', 'active'])->count(),
+            'total_contracts' => Contract::where('team_id', $teamId)->count(),
+            'pending_signatures' => Contract::where('team_id', $teamId)->where('status', 'pending')->count(),
+            'signed_contracts' => Contract::where('team_id', $teamId)->where('status', 'signed')->count(),
+            'active_conversations' => Conversation::where('team_id', $teamId)->whereNotNull('last_message_at')->count(),
+            'active_video_sessions' => VideoSession::where('team_id', $teamId)->whereIn('status', ['waiting', 'active'])->count(),
         ];
 
-        $recentContracts = \App\Models\Contract::with('creator')
+        $recentContracts = Contract::with('creator')
             ->where('team_id', $teamId)
             ->latest()
             ->limit(5)
             ->get();
 
-        $activeConversations = \App\Models\Conversation::withCount('participants')
+        $activeConversations = Conversation::withCount('participants')
             ->where('team_id', $teamId)
             ->whereNotNull('last_message_at')
             ->orderByDesc('last_message_at')
@@ -67,17 +71,17 @@ Route::middleware([
     Route::get('/contracts/create', fn () => view('contracts.create'))
         ->name('contracts.create');
 
-    Route::get('/contracts/{contract}', fn (\App\Models\Contract $contract) => view('contracts.show', ['contractId' => $contract->id]))
+    Route::get('/contracts/{contract}', fn (Contract $contract) => view('contracts.show', ['contractId' => $contract->id]))
         ->name('contracts.show');
 
-    Route::get('/contracts/{contract}/edit', fn (\App\Models\Contract $contract) => view('contracts.edit', ['contractId' => $contract->id]))
+    Route::get('/contracts/{contract}/edit', fn (Contract $contract) => view('contracts.edit', ['contractId' => $contract->id]))
         ->name('contracts.edit');
 
     // ── Chat ─────────────────────────────────────────────────────────────────
     Route::get('/chat', fn () => view('chat.index'))
         ->name('chat.index');
 
-    Route::get('/chat/{conversation}', fn (\App\Models\Conversation $conversation) => view('chat.show', ['conversationId' => $conversation->id]))
+    Route::get('/chat/{conversation}', fn (Conversation $conversation) => view('chat.show', ['conversationId' => $conversation->id]))
         ->name('chat.show');
 
     // ── Video Sessions ────────────────────────────────────────────────────────
@@ -86,7 +90,8 @@ Route::middleware([
         ->name('video.index');
 
     Route::get('/video/{room}', function (string $room) {
-        $session = \App\Models\VideoSession::where('room_id', $room)->firstOrFail();
+        $session = VideoSession::where('room_id', $room)->firstOrFail();
+
         return view('video.room', ['sessionId' => $session->id]);
     })->name('video.room');
 

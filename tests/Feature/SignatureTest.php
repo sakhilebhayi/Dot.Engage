@@ -6,9 +6,11 @@ use App\Events\ContractSigned;
 use App\Models\Contract;
 use App\Models\ContractSignature;
 use App\Models\User;
+use App\Models\VideoSession;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Tests\TestCase;
 
 class SignatureTest extends TestCase
@@ -24,29 +26,29 @@ class SignatureTest extends TestCase
         Storage::fake('signatures');
         Event::fake([ContractSigned::class]);
 
-        $owner    = User::factory()->withPersonalTeam()->create();
+        $owner = User::factory()->withPersonalTeam()->create();
         $contract = Contract::factory()->pending()->create([
-            'team_id'    => $owner->currentTeam->id,
+            'team_id' => $owner->currentTeam->id,
             'created_by' => $owner->id,
-            'file_path'  => 'contracts/test.pdf',
+            'file_path' => 'contracts/test.pdf',
         ]);
 
         // Minimal valid 1x1 px PNG encoded as base64 data URI.
         $pngBase64 = 'data:image/png;base64,'
-            . base64_encode(file_get_contents(base_path('vendor/phpunit/phpunit/phpunit.xsd')) ?: 'fake-image-data');
+            .base64_encode(file_get_contents(base_path('vendor/phpunit/phpunit/phpunit.xsd')) ?: 'fake-image-data');
 
         // Use a real tiny PNG instead.
-        $pixelPng  = base64_encode("\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01\x08\x02\x00\x00\x00\x90wS\xde\x00\x00\x00\x0cIDATx\x9cc\xf8\x0f\x00\x00\x01\x01\x00\x05\x18\xd8N\x00\x00\x00\x00IEND\xaeB`\x82");
-        $dataUri   = 'data:image/png;base64,' . $pixelPng;
+        $pixelPng = base64_encode("\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01\x08\x02\x00\x00\x00\x90wS\xde\x00\x00\x00\x0cIDATx\x9cc\xf8\x0f\x00\x00\x01\x01\x00\x05\x18\xd8N\x00\x00\x00\x00IEND\xaeB`\x82");
+        $dataUri = 'data:image/png;base64,'.$pixelPng;
 
         $response = $this->actingAs($owner, 'sanctum')
             ->postJson('/api/signatures', [
-                'contract_id'    => $contract->id,
+                'contract_id' => $contract->id,
                 'signature_data' => $dataUri,
             ]);
 
         $response->assertStatus(201)
-                 ->assertJsonStructure(['signature_id', 'signed_at']);
+            ->assertJsonStructure(['signature_id', 'signed_at']);
 
         Storage::disk('signatures')->assertExists(
             ContractSignature::first()->signature_image_path
@@ -55,14 +57,14 @@ class SignatureTest extends TestCase
 
     public function test_unauthenticated_user_cannot_submit_signature(): void
     {
-        $owner    = User::factory()->withPersonalTeam()->create();
+        $owner = User::factory()->withPersonalTeam()->create();
         $contract = Contract::factory()->pending()->create([
-            'team_id'    => $owner->currentTeam->id,
+            'team_id' => $owner->currentTeam->id,
             'created_by' => $owner->id,
         ]);
 
         $this->postJson('/api/signatures', [
-            'contract_id'    => $contract->id,
+            'contract_id' => $contract->id,
             'signature_data' => 'data:image/png;base64,abc',
         ])->assertStatus(401);
     }
@@ -73,25 +75,25 @@ class SignatureTest extends TestCase
 
         $this->actingAs($owner, 'sanctum')
             ->postJson('/api/signatures', [
-                'contract_id'    => 99999,
+                'contract_id' => 99999,
                 'signature_data' => 'data:image/png;base64,abc',
             ])->assertStatus(422)
-              ->assertJsonValidationErrors(['contract_id']);
+            ->assertJsonValidationErrors(['contract_id']);
     }
 
     public function test_invalid_base64_format_returns_error(): void
     {
         Storage::fake('signatures');
 
-        $owner    = User::factory()->withPersonalTeam()->create();
+        $owner = User::factory()->withPersonalTeam()->create();
         $contract = Contract::factory()->pending()->create([
-            'team_id'    => $owner->currentTeam->id,
+            'team_id' => $owner->currentTeam->id,
             'created_by' => $owner->id,
         ]);
 
         $this->actingAs($owner, 'sanctum')
             ->postJson('/api/signatures', [
-                'contract_id'    => $contract->id,
+                'contract_id' => $contract->id,
                 'signature_data' => 'not-a-valid-data-uri',
             ])->assertStatus(422);
     }
@@ -100,10 +102,10 @@ class SignatureTest extends TestCase
     {
         Storage::fake('signatures');
 
-        $owner    = User::factory()->withPersonalTeam()->create();
+        $owner = User::factory()->withPersonalTeam()->create();
         $outsider = User::factory()->withPersonalTeam()->create();
         $contract = Contract::factory()->pending()->create([
-            'team_id'    => $owner->currentTeam->id,
+            'team_id' => $owner->currentTeam->id,
             'created_by' => $owner->id,
         ]);
 
@@ -116,8 +118,8 @@ class SignatureTest extends TestCase
         // (found but forbidden).
         $this->actingAs($outsider, 'sanctum')
             ->postJson('/api/signatures', [
-                'contract_id'    => $contract->id,
-                'signature_data' => 'data:image/png;base64,' . $pixelPng,
+                'contract_id' => $contract->id,
+                'signature_data' => 'data:image/png;base64,'.$pixelPng,
             ])->assertStatus(404);
     }
 
@@ -127,9 +129,9 @@ class SignatureTest extends TestCase
         Event::fake([ContractSigned::class]);
 
         // Single-member team: owner is the only member, so one signature suffices.
-        $owner    = User::factory()->withPersonalTeam()->create();
+        $owner = User::factory()->withPersonalTeam()->create();
         $contract = Contract::factory()->pending()->create([
-            'team_id'    => $owner->currentTeam->id,
+            'team_id' => $owner->currentTeam->id,
             'created_by' => $owner->id,
         ]);
 
@@ -137,8 +139,8 @@ class SignatureTest extends TestCase
 
         $this->actingAs($owner, 'sanctum')
             ->postJson('/api/signatures', [
-                'contract_id'    => $contract->id,
-                'signature_data' => 'data:image/png;base64,' . $pixelPng,
+                'contract_id' => $contract->id,
+                'signature_data' => 'data:image/png;base64,'.$pixelPng,
             ])->assertStatus(201);
 
         $this->assertSame('signed', $contract->fresh()->status);
@@ -153,11 +155,11 @@ class SignatureTest extends TestCase
     {
         $disk = Storage::fake('contracts');
 
-        $owner    = User::factory()->withPersonalTeam()->create();
+        $owner = User::factory()->withPersonalTeam()->create();
         $contract = Contract::factory()->pending()->create([
-            'team_id'    => $owner->currentTeam->id,
+            'team_id' => $owner->currentTeam->id,
             'created_by' => $owner->id,
-            'file_path'  => 'test-contract.pdf',
+            'file_path' => 'test-contract.pdf',
         ]);
 
         $disk->put('test-contract.pdf', '%PDF-1.4 fake pdf content');
@@ -172,12 +174,12 @@ class SignatureTest extends TestCase
     {
         Storage::fake('contracts');
 
-        $owner    = User::factory()->withPersonalTeam()->create();
+        $owner = User::factory()->withPersonalTeam()->create();
         $outsider = User::factory()->withPersonalTeam()->create();
         $contract = Contract::factory()->pending()->create([
-            'team_id'    => $owner->currentTeam->id,
+            'team_id' => $owner->currentTeam->id,
             'created_by' => $owner->id,
-            'file_path'  => 'test.pdf',
+            'file_path' => 'test.pdf',
         ]);
 
         // ContractPdfController resolves {contract} via implicit route-model
@@ -195,12 +197,12 @@ class SignatureTest extends TestCase
 
     public function test_team_member_can_get_video_token_for_active_session(): void
     {
-        $owner   = User::factory()->withPersonalTeam()->create();
-        $session = \App\Models\VideoSession::create([
-            'team_id'      => $owner->currentTeam->id,
+        $owner = User::factory()->withPersonalTeam()->create();
+        $session = VideoSession::create([
+            'team_id' => $owner->currentTeam->id,
             'initiated_by' => $owner->id,
-            'room_id'      => \Illuminate\Support\Str::uuid(),
-            'status'       => 'active',
+            'room_id' => Str::uuid(),
+            'status' => 'active',
         ]);
 
         $this->actingAs($owner, 'sanctum')

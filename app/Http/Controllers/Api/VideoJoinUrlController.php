@@ -18,7 +18,7 @@ class VideoJoinUrlController extends Controller
         if (! $daily->isConfigured()) {
             return response()->json([
                 'configured' => false,
-                'room_id'    => $session->room_id,
+                'room_id' => $session->room_id,
             ]);
         }
 
@@ -27,14 +27,14 @@ class VideoJoinUrlController extends Controller
         if (! $url) {
             return response()->json([
                 'configured' => false,
-                'room_id'    => $session->room_id,
+                'room_id' => $session->room_id,
             ]);
         }
 
         return response()->json([
             'configured' => true,
-            'url'        => $url,
-            'room_id'    => $session->room_id,
+            'url' => $url,
+            'room_id' => $session->room_id,
         ]);
     }
 }

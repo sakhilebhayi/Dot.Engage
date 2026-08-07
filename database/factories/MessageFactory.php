@@ -16,27 +16,27 @@ class MessageFactory extends Factory
     {
         return [
             'conversation_id' => Conversation::factory(),
-            'user_id'         => User::factory(),
-            'body'            => $this->faker->sentences(rand(1, 3), true),
-            'type'            => 'text',
-            'contract_id'     => null,
-            'read_at'         => $this->faker->optional(0.6)->dateTimeBetween('-7 days', 'now'),
+            'user_id' => User::factory(),
+            'body' => $this->faker->sentences(rand(1, 3), true),
+            'type' => 'text',
+            'contract_id' => null,
+            'read_at' => $this->faker->optional(0.6)->dateTimeBetween('-7 days', 'now'),
         ];
     }
 
     /** Unread message. */
     public function unread(): static
     {
-        return $this->state(fn() => ['read_at' => null]);
+        return $this->state(fn () => ['read_at' => null]);
     }
 
     /** Message that references a contract (type = contract_share). */
     public function contractShare(int $contractId): static
     {
-        return $this->state(fn() => [
-            'type'        => 'contract_share',
+        return $this->state(fn () => [
+            'type' => 'contract_share',
             'contract_id' => $contractId,
-            'body'        => 'A contract has been shared in this conversation.',
+            'body' => 'A contract has been shared in this conversation.',
         ]);
     }
 }

@@ -6,6 +6,7 @@ use App\Models\Contract;
 use App\Models\Conversation;
 use App\Models\Message;
 use App\Models\VideoSession;
+use Carbon\Carbon;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
@@ -24,26 +25,28 @@ class GenerateTeamActivityReport extends Command
         $monthInput = $this->option('month') ?? now()->subMonth()->format('Y-m');
 
         try {
-            $period = \Carbon\Carbon::createFromFormat('Y-m', $monthInput);
+            $period = Carbon::createFromFormat('Y-m', $monthInput);
         } catch (\Exception) {
             $this->error('Invalid --month format. Use YYYY-MM (e.g. 2026-03).');
+
             return self::FAILURE;
         }
 
-        $start    = $period->copy()->startOfMonth();
-        $end      = $period->copy()->endOfMonth();
-        $teamId   = $this->option('team');
-        $output   = $this->option('output');
+        $start = $period->copy()->startOfMonth();
+        $end = $period->copy()->endOfMonth();
+        $teamId = $this->option('team');
+        $output = $this->option('output');
 
         $this->info("Activity report for {$start->format('F Y')}");
 
         // Collect team IDs to report on.
         $teams = DB::table('teams')
-            ->when($teamId, fn($q) => $q->where('id', $teamId))
+            ->when($teamId, fn ($q) => $q->where('id', $teamId))
             ->get(['id', 'name']);
 
         if ($teams->isEmpty()) {
             $this->warn('No teams found.');
+
             return self::SUCCESS;
         }
 
@@ -90,7 +93,7 @@ class GenerateTeamActivityReport extends Command
             $this->table($headers, $rows);
         }
 
-        Log::info('GenerateTeamActivityReport: report generated for ' . $start->format('Y-m') . ', ' . count($rows) . ' team(s).');
+        Log::info('GenerateTeamActivityReport: report generated for '.$start->format('Y-m').', '.count($rows).' team(s).');
 
         return self::SUCCESS;
     }

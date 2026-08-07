@@ -13,7 +13,7 @@ class NotifyContractSigned implements ShouldQueue
 
     public function handle(ContractSigned $event): void
     {
-        $contract  = $event->contract;
+        $contract = $event->contract;
         $signature = $event->signature;
 
         // Notify the contract creator.
@@ -23,8 +23,8 @@ class NotifyContractSigned implements ShouldQueue
 
         // Also notify other team members who haven't signed yet.
         $contract->team->allUsers()
-            ->reject(fn($u) => $u->id === $contract->created_by)
-            ->reject(fn($u) => $u->id === $signature->user_id)
-            ->each(fn($u) => $u->notify(new ContractSignedNotification($contract, $signature)));
+            ->reject(fn ($u) => $u->id === $contract->created_by)
+            ->reject(fn ($u) => $u->id === $signature->user_id)
+            ->each(fn ($u) => $u->notify(new ContractSignedNotification($contract, $signature)));
     }
 }

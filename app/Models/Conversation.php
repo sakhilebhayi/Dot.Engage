@@ -24,7 +24,7 @@ class Conversation extends Model
     protected function casts(): array
     {
         return [
-            'is_group'        => 'boolean',
+            'is_group' => 'boolean',
             'last_message_at' => 'datetime',
         ];
     }
@@ -37,8 +37,8 @@ class Conversation extends Model
     public function participants(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'conversation_participants')
-                    ->withPivot('last_read_at')
-                    ->withTimestamps();
+            ->withPivot('last_read_at')
+            ->withTimestamps();
     }
 
     public function messages(): HasMany

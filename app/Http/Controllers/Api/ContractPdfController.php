@@ -29,13 +29,13 @@ class ContractPdfController extends Controller
             'Contract file not found.'
         );
 
-        $filename = 'contract_' . $contract->id . '_' . str($contract->title)->slug() . '.pdf';
+        $filename = 'contract_'.$contract->id.'_'.str($contract->title)->slug().'.pdf';
         $contents = Storage::disk('contracts')->get($path);
 
         return response((string) $contents, 200, [
-            'Content-Type'        => 'application/pdf',
-            'Content-Disposition' => 'inline; filename="' . $filename . '"',
-            'X-Frame-Options'     => 'SAMEORIGIN',
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="'.$filename.'"',
+            'X-Frame-Options' => 'SAMEORIGIN',
         ]);
     }
 }

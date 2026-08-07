@@ -27,7 +27,7 @@ class SignatureRequestedDuringCall implements ShouldBroadcast
     public function broadcastOn(): array
     {
         return [
-            new PrivateChannel('team.' . $this->session->team_id),
+            new PrivateChannel('team.'.$this->session->team_id),
         ];
     }
 
@@ -39,10 +39,10 @@ class SignatureRequestedDuringCall implements ShouldBroadcast
     public function broadcastWith(): array
     {
         return [
-            'session_id'     => $this->session->id,
-            'contract_id'    => $this->contract->id,
+            'session_id' => $this->session->id,
+            'contract_id' => $this->contract->id,
             'contract_title' => $this->contract->title,
-            'signed_by_id'   => $this->signedBy->id,
+            'signed_by_id' => $this->signedBy->id,
             'signed_by_name' => $this->signedBy->name,
         ];
     }

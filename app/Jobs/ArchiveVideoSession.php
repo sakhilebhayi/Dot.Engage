@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Models\ContractSignature;
 use App\Models\VideoSession;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
@@ -12,6 +13,7 @@ class ArchiveVideoSession implements ShouldQueue
     use Queueable;
 
     public int $tries = 3;
+
     public int $backoff = 30;
 
     public function __construct(public readonly VideoSession $session) {}
@@ -28,7 +30,7 @@ class ArchiveVideoSession implements ShouldQueue
 
         // Guarantee ended_at and status are set.
         $session->updateQuietly([
-            'status'   => 'ended',
+            'status' => 'ended',
             'ended_at' => $session->ended_at ?? now(),
         ]);
 
@@ -38,24 +40,24 @@ class ArchiveVideoSession implements ShouldQueue
                 continue;
             }
 
-            $alreadyExists = \App\Models\ContractSignature::where('contract_id', $videoSig->contract_id)
+            $alreadyExists = ContractSignature::where('contract_id', $videoSig->contract_id)
                 ->where('user_id', $videoSig->user_id)
                 ->exists();
 
             if (! $alreadyExists) {
-                \App\Models\ContractSignature::create([
-                    'contract_id'          => $videoSig->contract_id,
-                    'user_id'              => $videoSig->user_id,
+                ContractSignature::create([
+                    'contract_id' => $videoSig->contract_id,
+                    'user_id' => $videoSig->user_id,
                     'signature_image_path' => $videoSig->signature_image_path,
-                    'ip_address'           => null,
-                    'signed_at'            => $videoSig->signed_at ?? now(),
+                    'ip_address' => null,
+                    'signed_at' => $videoSig->signed_at ?? now(),
                 ]);
 
                 Log::info('ArchiveVideoSession: promoted in-call signature for user '
-                    . $videoSig->user_id . ' on contract ' . $videoSig->contract_id);
+                    .$videoSig->user_id.' on contract '.$videoSig->contract_id);
             }
         }
 
-        Log::info('ArchiveVideoSession: session ' . $session->id . ' archived.');
+        Log::info('ArchiveVideoSession: session '.$session->id.' archived.');
     }
 }

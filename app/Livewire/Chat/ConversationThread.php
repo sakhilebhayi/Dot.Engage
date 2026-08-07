@@ -11,7 +11,9 @@ use Livewire\Component;
 class ConversationThread extends Component
 {
     public int $conversationId;
+
     public int $page = 1;
+
     public bool $hasMorePages = false;
 
     #[On('conversation-selected')]
@@ -54,18 +56,18 @@ class ConversationThread extends Component
         $conversation = Conversation::with('participants')
             ->findOrFail($this->conversationId);
 
-        $perPage   = 20;
+        $perPage = 20;
         $paginator = Message::with(['sender', 'attachments'])
             ->where('conversation_id', $this->conversationId)
             ->latest()
             ->paginate($perPage * $this->page);
 
-        $messages           = $paginator->items();
+        $messages = $paginator->items();
         $this->hasMorePages = $paginator->hasMorePages();
 
         return view('livewire.chat.conversation-thread', [
             'conversation' => $conversation,
-            'messages'     => array_reverse($messages),
+            'messages' => array_reverse($messages),
         ]);
     }
 }

@@ -18,7 +18,7 @@ class VideoSessionEnded implements ShouldBroadcast
     public function broadcastOn(): array
     {
         return [
-            new PrivateChannel('team.' . $this->session->team_id),
+            new PrivateChannel('team.'.$this->session->team_id),
         ];
     }
 
@@ -31,8 +31,8 @@ class VideoSessionEnded implements ShouldBroadcast
     {
         return [
             'session_id' => $this->session->id,
-            'room_id'    => $this->session->room_id,
-            'ended_at'   => $this->session->ended_at?->toIso8601String(),
+            'room_id' => $this->session->room_id,
+            'ended_at' => $this->session->ended_at?->toIso8601String(),
         ];
     }
 }

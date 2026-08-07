@@ -25,7 +25,7 @@ class ContractShared implements ShouldBroadcast
     public function broadcastOn(): array
     {
         return [
-            new PrivateChannel('user.' . $this->sharedWith->id),
+            new PrivateChannel('user.'.$this->sharedWith->id),
         ];
     }
 
@@ -37,7 +37,7 @@ class ContractShared implements ShouldBroadcast
     public function broadcastWith(): array
     {
         return [
-            'contract_id'    => $this->contract->id,
+            'contract_id' => $this->contract->id,
             'contract_title' => $this->contract->title,
             'shared_with_id' => $this->sharedWith->id,
         ];

@@ -10,23 +10,26 @@ use Livewire\Component;
 class NewConversation extends Component
 {
     public bool $show = false;
+
     public string $name = '';
+
     public bool $isGroup = false;
+
     public array $selectedUsers = [];
 
     public function create(): void
     {
         $this->validate([
-            'selectedUsers'   => 'required|array|min:1',
+            'selectedUsers' => 'required|array|min:1',
             'selectedUsers.*' => 'integer|exists:users,id',
-            'name'            => 'nullable|string|max:255',
+            'name' => 'nullable|string|max:255',
         ]);
 
         $team = Auth::user()->currentTeam;
 
         $conversation = Conversation::create([
-            'team_id'  => $team->id,
-            'name'     => $this->name ?: null,
+            'team_id' => $team->id,
+            'name' => $this->name ?: null,
             'is_group' => $this->isGroup,
         ]);
 
@@ -34,7 +37,7 @@ class NewConversation extends Component
         foreach ($allParticipants as $userId) {
             ConversationParticipant::create([
                 'conversation_id' => $conversation->id,
-                'user_id'         => $userId,
+                'user_id' => $userId,
             ]);
         }
 
@@ -45,6 +48,7 @@ class NewConversation extends Component
     public function render()
     {
         $teamMembers = Auth::user()->currentTeam->allUsers()->where('id', '!=', Auth::id());
+
         return view('livewire.chat.new-conversation', compact('teamMembers'));
     }
 }

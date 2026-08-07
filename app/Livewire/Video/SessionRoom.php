@@ -4,12 +4,12 @@ namespace App\Livewire\Video;
 
 use App\Events\VideoSessionEnded;
 use App\Models\VideoSession;
-use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 
 class SessionRoom extends Component
 {
     public int $sessionId;
+
     public bool $showDocument = false;
 
     public function mount(int $sessionId): void
@@ -38,6 +38,7 @@ class SessionRoom extends Component
     public function render()
     {
         $session = VideoSession::findOrFail($this->sessionId);
+
         return view('livewire.video.session-room', compact('session'));
     }
 }

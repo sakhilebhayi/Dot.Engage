@@ -7,7 +7,6 @@ use App\Models\VideoSession;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
-use Illuminate\Mail\Mailables\Attachment;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
@@ -24,7 +23,7 @@ class VideoSessionInviteMail extends Mailable implements ShouldQueue
     public function envelope(): Envelope
     {
         $initiator = $this->session->initiator;
-        $subject   = $initiator->name . ' has invited you to a video session';
+        $subject = $initiator->name.' has invited you to a video session';
 
         if ($this->session->contract_id) {
             $subject .= ' — document signing required';
@@ -38,11 +37,11 @@ class VideoSessionInviteMail extends Mailable implements ShouldQueue
         return new Content(
             markdown: 'emails.video-invite',
             with: [
-                'session'   => $this->session,
+                'session' => $this->session,
                 'initiator' => $this->session->initiator,
                 'recipient' => $this->recipient,
-                'joinUrl'   => route('video.room', ['room' => $this->session->room_id]),
-                'contract'  => $this->session->contract_id ? $this->session->contract : null,
+                'joinUrl' => route('video.room', ['room' => $this->session->room_id]),
+                'contract' => $this->session->contract_id ? $this->session->contract : null,
             ],
         );
     }

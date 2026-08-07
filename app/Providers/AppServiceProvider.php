@@ -28,10 +28,10 @@ class AppServiceProvider extends AuthServiceProvider
      * @var array<class-string, class-string>
      */
     protected $policies = [
-        Contract::class      => ContractPolicy::class,
-        Conversation::class  => ConversationPolicy::class,
-        Message::class       => MessagePolicy::class,
-        VideoSession::class  => VideoSessionPolicy::class,
+        Contract::class => ContractPolicy::class,
+        Conversation::class => ConversationPolicy::class,
+        Message::class => MessagePolicy::class,
+        VideoSession::class => VideoSessionPolicy::class,
     ];
 
     /**
@@ -40,7 +40,7 @@ class AppServiceProvider extends AuthServiceProvider
      * @var array<class-string, array<int, class-string>>
      */
     protected $listen = [
-        MessageSent::class    => [SendMessageNotification::class],
+        MessageSent::class => [SendMessageNotification::class],
         ContractShared::class => [NotifyContractShared::class],
         ContractSigned::class => [NotifyContractSigned::class],
         VideoSessionEnded::class => [LogVideoSession::class],

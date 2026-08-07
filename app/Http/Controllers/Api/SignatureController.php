@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Events\ContractSigned;
 use App\Http\Controllers\Controller;
 use App\Models\Contract;
 use App\Models\ContractSignature;
@@ -22,7 +23,7 @@ class SignatureController extends Controller
     public function __invoke(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'contract_id'    => ['required', 'integer', 'exists:contracts,id'],
+            'contract_id' => ['required', 'integer', 'exists:contracts,id'],
             'signature_data' => ['required', 'string'],
         ]);
 
@@ -36,35 +37,35 @@ class SignatureController extends Controller
         }
 
         $imageData = substr($validated['signature_data'], strpos($validated['signature_data'], ',') + 1);
-        $decoded   = base64_decode($imageData, strict: true);
+        $decoded = base64_decode($imageData, strict: true);
 
         if ($decoded === false) {
             return response()->json(['message' => 'Could not decode signature image.'], 422);
         }
 
-        $filename = 'sig_' . $request->user()->id . '_' . Str::uuid() . '.png';
+        $filename = 'sig_'.$request->user()->id.'_'.Str::uuid().'.png';
         Storage::disk('signatures')->put($filename, $decoded);
 
         $signature = ContractSignature::create([
-            'contract_id'          => $contract->id,
-            'user_id'              => $request->user()->id,
+            'contract_id' => $contract->id,
+            'user_id' => $request->user()->id,
             'signature_image_path' => $filename,
-            'ip_address'           => $request->ip(),
-            'signed_at'            => now(),
+            'ip_address' => $request->ip(),
+            'signed_at' => now(),
         ]);
 
         // Mark contract as fully signed if all team members have now signed.
         $teamMemberCount = $contract->team->allUsers()->count();
-        $signatureCount  = $contract->signatures()->count();
+        $signatureCount = $contract->signatures()->count();
 
         if ($signatureCount >= $teamMemberCount) {
             $contract->update(['status' => 'signed']);
-            \App\Events\ContractSigned::dispatch($contract, $signature);
+            ContractSigned::dispatch($contract, $signature);
         }
 
         return response()->json([
             'signature_id' => $signature->id,
-            'signed_at'    => $signature->signed_at->toIso8601String(),
+            'signed_at' => $signature->signed_at->toIso8601String(),
         ], 201);
     }
 }

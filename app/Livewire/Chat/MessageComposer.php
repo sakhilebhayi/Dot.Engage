@@ -15,15 +15,17 @@ class MessageComposer extends Component
     use WithFileUploads;
 
     public int $conversationId;
+
     public string $body = '';
+
     public array $attachments = [];
 
     public function send(): void
     {
         $this->validate([
-            'body'            => 'nullable|string|max:5000',
-            'attachments'     => 'nullable|array|max:5',
-            'attachments.*'   => 'file|max:20480',
+            'body' => 'nullable|string|max:5000',
+            'attachments' => 'nullable|array|max:5',
+            'attachments.*' => 'file|max:20480',
         ]);
 
         if (empty(trim($this->body)) && empty($this->attachments)) {
@@ -37,19 +39,19 @@ class MessageComposer extends Component
 
         $message = Message::create([
             'conversation_id' => $this->conversationId,
-            'user_id'         => Auth::id(),
-            'body'            => trim($this->body) ?: null,
-            'type'            => $type,
+            'user_id' => Auth::id(),
+            'body' => trim($this->body) ?: null,
+            'type' => $type,
         ]);
 
         foreach ($this->attachments as $attachment) {
             $path = $attachment->store('/', 'message-attachments');
             MessageAttachment::create([
-                'message_id'        => $message->id,
-                'file_path'         => $path,
+                'message_id' => $message->id,
+                'file_path' => $path,
                 'original_filename' => $attachment->getClientOriginalName(),
-                'mime_type'         => $attachment->getMimeType(),
-                'file_size'         => $attachment->getSize(),
+                'mime_type' => $attachment->getMimeType(),
+                'file_size' => $attachment->getSize(),
             ]);
         }
 

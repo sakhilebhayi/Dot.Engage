@@ -27,7 +27,7 @@ class SignedContractMail extends Mailable implements ShouldQueue
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Signed contract ready: ' . $this->contract->title,
+            subject: 'Signed contract ready: '.$this->contract->title,
         );
     }
 
@@ -36,10 +36,10 @@ class SignedContractMail extends Mailable implements ShouldQueue
         return new Content(
             markdown: 'emails.signed-contract',
             with: [
-                'contract'       => $this->contract,
-                'signedVersion'  => $this->signedVersion,
-                'recipient'      => $this->recipient,
-                'viewUrl'        => route('contracts.show', $this->contract),
+                'contract' => $this->contract,
+                'signedVersion' => $this->signedVersion,
+                'recipient' => $this->recipient,
+                'viewUrl' => route('contracts.show', $this->contract),
             ],
         );
     }
@@ -51,7 +51,7 @@ class SignedContractMail extends Mailable implements ShouldQueue
         if ($path && Storage::disk('contracts')->exists($path)) {
             return [
                 Attachment::fromStorageDisk('contracts', $path)
-                    ->as('signed_' . $this->contract->id . '.pdf')
+                    ->as('signed_'.$this->contract->id.'.pdf')
                     ->withMime('application/pdf'),
             ];
         }

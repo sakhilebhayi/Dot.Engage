@@ -21,13 +21,13 @@ class SignatureMergeTest extends TestCase
 
     public function test_valid_png_data_uri_passes_validation(): void
     {
-        $uri = 'data:image/png;base64,' . base64_encode('fake-image-binary');
+        $uri = 'data:image/png;base64,'.base64_encode('fake-image-binary');
         $this->assertTrue($this->isValidDataUri($uri));
     }
 
     public function test_valid_jpeg_data_uri_passes_validation(): void
     {
-        $uri = 'data:image/jpeg;base64,' . base64_encode('fake-jpeg-data');
+        $uri = 'data:image/jpeg;base64,'.base64_encode('fake-jpeg-data');
         $this->assertTrue($this->isValidDataUri($uri));
     }
 
