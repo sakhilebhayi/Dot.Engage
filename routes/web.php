@@ -37,6 +37,10 @@ Route::middleware([
     // cross-tenant aggregate counts (every team's contracts/conversations/
     // sessions) into every team's dashboard. Fixed here.
     Route::get('/dashboard', function () {
+        if (! Auth::user()->currentTeam) {
+            return redirect()->route('teams.create');
+        }
+
         $teamId = Auth::user()->currentTeam->id;
 
         $stats = [

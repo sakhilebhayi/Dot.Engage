@@ -18,6 +18,12 @@ class SessionLauncher extends Component
     {
         $this->authorize('create', VideoSession::class);
 
+        if (! Auth::user()->currentTeam) {
+            $this->addError('contractId', 'You need a team before starting a video session.');
+
+            return;
+        }
+
         $session = VideoSession::create([
             'team_id' => Auth::user()->currentTeam->id,
             'initiated_by' => Auth::id(),

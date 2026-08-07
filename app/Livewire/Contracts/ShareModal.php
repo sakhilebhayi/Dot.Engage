@@ -37,8 +37,9 @@ class ShareModal extends Component
     public function render()
     {
         $contract = Contract::findOrFail($this->contractId);
-        $teamMembers = Auth::user()->currentTeam->allUsers()
-            ->where('id', '!=', Auth::id());
+        $teamMembers = Auth::user()->currentTeam
+            ? Auth::user()->currentTeam->allUsers()->where('id', '!=', Auth::id())
+            : collect();
 
         return view('livewire.contracts.share-modal', compact('teamMembers'));
     }

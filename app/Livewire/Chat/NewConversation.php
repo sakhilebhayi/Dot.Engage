@@ -47,7 +47,9 @@ class NewConversation extends Component
 
     public function render()
     {
-        $teamMembers = Auth::user()->currentTeam->allUsers()->where('id', '!=', Auth::id());
+        $teamMembers = Auth::user()->currentTeam
+            ? Auth::user()->currentTeam->allUsers()->where('id', '!=', Auth::id())
+            : collect();
 
         return view('livewire.chat.new-conversation', compact('teamMembers'));
     }

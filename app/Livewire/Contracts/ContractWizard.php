@@ -91,6 +91,12 @@ class ContractWizard extends Component
                 ProcessContractUpload::dispatch($contract->fresh());
             }
         } else {
+            if (! Auth::user()->currentTeam) {
+                $this->addError('title', 'You need a team before creating a contract.');
+
+                return;
+            }
+
             // Create new contract.
             $contract = Contract::create([
                 'team_id' => Auth::user()->currentTeam->id,
