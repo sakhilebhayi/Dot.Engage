@@ -15,7 +15,7 @@
     </div>
 
     {{-- KPI Strip --}}
-    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:1rem;margin-bottom:2rem;">
+    <div style="display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:1rem;margin-bottom:2rem;">
         @php
             $kpis = [
                 ['label' => 'Total Contracts',      'val' => $stats['total_contracts'],      'color' => 'var(--accent)'],
