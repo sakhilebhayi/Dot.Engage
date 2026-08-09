@@ -1,5 +1,6 @@
 <?php
 
+use App\Console\Commands\ScanDependencyAdvisories;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
@@ -30,3 +31,10 @@ Schedule::command('dotengage:team-activity-report')
     ->withoutOverlapping()
     ->runInBackground()
     ->appendOutputTo(storage_path('logs/team-activity-report.log'));
+
+// Scan composer/npm dependencies for security advisories weekly and propose a patch per
+// manager for operator approval -- never applies automatically. See docs/superpowers/specs/
+// 2026-08-09-dependency-patch-approval-gate-design.md.
+Schedule::command(ScanDependencyAdvisories::class)
+    ->weekly()
+    ->withoutOverlapping();
