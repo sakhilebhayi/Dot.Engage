@@ -102,4 +102,11 @@ Route::middleware([
     // ── Notifications ─────────────────────────────────────────────────────────
     Route::get('/notifications', fn () => view('notifications.index'))
         ->name('notifications.index');
+
+    // ── Operator: Dependency Patches ───────────────────────────────────────────
+    // Livewire component handles approve/reject; this is a page-view route only.
+    Route::middleware('operator')->prefix('operator')->name('operator.')->group(function () {
+        Route::get('/dependency-patches', fn () => view('operator.dependency-patches'))
+            ->name('dependency-patches.index');
+    });
 });
