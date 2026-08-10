@@ -11,7 +11,7 @@ return [
     | framework when an event needs to be broadcast. You may set this to
     | any of the connections defined in the "connections" array below.
     |
-    | Supported: "reverb", "pusher", "ably", "redis", "log", "null"
+    | Supported: "reverb", "ably", "log", "null"
     |
     */
 
@@ -35,29 +35,22 @@ return [
             'key' => env('REVERB_APP_KEY'),
             'secret' => env('REVERB_APP_SECRET'),
             'app_id' => env('REVERB_APP_ID'),
+            // This is the PHP backend's own outbound path for publishing
+            // events into Reverb (POST /apps/{id}/events) -- deliberately
+            // the internal REVERB_SERVER_HOST/PORT the reverb:start process
+            // actually binds to (loopback-only in production), not the
+            // public REVERB_HOST/PORT browsers connect through. Publishing
+            // straight to the internal port skips an unnecessary round trip
+            // out through the reverse proxy and back, and keeps the
+            // server-to-server /apps/* API off the public internet
+            // entirely -- only /app/{key} (the browser's path) is proxied.
+            // Falls back to the public values when *_SERVER_* isn't set
+            // (e.g. local dev, where there's no reverse proxy at all).
             'options' => [
-                'host' => env('REVERB_HOST'),
-                'port' => env('REVERB_PORT', 443),
-                'scheme' => env('REVERB_SCHEME', 'https'),
-                'useTLS' => env('REVERB_SCHEME', 'https') === 'https',
-            ],
-            'client_options' => [
-                // Guzzle client options: https://docs.guzzlephp.org/en/stable/request-options.html
-            ],
-        ],
-
-        'pusher' => [
-            'driver' => 'pusher',
-            'key' => env('PUSHER_APP_KEY'),
-            'secret' => env('PUSHER_APP_SECRET'),
-            'app_id' => env('PUSHER_APP_ID'),
-            'options' => [
-                'cluster' => env('PUSHER_APP_CLUSTER'),
-                'host' => env('PUSHER_HOST') ?: 'api-'.env('PUSHER_APP_CLUSTER', 'mt1').'.pusher.com',
-                'port' => env('PUSHER_PORT', 443),
-                'scheme' => env('PUSHER_SCHEME', 'https'),
-                'encrypted' => true,
-                'useTLS' => env('PUSHER_SCHEME', 'https') === 'https',
+                'host' => env('REVERB_SERVER_HOST', env('REVERB_HOST', 'localhost')),
+                'port' => env('REVERB_SERVER_PORT', env('REVERB_PORT', 8080)),
+                'scheme' => env('REVERB_SERVER_HOST') ? 'http' : env('REVERB_SCHEME', 'http'),
+                'useTLS' => env('REVERB_SERVER_HOST') ? false : env('REVERB_SCHEME') === 'https',
             ],
             'client_options' => [
                 // Guzzle client options: https://docs.guzzlephp.org/en/stable/request-options.html
