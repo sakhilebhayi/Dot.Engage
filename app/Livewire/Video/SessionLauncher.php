@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Video;
 
+use App\Events\VideoSessionStarted;
 use App\Models\Contract;
 use App\Models\VideoSession;
 use Illuminate\Support\Facades\Auth;
@@ -32,6 +33,8 @@ class SessionLauncher extends Component
             'contract_id' => $this->contractId ?: null,
             'started_at' => now(),
         ]);
+
+        VideoSessionStarted::dispatch($session);
 
         $this->redirect(route('video.room', ['room' => $session->room_id]));
     }

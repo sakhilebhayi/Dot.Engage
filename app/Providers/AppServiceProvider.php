@@ -5,10 +5,12 @@ namespace App\Providers;
 use App\Events\ContractShared;
 use App\Events\ContractSigned;
 use App\Events\MessageSent;
+use App\Events\SignatureRequestedDuringCall;
 use App\Events\VideoSessionEnded;
 use App\Listeners\LogVideoSession;
 use App\Listeners\NotifyContractShared;
 use App\Listeners\NotifyContractSigned;
+use App\Listeners\NotifySignatureRequestedDuringCall;
 use App\Listeners\SendMessageNotification;
 use App\Models\Contract;
 use App\Models\ContractTemplate;
@@ -47,6 +49,7 @@ class AppServiceProvider extends AuthServiceProvider
         ContractShared::class => [NotifyContractShared::class],
         ContractSigned::class => [NotifyContractSigned::class],
         VideoSessionEnded::class => [LogVideoSession::class],
+        SignatureRequestedDuringCall::class => [NotifySignatureRequestedDuringCall::class],
     ];
 
     /**

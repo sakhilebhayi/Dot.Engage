@@ -2,10 +2,9 @@
 
 namespace App\Livewire\Contracts;
 
+use App\Events\ContractShared;
 use App\Models\Contract;
-use App\Notifications\ContractSharedNotification;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Notification;
 use Livewire\Component;
 
 class ShareModal extends Component
@@ -28,7 +27,13 @@ class ShareModal extends Component
 
         $team = Auth::user()->currentTeam;
         $users = $team->allUsers()->whereIn('id', $this->selectedUsers);
-        Notification::send($users, new ContractSharedNotification($contract));
+
+        // NotifyContractShared owns sending ContractSharedNotification --
+        // dispatching the event (rather than notifying directly) also
+        // broadcasts contract.shared on the recipient's private channel.
+        foreach ($users as $user) {
+            ContractShared::dispatch($contract, $user);
+        }
 
         $this->show = false;
         session()->flash('shared', 'Invitations sent successfully.');
