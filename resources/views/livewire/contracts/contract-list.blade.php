@@ -10,6 +10,10 @@
                 <option value="signed">Signed</option>
                 <option value="rejected">Rejected</option>
             </select>
+            <a href="{{ route('contracts.templates') }}"
+               class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 text-gray-700 text-sm font-medium rounded-md hover:bg-gray-50">
+                Templates
+            </a>
             <a href="{{ route('contracts.create') }}"
                class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-md hover:bg-indigo-700">
                 New Contract

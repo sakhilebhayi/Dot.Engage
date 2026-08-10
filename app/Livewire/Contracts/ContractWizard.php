@@ -4,7 +4,10 @@ namespace App\Livewire\Contracts;
 
 use App\Jobs\ProcessContractUpload;
 use App\Models\Contract;
+use App\Models\ContractTemplate;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 
@@ -13,6 +16,13 @@ class ContractWizard extends Component
     use WithFileUploads;
 
     public ?int $contractId = null;
+
+    /**
+     * The template this contract is being created from, if any. Its file
+     * (when present) is copied in at save time unless the user uploads
+     * their own in step 2, and its signing window is applied to expiresAt.
+     */
+    public ?int $templateId = null;
 
     public int $step = 1;
 
@@ -24,7 +34,7 @@ class ContractWizard extends Component
 
     public $file = null;
 
-    public function mount(?int $contractId = null): void
+    public function mount(?int $contractId = null, ?int $templateId = null): void
     {
         if ($contractId) {
             $contract = Contract::findOrFail($contractId);
@@ -33,6 +43,21 @@ class ContractWizard extends Component
             $this->title = $contract->title;
             $this->description = $contract->description ?? '';
             $this->expiresAt = $contract->expires_at?->format('Y-m-d');
+
+            return;
+        }
+
+        $templateId ??= request()->integer('template') ?: null;
+
+        if ($templateId) {
+            $template = ContractTemplate::findOrFail($templateId);
+            $this->authorize('view', $template);
+            $this->templateId = $templateId;
+            $this->title = $template->title;
+            $this->description = $template->description ?? '';
+            $this->expiresAt = $template->expires_in_days
+                ? now()->addDays($template->expires_in_days)->format('Y-m-d')
+                : null;
         }
     }
 
@@ -70,6 +95,17 @@ class ContractWizard extends Component
 
         // Store file on the private contracts disk.
         $filePath = $this->file ? $this->file->store('/', 'contracts') : null;
+
+        // No file uploaded but this contract is being created from a
+        // template that has one -- copy it in as the starting document
+        // rather than leaving the contract fileless.
+        if (! $filePath && ! $this->contractId && $this->templateId) {
+            $template = ContractTemplate::findOrFail($this->templateId);
+            if ($template->file_path && Storage::disk('contracts')->exists($template->file_path)) {
+                $filePath = Str::uuid().'.pdf';
+                Storage::disk('contracts')->copy($template->file_path, $filePath);
+            }
+        }
 
         if ($this->contractId) {
             // Update existing contract.

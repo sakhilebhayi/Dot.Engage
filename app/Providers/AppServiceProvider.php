@@ -11,10 +11,12 @@ use App\Listeners\NotifyContractShared;
 use App\Listeners\NotifyContractSigned;
 use App\Listeners\SendMessageNotification;
 use App\Models\Contract;
+use App\Models\ContractTemplate;
 use App\Models\Conversation;
 use App\Models\Message;
 use App\Models\VideoSession;
 use App\Policies\ContractPolicy;
+use App\Policies\ContractTemplatePolicy;
 use App\Policies\ConversationPolicy;
 use App\Policies\MessagePolicy;
 use App\Policies\VideoSessionPolicy;
@@ -29,6 +31,7 @@ class AppServiceProvider extends AuthServiceProvider
      */
     protected $policies = [
         Contract::class => ContractPolicy::class,
+        ContractTemplate::class => ContractTemplatePolicy::class,
         Conversation::class => ConversationPolicy::class,
         Message::class => MessagePolicy::class,
         VideoSession::class => VideoSessionPolicy::class,

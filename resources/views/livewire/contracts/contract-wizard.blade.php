@@ -43,6 +43,8 @@
             </div>
             @if($file)
                 <p class="text-sm text-green-600">File selected: {{ $file->getClientOriginalName() }}</p>
+            @elseif($templateId)
+                <p class="text-sm text-gray-500">Using the template's file. Upload a different one to override it.</p>
             @endif
         </div>
     @endif

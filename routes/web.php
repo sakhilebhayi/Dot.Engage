@@ -86,6 +86,11 @@ Route::middleware([
     Route::get('/contracts/create', fn () => view('contracts.create'))
         ->name('contracts.create');
 
+    // Must be registered before /contracts/{contract} -- otherwise "templates"
+    // is swallowed by that route's implicit Contract binding.
+    Route::get('/contracts/templates', fn () => view('contracts.templates'))
+        ->name('contracts.templates');
+
     Route::get('/contracts/{contract}', fn (Contract $contract) => view('contracts.show', ['contractId' => $contract->id]))
         ->name('contracts.show');
 
