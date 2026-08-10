@@ -8,6 +8,7 @@
                 <option value="draft">Draft</option>
                 <option value="pending">Pending</option>
                 <option value="signed">Signed</option>
+                <option value="expired">Expired</option>
                 <option value="rejected">Rejected</option>
             </select>
             <a href="{{ route('contracts.templates') }}"

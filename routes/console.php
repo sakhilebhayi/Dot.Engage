@@ -32,6 +32,15 @@ Schedule::command('dotengage:team-activity-report')
     ->runInBackground()
     ->appendOutputTo(storage_path('logs/team-activity-report.log'));
 
+// Remind pending signers on contracts expiring within 3 days, and flag
+// unsigned contracts already past their expiry. Once daily is enough --
+// signers don't need a fresh nudge every few minutes.
+Schedule::command('dotengage:send-expiration-reminders --days=3')
+    ->dailyAt('08:00')
+    ->withoutOverlapping()
+    ->runInBackground()
+    ->appendOutputTo(storage_path('logs/send-expiration-reminders.log'));
+
 // Scan composer/npm dependencies for security advisories weekly and propose a patch per
 // manager for operator approval -- never applies automatically. See docs/superpowers/specs/
 // 2026-08-09-dependency-patch-approval-gate-design.md.
