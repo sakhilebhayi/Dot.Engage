@@ -54,11 +54,9 @@ class SignatureController extends Controller
             'signed_at' => now(),
         ]);
 
-        // Mark contract as fully signed if all team members have now signed.
-        $teamMemberCount = $contract->team->allUsers()->count();
-        $signatureCount = $contract->signatures()->count();
-
-        if ($signatureCount >= $teamMemberCount) {
+        // Mark contract as fully signed once every team member and every
+        // invited external signer has signed.
+        if ($contract->signatures()->count() >= $contract->requiredSignatureCount()) {
             $contract->update(['status' => 'signed']);
             ContractSigned::dispatch($contract, $signature);
         }

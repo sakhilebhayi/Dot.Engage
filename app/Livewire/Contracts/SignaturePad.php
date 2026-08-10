@@ -38,11 +38,9 @@ class SignaturePad extends Component
             'signed_at' => now(),
         ]);
 
-        // Mark as signed if all team members have signed.
-        $teamMemberCount = $contract->team->allUsers()->count();
-        $signatureCount = $contract->signatures()->count();
-
-        if ($signatureCount >= $teamMemberCount) {
+        // Mark as signed once every team member and every invited external
+        // signer has signed.
+        if ($contract->signatures()->count() >= $contract->requiredSignatureCount()) {
             $contract->update(['status' => 'signed']);
             ContractSigned::dispatch($contract, $signature);
             GenerateSignedContractPdf::dispatch($contract);

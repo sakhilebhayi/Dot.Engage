@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Auth\EcosystemAuthController;
+use App\Http\Controllers\ExternalSigningController;
 use App\Models\Contract;
 use App\Models\Conversation;
 use App\Models\VideoSession;
@@ -24,6 +25,16 @@ Route::get('/cookies', function () {
         'cookies' => Str::markdown(file_get_contents(Jetstream::localizedMarkdownPath('cookies.md'))),
     ]);
 })->name('cookies');
+
+// ── External Signing ────────────────────────────────────────────────────────
+// Guest-facing (no auth:sanctum) -- security is the `signed` middleware
+// validating the emailed link itself, not a session, matching the
+// DocuSign/PandaDoc emailed-link trust model. See ExternalSigningController.
+Route::middleware('signed')->prefix('sign')->name('external.contracts.')->group(function () {
+    Route::get('/{signer}', [ExternalSigningController::class, 'show'])->name('show');
+    Route::get('/{signer}/download', [ExternalSigningController::class, 'download'])->name('download');
+    Route::post('/{signer}', [ExternalSigningController::class, 'sign'])->name('sign');
+});
 
 Route::middleware([
     'auth:sanctum',

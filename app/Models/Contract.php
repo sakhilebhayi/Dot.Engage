@@ -50,4 +50,18 @@ class Contract extends Model
     {
         return $this->hasMany(ContractVersion::class);
     }
+
+    public function externalSigners(): HasMany
+    {
+        return $this->hasMany(ContractExternalSigner::class);
+    }
+
+    /**
+     * A contract is fully signed once every team member and every invited
+     * external signer has a recorded signature.
+     */
+    public function requiredSignatureCount(): int
+    {
+        return $this->team->allUsers()->count() + $this->externalSigners()->count();
+    }
 }

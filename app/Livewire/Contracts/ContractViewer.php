@@ -16,7 +16,7 @@ class ContractViewer extends Component
 
     public function render()
     {
-        $contract = Contract::with(['signatures.user', 'versions.creator'])
+        $contract = Contract::with(['signatures.user', 'signatures.externalSigner', 'versions.creator', 'externalSigners'])
             ->findOrFail($this->contractId);
 
         return view('livewire.contracts.contract-viewer', compact('contract'));
