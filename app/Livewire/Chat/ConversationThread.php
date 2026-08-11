@@ -32,7 +32,15 @@ class ConversationThread extends Component
         $this->markAsRead();
     }
 
-    #[On('echo-private:conversation.{conversationId},message.sent')]
+    /**
+     * Livewire's native Echo integration passes this event name straight
+     * to Echo's listen() without a leading dot -- Echo's default
+     * EventFormatter then prepends the "App.Events" namespace and turns
+     * dots into backslashes, so without the leading dot here this would
+     * listen for "App.Events.message.sent" and never match
+     * MessageSent::broadcastAs()'s actual "message.sent" name.
+     */
+    #[On('echo-private:conversation.{conversationId},.message.sent')]
     public function messageReceived(array $data): void
     {
         $this->markAsRead();

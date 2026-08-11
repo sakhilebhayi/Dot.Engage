@@ -21,11 +21,17 @@ class ContractShared implements ShouldBroadcast
 
     /**
      * Broadcast to the recipient's private user channel.
+     *
+     * Must be "App.Models.User.{id}" -- the only per-user private channel
+     * routes/channels.php actually registers (it's also what Laravel's own
+     * database-notification broadcasting and NotificationBell rely on). A
+     * bare "user.{id}" channel was never registered, so nothing could ever
+     * subscribe to or authorize this broadcast.
      */
     public function broadcastOn(): array
     {
         return [
-            new PrivateChannel('user.'.$this->sharedWith->id),
+            new PrivateChannel('App.Models.User.'.$this->sharedWith->id),
         ];
     }
 
