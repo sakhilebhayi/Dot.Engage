@@ -11,6 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // The live database created this table under the earlier file name
+        // 2026_04_15_110536_create_conversations_table (renamed to fix the migration
+        // ordering). Without this guard that database would try to create it
+        // a second time the first time it runs this file.
+        if (Schema::hasTable('conversations')) {
+            return;
+        }
+
         Schema::create('conversations', function (Blueprint $table) {
             $table->id();
             $table->foreignId('team_id')->constrained()->cascadeOnDelete();
