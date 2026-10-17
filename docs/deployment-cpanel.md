@@ -35,3 +35,24 @@ Run **Deploy to Production** with `confirm=deploy` (`gh workflow run deploy.yml 
 ## Not covered yet
 
 PHPStan is not in CI. There is no health document for the Dot.Brain guardian, no nightly backup and no scheduler probe for Projects; the other Dot apps have all three.
+
+## Monitoring (Dot.Brain guardian)
+
+| What | Where | Auth |
+|---|---|---|
+| Scheduler liveness | `GET /up/scheduler`: 200 while the minute heartbeat is fresh, 503 when stale (and while the queue worker's five-minute heartbeat is fresh) | none |
+| Guardian report | `GET /guardian/health` (`dot-guardian/v1`, platform `dot-engage`) | `Authorization: Bearer <GUARDIAN_TOKEN>`; 503 when no token is configured, 401 when wrong |
+| Alarm | `scheduler-watchdog.yml` asks `/up/scheduler` every 15 minutes (three tries) and fails the run, which GitHub emails | none |
+
+One-time provisioning, after the release that ships this is deployed:
+
+1. Generate a long random token and store it as the repository secret `GUARDIAN_TOKEN`.
+2. Run **Provision Guardian Token** (`confirm=provision`). It writes the token to the production `.env` and refreshes the config; the value is never printed. It then calls `/guardian/health` and expects 200.
+3. Enrolling the platform in Dot.Brain (registry entry and `DOT_ENGAGE_GUARDIAN_TOKEN`) is a separate change in that repository.
+
+Checks in the report: database, cache, scheduler, error rate, queue backlog and worker. A missing heartbeat is `unknown`, never a claim of health.
+
+### Nightly database backup
+
+`php artisan engage:backup-database` copies the SQLite file to `storage/backups/engage-YYYY-MM-DD.sqlite` using SQLite's online backup API (consistent even while the app writes) and keeps the newest 14 copies (`--keep=N`). It is scheduled daily at 02:50 server time through the same `schedule:run` cron line; the other Dot apps use 02:15 to 02:55, one minute-slot each. It does nothing on a non-SQLite database. The copy sits beside the live file on the same host, so it protects against a bad migration or deletion, not a lost host; copying it off the host is a separate step. To restore: stop writes, copy the chosen file over `database/database.sqlite`, start again. The release's rollback tarball also contains the SQLite file as of that deploy.
+
