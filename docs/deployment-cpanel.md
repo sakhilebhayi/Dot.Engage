@@ -52,3 +52,7 @@ One-time provisioning, after the release that ships this is deployed:
 
 Checks in the report: database, cache, scheduler, error rate, queue backlog and worker. A missing heartbeat is `unknown`, never a claim of health.
 
+### Nightly database backup
+
+`php artisan engage:backup-database` copies the SQLite file to `storage/backups/engage-YYYY-MM-DD.sqlite` using SQLite's online backup API (consistent even while the app writes) and keeps the newest 14 copies (`--keep=N`). It is scheduled daily at 02:50 server time through the same `schedule:run` cron line; the other Dot apps use 02:15 to 02:55, one minute-slot each. It does nothing on a non-SQLite database. The copy sits beside the live file on the same host, so it protects against a bad migration or deletion, not a lost host; copying it off the host is a separate step. To restore: stop writes, copy the chosen file over `database/database.sqlite`, start again. The release's rollback tarball also contains the SQLite file as of that deploy.
+

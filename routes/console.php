@@ -1,5 +1,6 @@
 <?php
 
+use App\Console\Commands\BackupSqliteDatabase;
 use App\Console\Commands\ScanDependencyAdvisories;
 use App\Http\Controllers\SchedulerProbeController;
 use App\Jobs\QueueHeartbeat;
@@ -63,3 +64,8 @@ Schedule::call(fn () => Cache::forever(SchedulerProbeController::SCHEDULER_KEY, 
 // Proves the cron-driven queue worker actually drains jobs, not just that
 // the scheduler fires: only a worker that runs this can refresh the key.
 Schedule::job(new QueueHeartbeat)->everyFiveMinutes()->name('queue-heartbeat');
+
+// Nightly copy of the SQLite file, which holds the only copy of this app's
+// data. The SQLite-backed Dot apps share one host, so each one backs up at its
+// own minute. No-op on other database drivers.
+Schedule::command(BackupSqliteDatabase::class)->dailyAt('02:50')->onOneServer();
