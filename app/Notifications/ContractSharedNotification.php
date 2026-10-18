@@ -3,6 +3,7 @@
 namespace App\Notifications;
 
 use App\Models\Contract;
+use App\Models\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -12,7 +13,15 @@ class ContractSharedNotification extends Notification implements ShouldQueue
 {
     use Queueable;
 
-    public function __construct(public readonly Contract $contract) {}
+    /**
+     * @param  int|null  $sharedById  The user who performed the share. When
+     *                                null (unknown), the contract creator is
+     *                                used instead.
+     */
+    public function __construct(
+        public readonly Contract $contract,
+        public readonly ?int $sharedById = null,
+    ) {}
 
     public function via(object $notifiable): array
     {
@@ -38,18 +47,27 @@ class ContractSharedNotification extends Notification implements ShouldQueue
             'type' => 'contract_shared',
             'contract_id' => $this->contract->id,
             'contract_title' => $this->contract->title,
-            'shared_by_id' => $this->contract->created_by,
-            'shared_by_name' => $this->contract->creator?->name,
+            'shared_by_id' => $this->sharedById ?? $this->contract->created_by,
+            'shared_by_name' => $this->sharer()?->name,
             'message' => $this->sharedByName().' shared '.$this->contract->title.' with you',
         ];
     }
 
     /**
-     * The contract creator's name, or a neutral fallback when the creator
-     * can no longer be resolved.
+     * The user who shared the contract: the explicit sharer when known (null
+     * if that account no longer exists), otherwise the contract creator.
      */
+    private function sharer(): ?User
+    {
+        if ($this->sharedById !== null) {
+            return User::find($this->sharedById);
+        }
+
+        return $this->contract->creator;
+    }
+
     private function sharedByName(): string
     {
-        return $this->contract->creator?->name ?? 'Someone';
+        return $this->sharer()?->name ?? 'Someone';
     }
 }

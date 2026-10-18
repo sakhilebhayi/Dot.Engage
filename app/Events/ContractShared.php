@@ -17,6 +17,7 @@ class ContractShared implements ShouldBroadcast
     public function __construct(
         public readonly Contract $contract,
         public readonly User $sharedWith,
+        public readonly ?int $sharedById = null,
     ) {}
 
     /**

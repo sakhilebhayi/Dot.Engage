@@ -32,7 +32,7 @@ class ShareModal extends Component
         // dispatching the event (rather than notifying directly) also
         // broadcasts contract.shared on the recipient's private channel.
         foreach ($users as $user) {
-            ContractShared::dispatch($contract, $user);
+            ContractShared::dispatch($contract, $user, Auth::id());
         }
 
         $this->show = false;
