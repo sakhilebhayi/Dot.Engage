@@ -21,13 +21,13 @@ class ContractSharedNotification extends Notification implements ShouldQueue
 
     public function toMail(object $notifiable): MailMessage
     {
-        $sharedBy = $this->contract->creator;
+        $sharedByName = $this->sharedByName();
         $url = route('contracts.show', $this->contract);
 
         return (new MailMessage)
-            ->subject($sharedBy->name.' shared a contract with you')
+            ->subject($sharedByName.' shared a contract with you')
             ->greeting('Hi '.$notifiable->name.'!')
-            ->line($sharedBy->name.' has shared the contract **'.$this->contract->title.'** with you.')
+            ->line($sharedByName.' has shared the contract **'.$this->contract->title.'** with you.')
             ->action('Review Contract', $url)
             ->line('Please review and sign at your earliest convenience.');
     }
@@ -38,8 +38,18 @@ class ContractSharedNotification extends Notification implements ShouldQueue
             'type' => 'contract_shared',
             'contract_id' => $this->contract->id,
             'contract_title' => $this->contract->title,
-            'shared_by_id' => $this->contract->creator_id,
-            'shared_by_name' => $this->contract->creator->name,
+            'shared_by_id' => $this->contract->created_by,
+            'shared_by_name' => $this->contract->creator?->name,
+            'message' => $this->sharedByName().' shared '.$this->contract->title.' with you',
         ];
+    }
+
+    /**
+     * The contract creator's name, or a neutral fallback when the creator
+     * can no longer be resolved.
+     */
+    private function sharedByName(): string
+    {
+        return $this->contract->creator?->name ?? 'Someone';
     }
 }
