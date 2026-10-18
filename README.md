@@ -8,7 +8,7 @@
 
 <br />
 
-![Laravel](https://img.shields.io/badge/Laravel-13-FF2D20?style=flat-square&logo=laravel&logoColor=white) ![PHP](https://img.shields.io/badge/PHP-8.3%2B-777BB4?style=flat-square&logo=php&logoColor=white) ![Livewire](https://img.shields.io/badge/Livewire-3-FB70A9?style=flat-square) ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-infodot-336791?style=flat-square&logo=postgresql&logoColor=white)
+![Laravel](https://img.shields.io/badge/Laravel-13-FF2D20?style=flat-square&logo=laravel&logoColor=white) ![PHP](https://img.shields.io/badge/PHP-8.4-777BB4?style=flat-square&logo=php&logoColor=white) ![Livewire](https://img.shields.io/badge/Livewire-3-FB70A9?style=flat-square) ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-infodot-336791?style=flat-square&logo=postgresql&logoColor=white)
 
 <br /><br />
 
@@ -45,7 +45,7 @@ There is no Client/Proposal/Session-scheduling/CRM layer in this repository — 
 
 | Layer | Technology | Notes |
 |---|---|---|
-| Framework | Laravel 13, PHP 8.3+ | `composer.json` requires `^8.3` |
+| Framework | Laravel 13, PHP 8.4 | `composer.json` requires `^8.4`, platform pinned to 8.4.1 |
 | Frontend | Livewire 3 · Alpine.js 3 · Tailwind CSS 4 (Vite, guest pages) | The signed-in app loads Tailwind from its own CDN script, see "Tailwind CSS 4" below |
 | Database | PostgreSQL, `DB_DATABASE=infodot` | Shared instance across the ecosystem |
 | Realtime | Laravel Reverb | Wired to real broadcast events (contract signed, message sent, video session started/ended, in-call signature requests) |
