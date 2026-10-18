@@ -36,13 +36,17 @@ class NewMessageNotification extends Notification implements ShouldQueue
 
     public function toArray(object $notifiable): array
     {
+        $senderName = $this->message->sender->name;
+        $preview = str($this->message->body)->limit(80)->toString();
+
         return [
             'type' => 'new_message',
             'message_id' => $this->message->id,
             'conversation_id' => $this->message->conversation_id,
             'sender_id' => $this->message->user_id,
-            'sender_name' => $this->message->sender->name,
-            'preview' => str($this->message->body)->limit(80)->toString(),
+            'sender_name' => $senderName,
+            'preview' => $preview,
+            'message' => $senderName.' sent you a message'.(filled($preview) ? ': '.$preview : ''),
         ];
     }
 }
