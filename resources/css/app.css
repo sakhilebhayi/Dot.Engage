@@ -5,9 +5,9 @@
  *
  * Only the guest pages load this file (resources/views/layouts/guest.blade.php,
  * welcome.blade.php and the errors/* pages). The signed-in app
- * (layouts/app.blade.php) styles itself and loads Tailwind from its own CDN
- * script, so nothing in this file reaches it. The PDF and the mails never load it
- * either.
+ * (layouts/app.blade.php) loads resources/css/signed-in.css, a separate entry
+ * without preflight or plugins, so nothing in this file reaches it. The PDF and
+ * the mails never load either.
  *
  * No automatic source detection: `source(none)` plus the @source lines below are
  * the old `content` globs from tailwind.config.js, nothing more. Do not widen

@@ -1,0 +1,251 @@
+/*
+ * Tailwind v4 entry for the signed-in app (layouts/app.blade.php). It replaces
+ * the Tailwind Play CDN script (v3, `corePlugins: { preflight: false }`, no other
+ * config, no plugins) that layout used to load at run time. Built by
+ * @tailwindcss/vite (vite.config.js) like resources/css/app.css, which the guest
+ * pages still use. The two entries share tailwind-v3-palette.css and nothing else.
+ *
+ * What the CDN gave the signed-in pages, and what that means here:
+ *
+ *   - NO preflight. The layout's own <style> block is the reset (box-sizing,
+ *     body, [x-cloak]); the markup was written and looked at without Tailwind's
+ *     reset, so it is not imported. That is why this is a separate entry and
+ *     not app.css: app.css imports 'tailwindcss', which includes preflight.
+ *   - NO forms or typography plugin (the CDN URL had no ?plugins=). Adding them
+ *     would restyle every <input>, <select> and `prose` block.
+ *   - NO theme extension: the v3 default theme. The font stacks and the spacing,
+ *     type and radius scales are the same in v4's theme; the differences are
+ *     restored below.
+ *   - The utilities were appended to <head> AFTER the layout's inline <style>
+ *     and were not in a cascade layer, so on equal specificity a utility beat
+ *     `.dot-btn`, `.dot-input` and friends, and a more specific inline selector
+ *     beat a utility. v4 puts utilities in `@layer utilities`, which loses to ANY
+ *     unlayered CSS. So the utilities are imported here WITHOUT a layer, and
+ *     layouts/app.blade.php puts the @vite tag after its inline <style>:
+ *     the same one-cascade, last-one-wins order the CDN produced.
+ *
+ * No automatic source detection: `source(none)` plus the @source lines below are
+ * the CDN's "scan the DOM" made explicit, nothing more. Every class the signed-in
+ * pages can render is a literal string in a Blade view (Livewire and Jetstream
+ * views included, all under resources/views); app/, config/ and the database
+ * hold no class names, and the one dynamic spot (components/banner.blade.php,
+ * :class objects) spells every class out in full. Do not widen the sources.
+ */
+@layer theme;
+
+@import 'tailwindcss/theme.css' layer(theme);
+@import './tailwind-v3-palette.css';
+@import 'tailwindcss/utilities.css' source(none);
+
+@source '../views/**/*.blade.php';
+
+/*
+ * Livewire's pagination view (ContractList renders $contracts->links() inside a
+ * Livewire component, which switches the paginator to livewire::tailwind) lives in
+ * vendor/, which the deploy's frontend build does not have (it runs before composer
+ * install), so its classes are listed here instead. tests/Feature/
+ * SignedInStylesheetTest keeps this list in step with the vendor view.
+ */
+@source inline('-ml-px active:bg-gray-100 active:text-gray-500 active:text-gray-700 bg-white border');
+@source inline('border-gray-300 cursor-default dark:active:bg-gray-700 dark:active:text-gray-300');
+@source inline('dark:bg-gray-800 dark:border-gray-600 dark:focus:border-blue-700');
+@source inline('dark:focus:border-blue-800 dark:hover:text-gray-300 dark:text-gray-300 dark:text-gray-400');
+@source inline('dark:text-gray-600 duration-150 ease-in-out flex flex-1 focus:border-blue-300');
+@source inline('focus:outline-none focus:ring focus:z-10 font-medium h-5 hidden hover:text-gray-400');
+@source inline('hover:text-gray-500 inline-flex items-center justify-between leading-5 ml-3 px-2 px-4 py-2');
+@source inline('relative ring-blue-300 rounded-l-md rounded-md rounded-r-md rtl:flex-row-reverse shadow-sm');
+@source inline('sm:flex sm:flex-1 sm:hidden sm:items-center sm:justify-between text-gray-500 text-gray-700');
+@source inline('text-sm transition w-5 z-0');
+
+/*
+ * v3 compatibility: v4 wraps `hover:` in `@media (hover: hover)`, which turns
+ * every hover style off on touch screens. v3 applied it everywhere.
+ */
+@custom-variant hover (&:hover);
+
+/*
+ * v3 compatibility: `ltr:` / `rtl:` only matched under an explicit dir="ltr" /
+ * dir="rtl"; v4 matches the computed direction, which would switch them on
+ * everywhere (no layout here sets `dir`).
+ */
+@custom-variant ltr (&:where([dir='ltr'], [dir='ltr'] *));
+@custom-variant rtl (&:where([dir='rtl'], [dir='rtl'] *));
+
+@theme {
+    /* v3 `ring` was 3px blue-500 at 50%; v4 made it 1px currentColor. */
+    --default-ring-width: 3px;
+    --default-ring-color: rgb(59 130 246 / 0.5);
+
+    /*
+     * v4 renamed the small end of three scales (shadow-sm -> shadow-xs, rounded-sm
+     * -> rounded-xs, blur-sm -> blur-xs) and moved the bare names up one step.
+     * The Jetstream views still say shadow-sm / shadow / rounded / blur, so the
+     * old names keep their old values here instead of being renamed in every view.
+     */
+    --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --radius: 0.25rem;
+    --radius-sm: 0.125rem;
+    --blur: 8px;
+    --blur-sm: 4px;
+}
+
+/*
+ * What v3 did WITHOUT preflight: `border`, `border-b`, `divide-y` ... set only a
+ * border WIDTH and never touched the border STYLE (preflight is what made every
+ * element `solid`). So on the CDN pages a bare `border border-gray-200` on a
+ * <div> drew nothing (the style stayed `none`), while on a <button> it drew the
+ * browser's own `outset` border, and on an <input> an `inset` one.
+ *
+ * v4's width utilities set `border-style: var(--tw-border-style)`, and v4
+ * registers that variable as `solid`. Giving the variable the browser's default
+ * style per element, instead, reproduces v3: `none` everywhere, the form
+ * controls' own style on the controls. `:where()` keeps these at zero
+ * specificity, so the explicit `border-solid` / `border-dashed` / `border-none`
+ * utilities, which set the variable on the element itself, still win.
+ */
+*,
+::before,
+::after,
+::backdrop {
+    --tw-border-style: none;
+}
+
+:where(button, input[type='submit'], input[type='button'], input[type='reset']) {
+    --tw-border-style: outset;
+}
+
+:where(
+        input:not(
+                [type='checkbox'],
+                [type='radio'],
+                [type='file'],
+                [type='range'],
+                [type='hidden'],
+                [type='image'],
+                [type='color'],
+                [type='submit'],
+                [type='button'],
+                [type='reset']
+            ),
+        hr,
+        iframe
+    ) {
+    --tw-border-style: inset;
+}
+
+:where(input[type='color'], select, textarea, dialog) {
+    --tw-border-style: solid;
+}
+
+:where(fieldset) {
+    --tw-border-style: groove;
+}
+
+/*
+ * v3 compatibility: `space-x-*` / `space-y-*`. v3 put the gap on every sibling
+ * AFTER the first (`margin-top: S; margin-bottom: 0`) and left the first child's
+ * own margins alone. v4 puts it on every sibling BEFORE the last and sets both
+ * margins there (`margin-top: 0; margin-bottom: S`). With a reset the two draw the
+ * same; WITHOUT preflight the browser's own margins on <h3>, <p>, <ul> ... are
+ * still there, and v4 swaps which of them survives (a modal's <h3> title moved 10px
+ * and the box shrank 20px). These are the v3 rules, as utilities of the same names
+ * (they come first in the output and are more specific, so they win), plus a
+ * zero-specificity rule that gives the first child back its own margins.
+ * `-space-*` and `space-*-reverse` are not used here and stay v4's.
+ */
+@utility space-y-* {
+    & > :not([hidden]) ~ :not([hidden]) {
+        --tw-space-y-reverse: 0;
+        margin-top: calc(calc(var(--spacing) * --value(number)) * calc(1 - var(--tw-space-y-reverse)));
+        margin-bottom: calc(calc(var(--spacing) * --value(number)) * var(--tw-space-y-reverse));
+    }
+}
+
+@utility space-y-px {
+    & > :not([hidden]) ~ :not([hidden]) {
+        --tw-space-y-reverse: 0;
+        margin-top: calc(1px * calc(1 - var(--tw-space-y-reverse)));
+        margin-bottom: calc(1px * var(--tw-space-y-reverse));
+    }
+}
+
+@utility space-x-* {
+    & > :not([hidden]) ~ :not([hidden]) {
+        --tw-space-x-reverse: 0;
+        margin-right: calc(calc(var(--spacing) * --value(number)) * var(--tw-space-x-reverse));
+        margin-left: calc(calc(var(--spacing) * --value(number)) * calc(1 - var(--tw-space-x-reverse)));
+    }
+}
+
+@utility space-x-px {
+    & > :not([hidden]) ~ :not([hidden]) {
+        --tw-space-x-reverse: 0;
+        margin-right: calc(1px * var(--tw-space-x-reverse));
+        margin-left: calc(1px * calc(1 - var(--tw-space-x-reverse)));
+    }
+}
+
+:where([class*='space-y-'] > :first-child:not(:last-child)) {
+    margin-top: revert;
+    margin-bottom: revert;
+}
+
+:where([class*='space-x-'] > :first-child:not(:last-child)) {
+    margin-left: revert;
+    margin-right: revert;
+}
+
+/*
+ * <x-button>, <x-secondary-button> and <x-checkbox> say
+ * `focus:ring-2 focus:ring-[var(--gold)]`, and `--gold` exists only on the guest
+ * layouts. In v3 the ring's colour was `var(--tw-ring-color)` with no fallback, so
+ * an undefined colour made the whole ring (and the shadow with it) invalid and
+ * these controls drew nothing on focus. v4 falls back to the default ring colour
+ * instead and would draw a 2px ring in the default blue on keyboard focus. This keeps the v3
+ * result. Delete the rule to get the ring, or define --gold in the layout to get
+ * the gold one the markup asks for: either is a visual change and belongs in its
+ * own PR. (<x-input> has no ring width, so nothing is drawn either way.)
+ */
+.focus\:ring-2.focus\:ring-\[var\(--gold\)\]:focus {
+    box-shadow: none;
+}
+
+/*
+ * v3 compatibility: transition property lists. v4 adds outline-color (a focus
+ * outline would now fade in over 150ms where v3 snapped) and the gradient variables
+ * to `transition` and `transition-colors`. These are the v3 lists, plus
+ * translate/scale/rotate, which in v4 are what `translate-*`, `scale-*` and
+ * `rotate-*` set instead of `transform`.
+ *
+ * Plain rules after the utilities, not `@utility`: an `@utility` of the same
+ * name is merged BEFORE the built-in one, which would win.
+ */
+.transition {
+    transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity,
+        box-shadow, transform, translate, scale, rotate, filter, -webkit-backdrop-filter, backdrop-filter;
+}
+
+.transition-colors {
+    transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+}
+
+/*
+ * v3's `transform` class wrote a real (identity) transform, which makes the element
+ * a stacking context and the containing block of fixed descendants, like any
+ * transform; v4's writes `transform: none`. The Jetstream modal panel carries it.
+ */
+.transform {
+    transform: translate(0, 0);
+}
+
+/*
+ * `outline-none` was a transparent 2px outline in v3 (it still shows in
+ * forced-colors mode); v4 made it `outline-style: none` and moved the old
+ * behaviour to `outline-hidden`.
+ */
+.outline-none,
+.focus\:outline-none:focus {
+    outline: 2px solid transparent;
+    outline-offset: 2px;
+}
