@@ -46,13 +46,18 @@ class ContractSignedNotification extends Notification implements ShouldQueue
 
     public function toArray(object $notifiable): array
     {
+        $signerName = $this->signature->user->name;
+
         return [
             'type' => 'contract_signed',
             'contract_id' => $this->contract->id,
             'contract_title' => $this->contract->title,
             'contract_status' => $this->contract->status,
             'signed_by_id' => $this->signature->user_id,
-            'signed_by_name' => $this->signature->user->name,
+            'signed_by_name' => $signerName,
+            'message' => $this->contract->status === 'signed'
+                ? $this->contract->title.' is fully signed'
+                : $signerName.' signed '.$this->contract->title,
         ];
     }
 }

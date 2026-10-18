@@ -2,6 +2,7 @@
 
 namespace App\Events;
 
+use App\Events\Concerns\BroadcastsOnlyWhenEnabled;
 use App\Models\Contract;
 use App\Models\ContractSignature;
 use Illuminate\Broadcasting\InteractsWithSockets;
@@ -12,7 +13,7 @@ use Illuminate\Queue\SerializesModels;
 
 class ContractSigned implements ShouldBroadcast
 {
-    use Dispatchable, InteractsWithSockets, SerializesModels;
+    use BroadcastsOnlyWhenEnabled, Dispatchable, InteractsWithSockets, SerializesModels;
 
     public function __construct(
         public readonly Contract $contract,

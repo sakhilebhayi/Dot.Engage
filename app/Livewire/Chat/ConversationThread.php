@@ -4,6 +4,7 @@ namespace App\Livewire\Chat;
 
 use App\Models\Conversation;
 use App\Models\Message;
+use App\Services\Realtime;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\On;
 use Livewire\Component;
@@ -43,6 +44,16 @@ class ConversationThread extends Component
         $this->page++;
     }
 
+    /**
+     * Polling fallback for hosts with no websocket server: the render that
+     * follows this call loads new messages, so all that is left to do is
+     * mark the ones just shown as read.
+     */
+    public function refreshFromPoll(): void
+    {
+        $this->markAsRead();
+    }
+
     private function markAsRead(): void
     {
         Message::where('conversation_id', $this->conversationId)
@@ -68,6 +79,7 @@ class ConversationThread extends Component
         return view('livewire.chat.conversation-thread', [
             'conversation' => $conversation,
             'messages' => array_reverse($messages),
+            'polling' => ! Realtime::active(),
         ]);
     }
 }

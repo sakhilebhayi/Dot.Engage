@@ -14,7 +14,7 @@ name: Deploy to Production
 #           local host-before-adopt-* branch) WITHOUT deleting anything untracked
 #           (.env, storage/, database/, uploads) and then continues as a deploy,
 #           except that pending migrations are only LISTED unless `migrate` is
-#           also given (the rollback copy covers a SQLite file, not Postgres).
+#           also given (the rollback copy covers the SQLite file).
 #   deploy  Every release after that: needs the checkout on this pipeline.
 #
 # What a run does, in order:
@@ -263,6 +263,24 @@ jobs:
           # Not changed here (it can alter behaviour), but never silent.
           if grep -q '^APP_ENV=local' .env; then echo "::warning::APP_ENV=local in the production .env; set it to production."; fi
           if grep -qE '^APP_URL=http://' .env; then echo "::warning::APP_URL is http://, not https://; set it to the https address."; fi
+          # Production facts for this host: SQLite, no websocket server, a database
+          # queue run by cron, file-or-database sessions and cache. Anything else in
+          # the .env points at a service that is not there. Warned about, NEVER
+          # changed: rewriting the .env could take the site down.
+          # A key that is absent must answer empty, not abort the deploy (set -e + pipefail).
+          env_value() { { grep -E "^$1=" .env || true; } | tail -1 | cut -d= -f2- | sed -e 's/^["'"'"']//' -e 's/["'"'"']$//' -e 's/[[:space:]]*#.*$//'; }
+          DB_NOW="$(env_value DB_CONNECTION)"
+          if [ -n "$DB_NOW" ] && [ "$DB_NOW" != "sqlite" ]; then echo "::warning::DB_CONNECTION=$DB_NOW in the host .env; production is SQLite."; fi
+          BROADCAST_NOW="$(env_value BROADCAST_CONNECTION)"
+          case "$BROADCAST_NOW" in
+            reverb|pusher|ably) echo "::warning::BROADCAST_CONNECTION=$BROADCAST_NOW in the host .env; this host has no websocket server (use null)." ;;
+          esac
+          QUEUE_NOW="$(env_value QUEUE_CONNECTION)"
+          case "$QUEUE_NOW" in
+            sync|redis) echo "::warning::QUEUE_CONNECTION=$QUEUE_NOW in the host .env; the cron worker reads the database queue (use database)." ;;
+          esac
+          if [ "$(env_value SESSION_DRIVER)" = "redis" ]; then echo "::warning::SESSION_DRIVER=redis in the host .env; there is no Redis on this host."; fi
+          if [ "$(env_value CACHE_STORE)" = "redis" ]; then echo "::warning::CACHE_STORE=redis in the host .env; there is no Redis on this host."; fi
 
           # ---- frontend: swap the staged build in, keep the docroot copy in step
           # public/build is gitignored, so git never refreshes it. The docroot
@@ -273,6 +291,11 @@ jobs:
           [ -d public/build ] && mv public/build public/build.old
           mv public/build.incoming public/build
           rm -rf public/build.old
+          # public/hot is written by `npm run dev` and makes @vite() point every
+          # page at a dev server (http://[::1]:5173) that no visitor can reach.
+          # It is gitignored, so git never removes it, and a hand-uploaded tree
+          # can carry one onto the host. Production never runs a dev server.
+          if [ -e public/hot ]; then rm -f public/hot; echo "== removed a stray public/hot (the Vite dev-server marker)"; fi
           LINK="$DOCROOT/build"
           if [ -L "$LINK" ]; then
             echo "== docroot build/ is a symlink; nothing to copy"
@@ -379,6 +402,15 @@ jobs:
           for PAGE in "/" "/login" "/up"; do
             CODE=$(curl -s --max-time 30 -o /dev/null -w '%{http_code}' "$SITE_URL$PAGE" || true)
             if [ "$CODE" = "200" ]; then echo "200 $SITE_URL$PAGE"; else echo "::error::$SITE_URL$PAGE answered ${CODE:-no response} (expected 200)"; FAILED=1; fi
+          done
+          # No page may point at a Vite dev server: that is what a stray public/hot
+          # file does, and the site then renders with no styles at all.
+          for PAGE in "/" "/login"; do
+            if curl -s --max-time 30 "$SITE_URL$PAGE" | grep -qE ':5173|@vite/client'; then
+              echo "::error::$SITE_URL$PAGE references the Vite dev server (a public/hot file on the host): the page has no usable CSS or JS."; FAILED=1
+            else
+              echo "No Vite dev-server references on $SITE_URL$PAGE"
+            fi
           done
           for ASSET in $(python3 -c "import json; m=json.load(open('public/build/manifest.json')); print(' '.join(sorted({v['file'] for v in m.values() if v.get('isEntry')} | {f for v in m.values() if v.get('isEntry') for f in v.get('css', [])})))"); do
             CODE=$(curl -s --max-time 30 -o /dev/null -w '%{http_code}' "$SITE_URL/build/$ASSET" || true)

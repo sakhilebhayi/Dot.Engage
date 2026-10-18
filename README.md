@@ -8,7 +8,7 @@
 
 <br />
 
-![Laravel](https://img.shields.io/badge/Laravel-13-FF2D20?style=flat-square&logo=laravel&logoColor=white) ![PHP](https://img.shields.io/badge/PHP-8.3%2B-777BB4?style=flat-square&logo=php&logoColor=white) ![Livewire](https://img.shields.io/badge/Livewire-3-FB70A9?style=flat-square) ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-infodot-336791?style=flat-square&logo=postgresql&logoColor=white)
+![Laravel](https://img.shields.io/badge/Laravel-13-FF2D20?style=flat-square&logo=laravel&logoColor=white) ![PHP](https://img.shields.io/badge/PHP-8.4-777BB4?style=flat-square&logo=php&logoColor=white) ![Livewire](https://img.shields.io/badge/Livewire-3-FB70A9?style=flat-square) ![SQLite](https://img.shields.io/badge/SQLite-production-003B57?style=flat-square&logo=sqlite&logoColor=white)
 
 <br /><br />
 
@@ -45,10 +45,10 @@ There is no Client/Proposal/Session-scheduling/CRM layer in this repository — 
 
 | Layer | Technology | Notes |
 |---|---|---|
-| Framework | Laravel 13, PHP 8.3+ | `composer.json` requires `^8.3` |
+| Framework | Laravel 13, PHP 8.4 | `composer.json` requires `^8.4`, platform pinned to 8.4.1 |
 | Frontend | Livewire 3 · Alpine.js 3 · Tailwind CSS 4 (Vite, guest pages) | The signed-in app loads Tailwind from its own CDN script, see "Tailwind CSS 4" below |
-| Database | PostgreSQL, `DB_DATABASE=infodot` | Shared instance across the ecosystem |
-| Realtime | Laravel Reverb | Wired to real broadcast events (contract signed, message sent, video session started/ended, in-call signature requests) |
+| Database | SQLite (`DB_CONNECTION=sqlite`) | One file, `database/database.sqlite`, on the cPanel host. WAL, 5 s busy timeout and `IMMEDIATE` transactions are set in `config/database.php`. PostgreSQL is not used in production |
+| Realtime | Laravel Reverb, **off in production** | Production has no websocket server (`BROADCAST_CONNECTION=null`): broadcast events are discarded, the browser opens no websocket, and chat polls every 5 s instead. Live push needs a Reverb server, `BROADCAST_CONNECTION=reverb`, the `REVERB_*` values and a rebuild |
 | Video | Daily.co (`@daily-co/daily-js`), Reverb-signalling fallback | Degrades gracefully with no `DAILY_API_KEY` configured |
 | Documents | Spatie MediaLibrary, `barryvdh/laravel-dompdf` | Signed-contract PDF generation |
 | Auth | Laravel Sanctum (InfoDot SSO) | |
@@ -77,15 +77,18 @@ cp .env.example .env
 composer install
 npm install && npm run build
 php artisan key:generate
+touch database/database.sqlite
 php artisan migrate
 php artisan serve
 ```
 
-> **Ecosystem SSO:** Set `DB_*` env vars to the shared InfoDot PostgreSQL instance (`DB_DATABASE=infodot`) and `APP_URL=https://engage.infodot.app`. Users authenticated through InfoDot gain access automatically via a one-time Sanctum token handoff at `/auth/ecosystem`.
+> **Database:** `DB_CONNECTION=sqlite` is the default. Create the file first (`touch database/database.sqlite`), then `php artisan migrate`. Production is SQLite too; PostgreSQL is not used in production.
+>
+> **Ecosystem SSO:** Users authenticated through InfoDot gain access via a one-time Sanctum token handoff at `/auth/ecosystem`.
 
 ## Ecosystem
 
-**Dot.Engage** is part of the InfoDot ecosystem, connected via shared PostgreSQL and Sanctum SSO. Visit [InfoDot](https://github.com/sakhileb/InfoDot) to explore the full platform map, and see [`wiki.md`](wiki.md) for this platform's own knowledge base, including a security-scan and ethical-engagement writeup.
+**Dot.Engage** is part of the InfoDot ecosystem, connected via Sanctum SSO. Visit [InfoDot](https://github.com/sakhileb/InfoDot) to explore the full platform map, and see [`wiki.md`](wiki.md) for this platform's own knowledge base, including a security-scan and ethical-engagement writeup.
 
 ## License
 

@@ -3,6 +3,7 @@
 namespace App\Livewire\Chat;
 
 use App\Models\Conversation;
+use App\Services\Realtime;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 
@@ -29,6 +30,9 @@ class ConversationList extends Component
             ->latest('last_message_at')
             ->get();
 
-        return view('livewire.chat.conversation-list', compact('conversations'));
+        return view('livewire.chat.conversation-list', [
+            'conversations' => $conversations,
+            'polling' => ! Realtime::active(),
+        ]);
     }
 }

@@ -45,6 +45,34 @@ class EventWiringTest extends TestCase
         );
     }
 
+    public function test_sharing_without_a_current_team_says_so_instead_of_crashing(): void
+    {
+        Event::fake([ContractShared::class]);
+
+        $owner = User::factory()->withPersonalTeam()->create();
+        // Belongs to the contract's team but has no *current* team selected.
+        $member = User::factory()->create(['current_team_id' => null]);
+        $owner->currentTeam->users()->attach($member, ['role' => 'editor']);
+        $this->assertNull($member->currentTeam);
+
+        $contract = Contract::factory()->pending()->create([
+            'team_id' => $owner->currentTeam->id,
+            'created_by' => $owner->id,
+        ]);
+
+        Livewire::actingAs($member)
+            ->test(ShareModal::class, ['contractId' => $contract->id])
+            ->set('show', true)
+            ->assertOk()
+            ->assertSee('Pick or create a team before sharing')
+            ->set('selectedUsers', [$owner->id])
+            ->call('share')
+            ->assertOk()
+            ->assertSee('Pick or create a team before sharing');
+
+        Event::assertNotDispatched(ContractShared::class);
+    }
+
     public function test_contract_shared_event_notifies_the_recipient(): void
     {
         Notification::fake();

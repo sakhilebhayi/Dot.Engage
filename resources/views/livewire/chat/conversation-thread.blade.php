@@ -1,4 +1,4 @@
-<div class="flex flex-col h-full">
+<div class="flex flex-col h-full" @if($polling) wire:poll.5s.visible="refreshFromPoll" @endif>
     {{-- Header --}}
     <div class="px-4 py-3 border-b border-gray-200 bg-white flex items-center gap-3">
         <div>
