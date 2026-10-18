@@ -48,7 +48,7 @@ There is no Client/Proposal/Session-scheduling/CRM layer in this repository — 
 | Framework | Laravel 13, PHP 8.4 | `composer.json` requires `^8.4`, platform pinned to 8.4.1 |
 | Frontend | Livewire 3 · Alpine.js 3 · Tailwind CSS 4 (Vite, guest pages) | The signed-in app loads Tailwind from its own CDN script, see "Tailwind CSS 4" below |
 | Database | SQLite (`DB_CONNECTION=sqlite`) | One file, `database/database.sqlite`, on the cPanel host. WAL, 5 s busy timeout and `IMMEDIATE` transactions are set in `config/database.php`. PostgreSQL is not used in production |
-| Realtime | Laravel Reverb | Wired to real broadcast events (contract signed, message sent, video session started/ended, in-call signature requests) |
+| Realtime | Laravel Reverb, **off in production** | Production has no websocket server (`BROADCAST_CONNECTION=null`): broadcast events are discarded, the browser opens no websocket, and chat polls every 5 s instead. Live push needs a Reverb server, `BROADCAST_CONNECTION=reverb`, the `REVERB_*` values and a rebuild |
 | Video | Daily.co (`@daily-co/daily-js`), Reverb-signalling fallback | Degrades gracefully with no `DAILY_API_KEY` configured |
 | Documents | Spatie MediaLibrary, `barryvdh/laravel-dompdf` | Signed-contract PDF generation |
 | Auth | Laravel Sanctum (InfoDot SSO) | |

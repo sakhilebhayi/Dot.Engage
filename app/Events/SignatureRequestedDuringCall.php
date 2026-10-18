@@ -2,6 +2,7 @@
 
 namespace App\Events;
 
+use App\Events\Concerns\BroadcastsOnlyWhenEnabled;
 use App\Models\Contract;
 use App\Models\User;
 use App\Models\VideoSession;
@@ -13,7 +14,7 @@ use Illuminate\Queue\SerializesModels;
 
 class SignatureRequestedDuringCall implements ShouldBroadcast
 {
-    use Dispatchable, InteractsWithSockets, SerializesModels;
+    use BroadcastsOnlyWhenEnabled, Dispatchable, InteractsWithSockets, SerializesModels;
 
     public function __construct(
         public readonly VideoSession $session,
