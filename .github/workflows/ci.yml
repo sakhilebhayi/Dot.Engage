@@ -10,10 +10,9 @@ name: CI
 #   informs: composer and npm audit, and PHPStan. They warn instead of blocking:
 #            new advisories appear without anyone touching the code, and
 #            making them blocking would turn every run red until they are
-#            cleared (Dot.Agents sat red for a month that way). Composer and
-#            the runtime npm packages are clean today; what the npm audit still
-#            reports is the Tailwind 3 build toolchain, which needs a major
-#            upgrade and never ships to production (see the audit job).
+#            cleared (Dot.Agents sat red for a month that way). Composer, the
+#            runtime npm packages and (since the Tailwind 4 upgrade) the npm
+#            build tools are clean today (see the audit job).
 #            PHPStan (level 5, phpstan.neon.dist) reports 84 existing errors,
 #            almost all Jetstream/Eloquent typing noise. It stays informational
 #            until those are fixed or baselined by the owner; then add it to
@@ -151,9 +150,9 @@ jobs:
       - name: npm audit (runtime packages)
         continue-on-error: true
         run: npm audit --omit=dev --audit-level=moderate || echo "::warning::npm audit reports advisories in runtime packages (not blocking)"
-      # Includes the build toolchain (tailwindcss 3, concurrently ...). It never
-      # runs in production; the fix for what is left is a Tailwind 3 to 4
-      # upgrade, which is a design-affecting change for the owner to decide.
+      # Includes the build toolchain (tailwindcss, vite, concurrently ...). It
+      # never runs in production. Clean since the Tailwind 4 upgrade; it stays
+      # informational like the rest of this job.
       - name: npm audit (including build tools)
         continue-on-error: true
         run: npm audit --audit-level=moderate || echo "::warning::npm audit reports advisories in build tooling (not blocking)"

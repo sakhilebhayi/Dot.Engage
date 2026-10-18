@@ -46,7 +46,7 @@ There is no Client/Proposal/Session-scheduling/CRM layer in this repository — 
 | Layer | Technology | Notes |
 |---|---|---|
 | Framework | Laravel 13, PHP 8.3+ | `composer.json` requires `^8.3` |
-| Frontend | Livewire 3 · Alpine.js 3 · Tailwind CSS | |
+| Frontend | Livewire 3 · Alpine.js 3 · Tailwind CSS 4 (Vite, guest pages) | The signed-in app loads Tailwind from its own CDN script, see "Tailwind CSS 4" below |
 | Database | PostgreSQL, `DB_DATABASE=infodot` | Shared instance across the ecosystem |
 | Realtime | Laravel Reverb | Wired to real broadcast events (contract signed, message sent, video session started/ended, in-call signature requests) |
 | Video | Daily.co (`@daily-co/daily-js`), Reverb-signalling fallback | Degrades gracefully with no `DAILY_API_KEY` configured |
@@ -56,6 +56,17 @@ There is no Client/Proposal/Session-scheduling/CRM layer in this repository — 
 | Storage | Local/Flysystem, private disks for contracts/signatures/attachments | AWS credentials are present in `.env.example` but S3 is not the configured default disk |
 
 No AI integration, no search service (Scout/Meilisearch), and no Redis/Horizon queue exist in this repository — all three appeared in a previous draft of this README without corresponding code and have been removed.
+
+## Tailwind CSS 4
+
+Tailwind is v4, built by `@tailwindcss/vite` (`vite.config.js`). There is no `tailwind.config.js`, `postcss.config.js` or autoprefixer: everything that used to be config lives in `resources/css/app.css`.
+
+- **Which pages use it.** Only the guest pages load the Vite bundle: `layouts/guest.blade.php` (login, register, password reset, terms, privacy, cookies, external signing), `welcome.blade.php` and the `errors/*` pages. The signed-in app (`layouts/app.blade.php`) styles itself and loads Tailwind from `https://cdn.tailwindcss.com` (v3, preflight off), so the build in this repository does not reach it. The signed-contract PDF (`pdf/signed-contract.blade.php`, dompdf) and the mails (Markdown mail with `vendor/mail/html/themes/default.css`) are self-contained and never load the compiled CSS.
+- `@import 'tailwindcss' source(none)` plus four `@source` lines (the old `content` globs, nothing wider: automatic detection would scan `app/`, `docs/` and `tests/`), `@plugin` for forms and typography.
+- **Every v4 default that moved a pixel is put back**, each with a comment in `app.css`: border colour (gray-200, not `currentColor`), pointer cursor on buttons, placeholder colour, `hover:` on touch screens, `ring` (3px blue-500/50), the `shadow`/`rounded`/`blur` scale renames, the transparent `outline-none`, the v3 `transition` property lists, the browser's own padding on `th`/`td`/`option`/the file button, `ltr:`/`rtl:` needing an explicit `dir`, the v3 `font-sans` (Figtree first) and `font-mono` stacks (declared `@theme inline`, because the pages define their own `--font-mono`), the v3 palette hex values (`tailwind-v3-palette.css`; v4 moved to oklch) and the v3 colours of `prose`. The rule of the migration is NO visual change: fix a difference in `app.css`, never by redesigning.
+- Things v4 does differently that a view can trip over, not compensated: a responsive text size (`sm:text-4xl`) no longer resets an earlier `leading-*` (the welcome headings carry an explicit `sm:leading-*` for that); `space-x-*`/`space-y-*` and `divide-*` put the margin or border on every child but the LAST instead of every child but the first (a hidden last child leaves a trailing gap); `bg-opacity-*` and `ring-opacity-*` no longer exist (use `bg-black/5`); the important marker goes last (`grid!`); `scale-*`, `translate-*` and `rotate-*` set their own properties, not `transform`.
+- `@tailwindcss/typography` still pins a flagged `postcss-selector-parser`; `package.json` `overrides` pins it to ^7.1.6 so `npm audit --audit-level=moderate` is clean. Leave it until the plugin itself moves.
+- Browser floor: Chrome 111, Safari 16.4, Firefox 128 (cascade layers, `@property`, `color-mix`).
 
 ## Quick Start
 
