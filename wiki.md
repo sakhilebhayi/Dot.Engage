@@ -28,7 +28,7 @@ Dot.Engage is a business contract-sharing, real-time chat, and video-call docume
 | Layer | Technology | Notes |
 |---|---|---|
 | Framework | Laravel 13, PHP 8.3+ (`composer.json` requires `^8.3`) | Jetstream 5.5 + Fortify for auth/teams |
-| UI | Livewire 3.6, Alpine.js 3 (CDN), Tailwind (CDN in `layouts/app.blade.php`, Vite-built `resources/css/app.css` elsewhere) | Server-rendered; two coexisting layout styles — see §8 |
+| UI | Livewire 3.6, Alpine.js 3 (CDN), Tailwind (CDN in `layouts/app.blade.php`, Vite-built `resources/css/app.css` elsewhere, Tailwind 4 since 2026-10) | Server-rendered; two coexisting layout styles — see §8 |
 | Database | PostgreSQL (`config/database.php` default `pgsql`), `DB_DATABASE=infodot` in `.env.example` | Shared instance across the InfoDot ecosystem — confirmed matching convention |
 | Auth | Laravel Sanctum + `App\Http\Controllers\Auth\EcosystemAuthController` | SSO handoff from the InfoDot hub at `/auth/ecosystem` — verified against the same contract used elsewhere in the ecosystem (single-use `PersonalAccessToken` with the `ecosystem:read` ability, deleted after use, expiry checked, `Auth::login()` then redirect to `dashboard`) |
 | Realtime | Laravel Reverb 1.10 | Wired to real broadcast events (see §5) — this is further along than most ecosystem platforms, which have Reverb configured but unused |

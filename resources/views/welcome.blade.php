@@ -152,7 +152,7 @@
                         <p class="font-mono text-xs tracking-[0.18em] uppercase text-[var(--gold)] mb-6">
                             Contracts, chat &amp; e-signatures
                         </p>
-                        <h1 class="font-display font-semibold text-4xl sm:text-5xl lg:text-6xl leading-[1.05] tracking-tight text-[var(--paper)] mb-6">
+                        <h1 class="font-display font-semibold text-4xl sm:text-5xl lg:text-6xl leading-[1.05] sm:leading-none tracking-tight text-[var(--paper)] mb-6">
                             Share it.<br>Talk it through.<br>Sign it live.
                         </h1>
                         <p class="text-lg text-[var(--paper)] leading-relaxed max-w-xl mb-10">
@@ -211,7 +211,7 @@
             <div class="max-w-[1400px] mx-auto">
                 <div class="max-w-2xl mb-16 reveal" data-reveal>
                     <p class="font-mono text-xs tracking-[0.18em] uppercase text-[var(--gold)] mb-4">What it's built from</p>
-                    <h2 class="font-display font-semibold text-3xl sm:text-4xl text-[var(--ink)] leading-tight">
+                    <h2 class="font-display font-semibold text-3xl sm:text-4xl text-[var(--ink)] leading-tight sm:leading-10">
                         The deal and the conversation, in the same place
                     </h2>
                 </div>
@@ -268,7 +268,7 @@
                 <div class="grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)] gap-12 lg:gap-20">
                     <div class="reveal" data-reveal>
                         <p class="font-mono text-xs tracking-[0.18em] uppercase text-[var(--gold-bright)] mb-4">Part of the Dot Ecosystem</p>
-                        <h2 class="font-display font-semibold text-3xl sm:text-4xl text-white leading-tight mb-5">
+                        <h2 class="font-display font-semibold text-3xl sm:text-4xl text-white leading-tight sm:leading-10 mb-5">
                             Built on real-time infrastructure, not a polling loop
                         </h2>
                         <p class="text-[#c4c6dc] leading-relaxed max-w-sm">
@@ -302,7 +302,7 @@
             <div class="absolute inset-0 bg-cover bg-center" style="background-image: url('https://images.unsplash.com/photo-1763729805496-b5dbf7f00c79?q=80&w=2400&auto=format&fit=crop');"></div>
             <div class="absolute inset-0" style="background: linear-gradient(180deg, #f5f5f2 0%, rgba(23,27,61,0.80) 20%, rgba(23,27,61,0.85) 50%, rgba(23,27,61,0.80) 80%, #f5f5f2 100%);"></div>
             <div class="relative z-10 max-w-2xl mx-auto text-center reveal" data-reveal>
-                <h2 class="font-display font-semibold text-3xl sm:text-4xl text-[var(--paper)] leading-tight mb-5">
+                <h2 class="font-display font-semibold text-3xl sm:text-4xl text-[var(--paper)] leading-tight sm:leading-10 mb-5">
                     Get the next contract signed this week
                 </h2>
                 <p class="text-[var(--paper)] leading-relaxed mb-10 max-w-lg mx-auto">
