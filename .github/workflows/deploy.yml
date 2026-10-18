@@ -14,7 +14,7 @@ name: Deploy to Production
 #           local host-before-adopt-* branch) WITHOUT deleting anything untracked
 #           (.env, storage/, database/, uploads) and then continues as a deploy,
 #           except that pending migrations are only LISTED unless `migrate` is
-#           also given (the rollback copy covers a SQLite file, not Postgres).
+#           also given (the rollback copy covers the SQLite file).
 #   deploy  Every release after that: needs the checkout on this pipeline.
 #
 # What a run does, in order:
