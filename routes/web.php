@@ -17,7 +17,8 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-Route::get('/auth/ecosystem', [EcosystemAuthController::class, 'handle'])
+Route::match(['get', 'post'], '/auth/ecosystem', [EcosystemAuthController::class, 'handle'])
+    ->withoutMiddleware(['Illuminate\Foundation\Http\Middleware\VerifyCsrfToken', 'Illuminate\Foundation\Http\Middleware\ValidateCsrfToken'])
     ->name('ecosystem.auth');
 
 // Cookie Policy — Jetstream's termsAndPrivacyPolicy feature covers terms.show/policy.show
