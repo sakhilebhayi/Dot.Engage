@@ -26,6 +26,7 @@ class SaveAsTemplate extends Component
     {
         $contract = Contract::findOrFail($contractId);
         $this->authorize('view', $contract);
+        $this->authorize('create', ContractTemplate::class);
 
         $this->contractId = $contractId;
         $this->title = $contract->title.' Template';

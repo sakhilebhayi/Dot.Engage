@@ -57,5 +57,11 @@ class JetstreamServiceProvider extends ServiceProvider
             'create',
             'update',
         ])->description('Editor users have the ability to read, create, and update.');
+
+        // Read-only. The policies (App\Policies\*) require 'create' or 'update' for every
+        // mutating action, so a role holding only 'read' can look but never change anything.
+        Jetstream::role('viewer', 'Viewer', [
+            'read',
+        ])->description('Viewer users can read everything their team shares, but cannot create, change, send or sign anything.');
     }
 }

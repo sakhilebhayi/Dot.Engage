@@ -34,7 +34,7 @@ class SendContractExpirationReminders extends Command
 
         foreach ($expiringSoon as $contract) {
             $signedUserIds = $contract->signatures()->whereNotNull('user_id')->pluck('user_id');
-            $pendingUsers = $contract->team->allUsers()->reject(
+            $pendingUsers = $contract->signingMembers()->reject(
                 fn ($user) => $signedUserIds->contains($user->id)
             );
 

@@ -24,11 +24,12 @@ class ContractTemplatePolicy
     }
 
     /**
-     * Any authenticated team member may save a new template.
+     * A team member whose role may create records (not a viewer) may save a new template.
      */
     public function create(User $user): bool
     {
-        return true;
+        return $user->currentTeam !== null
+            && $user->hasTeamPermission($user->currentTeam, 'create');
     }
 
     /**
@@ -36,7 +37,7 @@ class ContractTemplatePolicy
      */
     public function update(User $user, ContractTemplate $template): bool
     {
-        return $user->belongsToTeam($template->team)
+        return $user->hasTeamPermission($template->team, 'update')
             && ($template->created_by === $user->id
                 || $user->hasTeamRole($template->team, 'admin'));
     }
@@ -46,7 +47,7 @@ class ContractTemplatePolicy
      */
     public function delete(User $user, ContractTemplate $template): bool
     {
-        return $user->belongsToTeam($template->team)
+        return $user->hasTeamPermission($template->team, 'update')
             && ($template->created_by === $user->id
                 || $user->hasTeamRole($template->team, 'admin'));
     }

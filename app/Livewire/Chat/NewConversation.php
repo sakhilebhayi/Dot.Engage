@@ -19,6 +19,8 @@ class NewConversation extends Component
 
     public function create(): void
     {
+        $this->authorize('create', Conversation::class);
+
         $this->validate([
             'selectedUsers' => 'required|array|min:1',
             'selectedUsers.*' => 'integer|exists:users,id',

@@ -6,7 +6,6 @@ use App\Models\Team;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Laravel\Jetstream\Jetstream;
 
 /**
  * Applies the companies InfoDot says a person belongs to, on every sign-in.
@@ -16,7 +15,7 @@ use Laravel\Jetstream\Jetstream;
  *   an ordinary member is attached once it exists, so a member can never become
  *   the local owner of someone else's company.
  * - Membership and role follow InfoDot (owner and admin become admin, editor stays
- *   editor, anything else the least powerful role this app has).
+ *   editor, viewer and anything unrecognised become the read-only viewer).
  * - Companies InfoDot no longer lists for the person are detached, so removing
  *   someone in InfoDot removes their access here at their next sign-in.
  * - The company InfoDot says is active becomes the person's current team.
@@ -84,7 +83,7 @@ class SyncTeamsFromInfoDot
             return; // the local owner needs no membership row
         }
 
-        $localRole = $this->localRole($role);
+        $localRole = self::localRole($role);
 
         if ($user->belongsToTeam($team)) {
             $team->users()->updateExistingPivot($user->id, ['role' => $localRole]);
@@ -116,10 +115,16 @@ class SyncTeamsFromInfoDot
         }
     }
 
-    private function localRole(string $infodotRole): string
+    /**
+     * InfoDot role -> this app's Jetstream role key. Least privilege: anything that is not
+     * explicitly owner, admin or editor (viewer, an empty or an unknown role) is the read-only viewer.
+     */
+    public static function localRole(string $infodotRole): string
     {
-        $wanted = in_array($infodotRole, ['owner', 'admin'], true) ? 'admin' : ($infodotRole === 'editor' ? 'editor' : 'viewer');
-
-        return Jetstream::findRole($wanted) ? $wanted : 'editor';
+        return match ($infodotRole) {
+            'owner', 'admin' => 'admin',
+            'editor' => 'editor',
+            default => 'viewer',
+        };
     }
 }

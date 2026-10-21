@@ -25,11 +25,12 @@ class MessagePolicy
     }
 
     /**
-     * Any conversation participant may create (send) a message.
+     * Any participant whose role may create records (not a viewer) may send a message.
      */
     public function create(User $user): bool
     {
-        return true;
+        return $user->currentTeam !== null
+            && $user->hasTeamPermission($user->currentTeam, 'create');
     }
 
     /**
@@ -37,7 +38,8 @@ class MessagePolicy
      */
     public function update(User $user, Message $message): bool
     {
-        return $message->user_id === $user->id;
+        return $message->user_id === $user->id
+            && $user->hasTeamPermission($message->conversation->team, 'update');
     }
 
     /**
@@ -47,7 +49,7 @@ class MessagePolicy
     {
         $team = $message->conversation->team;
 
-        return $message->user_id === $user->id
+        return ($message->user_id === $user->id && $user->hasTeamPermission($team, 'update'))
             || $user->hasTeamRole($team, 'admin');
     }
 
