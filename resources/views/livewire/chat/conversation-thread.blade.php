@@ -42,7 +42,13 @@
     </div>
 
     {{-- Composer --}}
-    <div class="border-t border-gray-200 bg-white p-3">
-        <livewire:chat.message-composer :conversationId="$conversationId" />
-    </div>
+    @can('sendMessage', $conversation)
+        <div class="border-t border-gray-200 bg-white p-3">
+            <livewire:chat.message-composer :conversationId="$conversationId" />
+        </div>
+    @else
+        <div class="border-t border-gray-200 bg-white p-3 text-center text-xs text-gray-500">
+            Your role is read-only here, so you can read this conversation but not reply.
+        </div>
+    @endcan
 </div>

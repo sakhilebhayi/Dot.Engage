@@ -23,8 +23,10 @@
                         </td>
                         <td class="px-6 py-4 text-sm text-gray-500">{{ $template->created_at->format('M d, Y') }}</td>
                         <td class="px-6 py-4 text-right text-sm font-medium space-x-2">
-                            <a href="{{ route('contracts.create', ['template' => $template->id]) }}"
-                               class="text-indigo-600 hover:text-indigo-900">Use Template</a>
+                            @can('create', App\Models\Contract::class)
+                                <a href="{{ route('contracts.create', ['template' => $template->id]) }}"
+                                   class="text-indigo-600 hover:text-indigo-900">Use Template</a>
+                            @endcan
                             @can('delete', $template)
                                 <button wire:click="delete({{ $template->id }})"
                                         wire:confirm="Delete this template?"

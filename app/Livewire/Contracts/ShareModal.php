@@ -28,7 +28,7 @@ class ShareModal extends Component
         ]);
 
         $contract = Contract::findOrFail($this->contractId);
-        $this->authorize('view', $contract);
+        $this->authorize('share', $contract);
 
         $team = Auth::user()->currentTeam;
         $users = $team->allUsers()->whereIn('id', $this->selectedUsers);

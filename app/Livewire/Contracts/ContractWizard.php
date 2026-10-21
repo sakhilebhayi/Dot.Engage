@@ -47,6 +47,9 @@ class ContractWizard extends Component
             return;
         }
 
+        // Creating a contract needs a role that may create records (not a viewer).
+        $this->authorize('create', Contract::class);
+
         $templateId ??= request()->integer('template') ?: null;
 
         if ($templateId) {
@@ -92,6 +95,14 @@ class ContractWizard extends Component
     public function save(): void
     {
         $this->validate();
+
+        // Authorise before anything is stored: a new contract needs 'create'; an existing
+        // one is authorised against the record below ('update') before it is touched.
+        if (! $this->contractId) {
+            $this->authorize('create', Contract::class);
+        } else {
+            $this->authorize('update', Contract::findOrFail($this->contractId));
+        }
 
         // Store file on the private contracts disk.
         $filePath = $this->file ? $this->file->store('/', 'contracts') : null;

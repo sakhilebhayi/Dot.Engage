@@ -15,10 +15,14 @@
                         @endforeach
                     </select>
                 </div>
-                <button wire:click="create" wire:loading.attr="disabled"
-                        class="w-full px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700">
-                    Create Session
-                </button>
+                @can('create', App\Models\VideoSession::class)
+                    <button wire:click="create" wire:loading.attr="disabled"
+                            class="w-full px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700">
+                        Create Session
+                    </button>
+                @else
+                    <p class="text-xs text-gray-500">Your role is read-only, so you can join a session but not start one.</p>
+                @endcan
             </div>
 
             {{-- Join existing --}}

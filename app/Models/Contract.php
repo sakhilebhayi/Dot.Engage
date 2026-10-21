@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Collection;
 
 class Contract extends Model
 {
@@ -60,11 +61,27 @@ class Contract extends Model
     }
 
     /**
-     * A contract is fully signed once every team member and every invited
+     * The team members who are expected to sign: everyone whose role may create
+     * records. A read-only viewer cannot sign (ContractPolicy::sign), so waiting
+     * for one would leave the contract unfinishable.
+     *
+     * @return Collection<int, User>
+     */
+    public function signingMembers(): Collection
+    {
+        return $this->team->allUsers()->filter(function (User $member): bool {
+            $permissions = $member->teamPermissions($this->team);
+
+            return in_array('create', $permissions, true) || in_array('*', $permissions, true);
+        });
+    }
+
+    /**
+     * A contract is fully signed once every signing team member and every invited
      * external signer has a recorded signature.
      */
     public function requiredSignatureCount(): int
     {
-        return $this->team->allUsers()->count() + $this->externalSigners()->count();
+        return $this->signingMembers()->count() + $this->externalSigners()->count();
     }
 }

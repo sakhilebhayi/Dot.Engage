@@ -97,9 +97,9 @@ class InfoDotTeamSyncTest extends TestCase
         $this->assertSame('admin', $carl->fresh()->teamRole($team->fresh())->key);
     }
 
-    public function test_an_infodot_viewer_becomes_an_editor_because_this_app_has_no_read_only_role(): void
+    public function test_an_infodot_viewer_stays_a_read_only_viewer(): void
     {
-        $this->assertNull(Jetstream::findRole('viewer'), 'if a viewer role is ever added, map to it and update this test');
+        $this->assertSame(['read'], Jetstream::findRole('viewer')->permissions);
 
         $this->signIn('ann@acme.test', [$this->company(self::ACME, 'Acme Ltd', 'owner')], self::ACME);
         $this->signIn('vic@acme.test', [$this->company(self::ACME, 'Acme Ltd', 'viewer')], self::ACME);
@@ -107,7 +107,35 @@ class InfoDotTeamSyncTest extends TestCase
         $team = Team::where('infodot_team_uuid', self::ACME)->firstOrFail();
         $vic = User::where('email', 'vic@acme.test')->firstOrFail();
 
-        $this->assertSame('editor', $vic->teamRole($team)->key);
+        $this->assertSame('viewer', $vic->teamRole($team)->key);
+        $this->assertFalse($vic->hasTeamPermission($team, 'create'));
+        $this->assertFalse($vic->hasTeamPermission($team, 'update'));
+    }
+
+    public function test_an_unrecognised_infodot_role_gets_the_least_powerful_role(): void
+    {
+        $this->signIn('ann@acme.test', [$this->company(self::ACME, 'Acme Ltd', 'owner')], self::ACME);
+        $this->signIn('una@acme.test', [$this->company(self::ACME, 'Acme Ltd', 'billing-contact')], self::ACME);
+
+        $team = Team::where('infodot_team_uuid', self::ACME)->firstOrFail();
+
+        $this->assertSame('viewer', User::where('email', 'una@acme.test')->firstOrFail()->teamRole($team)->key);
+    }
+
+    public function test_an_existing_editor_membership_follows_infodot_down_to_viewer_at_next_sign_in(): void
+    {
+        $this->signIn('ann@acme.test', [$this->company(self::ACME, 'Acme Ltd', 'owner')], self::ACME);
+        $team = Team::where('infodot_team_uuid', self::ACME)->firstOrFail();
+
+        // The old behaviour stored an InfoDot viewer as an editor; nothing rewrites that until they sign in.
+        $vic = User::factory()->create(['email' => 'vic@acme.test']);
+        $team->users()->attach($vic, ['role' => 'editor']);
+        $this->assertSame('editor', $vic->fresh()->teamRole($team)->key);
+
+        $this->signIn('vic@acme.test', [$this->company(self::ACME, 'Acme Ltd', 'viewer')], self::ACME);
+
+        $this->assertSame('viewer', $vic->fresh()->teamRole($team->fresh())->key);
+        $this->assertSame(1, $team->users()->where('users.id', $vic->id)->count());
     }
 
     public function test_a_person_removed_in_infodot_loses_the_company_here_at_next_sign_in(): void
