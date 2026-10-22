@@ -6,23 +6,32 @@ use App\Models\Conversation;
 use App\Models\Message;
 use App\Services\Realtime;
 use Illuminate\Support\Facades\Auth;
+use Livewire\Attributes\Locked;
 use Livewire\Attributes\On;
 use Livewire\Component;
 
 class ConversationThread extends Component
 {
+    // Locked: the browser can never swap in another conversation or page count;
+    // only the server-side actions below change these.
+    #[Locked]
     public int $conversationId;
 
+    #[Locked]
     public int $page = 1;
 
+    #[Locked]
     public bool $hasMorePages = false;
+
+    /** Upper bound on loaded pages (20 messages each), so one request can't ask for the whole table. */
+    private const MAX_PAGES = 50;
 
     #[On('conversation-selected')]
     public function switchConversation(int $conversationId): void
     {
+        $this->authorize('view', Conversation::findOrFail($conversationId));
         $this->conversationId = $conversationId;
         $this->page = 1;
-        $this->authorize('view', Conversation::findOrFail($conversationId));
         $this->markAsRead();
     }
 
@@ -41,7 +50,7 @@ class ConversationThread extends Component
 
     public function loadMore(): void
     {
-        $this->page++;
+        $this->page = min($this->page + 1, self::MAX_PAGES);
     }
 
     /**
@@ -56,6 +65,8 @@ class ConversationThread extends Component
 
     private function markAsRead(): void
     {
+        $this->authorize('view', Conversation::findOrFail($this->conversationId));
+
         Message::where('conversation_id', $this->conversationId)
             ->where('user_id', '!=', Auth::id())
             ->whereNull('read_at')
@@ -66,6 +77,9 @@ class ConversationThread extends Component
     {
         $conversation = Conversation::with('participants')
             ->findOrFail($this->conversationId);
+
+        // Checked on every render, not only at mount: membership can end mid-session.
+        $this->authorize('view', $conversation);
 
         $perPage = 20;
         $paginator = Message::with(['sender', 'attachments'])
