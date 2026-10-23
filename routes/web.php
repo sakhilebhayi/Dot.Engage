@@ -11,6 +11,7 @@ use App\Models\VideoSession;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
+use Laravel\Fortify\Features;
 use Laravel\Jetstream\Jetstream;
 
 Route::get('/', function () {
@@ -145,3 +146,9 @@ Route::get('/up/scheduler', SchedulerProbeController::class)->name('up.scheduler
 Route::get('/guardian/health', GuardianHealthController::class)
     ->middleware(AuthenticateGuardian::class)
     ->name('guardian.health');
+
+// Public sign-up is closed (accounts are created by InfoDot at first sign-in). Keep the named route so any link or
+// invitation email that points at it lands on the login page instead of failing.
+if (! Features::enabled(Features::registration())) {
+    Route::redirect('/register', '/login')->name('register');
+}
