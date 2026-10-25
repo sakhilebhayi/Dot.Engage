@@ -7,6 +7,7 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
+use Illuminate\Support\Carbon;
 
 class ContractExpiringSoonNotification extends Notification implements ShouldQueue
 {
@@ -33,11 +34,15 @@ class ContractExpiringSoonNotification extends Notification implements ShouldQue
 
     public function toArray(object $notifiable): array
     {
+        $expiresAt = Carbon::make($this->contract->expires_at);
+
         return [
             'type' => 'contract_expiring_soon',
             'contract_id' => $this->contract->id,
             'contract_title' => $this->contract->title,
-            'expires_at' => $this->contract->expires_at?->toIso8601String(),
+            'expires_at' => $expiresAt?->toIso8601String(),
+            'message' => $this->contract->title.' is waiting for your signature'
+                .($expiresAt ? ' and expires on '.$expiresAt->format('jS F Y') : ''),
         ];
     }
 }

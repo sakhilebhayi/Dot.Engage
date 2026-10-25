@@ -13,11 +13,10 @@ class NotifySignatureRequestedDuringCall implements ShouldQueue
 
     public function handle(SignatureRequestedDuringCall $event): void
     {
-        $team = $event->session->team;
-
-        // Notify every team member watching the call except the person
-        // who just signed -- they don't need to be told to sign.
-        $recipients = $team->allUsers()->reject(
+        // Notify every team member who can sign, except the person who just
+        // signed -- they don't need to be told to sign. A read-only viewer cannot
+        // sign, so asking them to would be noise.
+        $recipients = $event->contract->signingMembers()->reject(
             fn ($user) => $user->id === $event->signedBy->id
         );
 

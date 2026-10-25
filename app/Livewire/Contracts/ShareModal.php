@@ -17,13 +17,18 @@ class ShareModal extends Component
 
     public function share(): void
     {
+        // A user can belong to a team without having one selected as current.
+        if (Auth::user()->currentTeam === null) {
+            return;
+        }
+
         $this->validate([
             'selectedUsers' => 'required|array|min:1',
             'selectedUsers.*' => 'integer|exists:users,id',
         ]);
 
         $contract = Contract::findOrFail($this->contractId);
-        $this->authorize('view', $contract);
+        $this->authorize('share', $contract);
 
         $team = Auth::user()->currentTeam;
         $users = $team->allUsers()->whereIn('id', $this->selectedUsers);
@@ -32,7 +37,7 @@ class ShareModal extends Component
         // dispatching the event (rather than notifying directly) also
         // broadcasts contract.shared on the recipient's private channel.
         foreach ($users as $user) {
-            ContractShared::dispatch($contract, $user);
+            ContractShared::dispatch($contract, $user, Auth::id());
         }
 
         $this->show = false;
@@ -46,6 +51,9 @@ class ShareModal extends Component
             ? Auth::user()->currentTeam->allUsers()->where('id', '!=', Auth::id())
             : collect();
 
-        return view('livewire.contracts.share-modal', compact('teamMembers'));
+        return view('livewire.contracts.share-modal', [
+            'teamMembers' => $teamMembers,
+            'hasTeam' => Auth::user()->currentTeam !== null,
+        ]);
     }
 }

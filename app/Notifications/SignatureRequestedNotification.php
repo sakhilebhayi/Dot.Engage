@@ -43,6 +43,7 @@ class SignatureRequestedNotification extends Notification implements ShouldQueue
             'room_id' => $this->session->room_id,
             'contract_id' => $this->contract->id,
             'contract_title' => $this->contract->title,
+            'message' => 'Your signature is requested on '.$this->contract->title.' in a live video session',
         ];
     }
 }

@@ -24,11 +24,12 @@ class ConversationPolicy
     }
 
     /**
-     * Any authenticated user may create a conversation.
+     * A team member whose role may create records (not a viewer) may start a conversation.
      */
     public function create(User $user): bool
     {
-        return true;
+        return $user->currentTeam !== null
+            && $user->hasTeamPermission($user->currentTeam, 'create');
     }
 
     /**
@@ -65,10 +66,12 @@ class ConversationPolicy
     }
 
     /**
-     * A participant may send messages to the conversation.
+     * A participant whose role may create records (not a viewer) may send messages.
+     * A viewer who is a participant can still read the conversation.
      */
     public function sendMessage(User $user, Conversation $conversation): bool
     {
-        return $conversation->participants()->where('users.id', $user->id)->exists();
+        return $conversation->participants()->where('users.id', $user->id)->exists()
+            && $user->hasTeamPermission($conversation->team, 'create');
     }
 }

@@ -7,11 +7,16 @@ name: CI
 #   gates:   the PHP test suite, Pint (code style), the frontend build and a
 #            check that the build's manifest contains every entry the views ask
 #            for (the missing-manifest 500 that broke the Dot.Projects login pages on 2026-10-17).
-#   informs: composer and npm audit. Both report real advisories today; making
-#            them blocking would turn every run red until they are cleared
-#            (Dot.Agents sat red for a month that way), so they warn instead.
-# PHPStan is not run: the repo's tool wrapper swallows its output, so a red
-# result would carry no explanation. Add it once that is sorted.
+#   informs: composer and npm audit, and PHPStan. They warn instead of blocking:
+#            new advisories appear without anyone touching the code, and
+#            making them blocking would turn every run red until they are
+#            cleared (Dot.Agents sat red for a month that way). Composer, the
+#            runtime npm packages and (since the Tailwind 4 upgrade) the npm
+#            build tools are clean today (see the audit job).
+#            PHPStan (level 5, phpstan.neon.dist) reports 84 existing errors,
+#            almost all Jetstream/Eloquent typing noise. It stays informational
+#            until those are fixed or baselined by the owner; then add it to
+#            the gate's needs.
 on:
   push:
     branches: [main]
@@ -21,6 +26,13 @@ on:
 
 permissions:
   contents: read
+
+# A new push to a pull request supersedes the run in progress. Every other
+# event (push to main, the deploy's workflow_call) gets its own group, so a run
+# that gates a deploy is never cancelled.
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   tests:
@@ -39,6 +51,9 @@ jobs:
 
       - name: Install PHP dependencies
         run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: composer.json and composer.lock agree
+        run: composer validate --no-check-publish
 
       - name: Prepare environment
         run: |
@@ -94,6 +109,25 @@ jobs:
           print('OK')
           PY
 
+  phpstan:
+    name: PHPStan (informational)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    # Not in the gate yet: 84 errors exist on main today (see the header).
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          tools: composer:v2
+          coverage: none
+          extensions: mbstring, intl, sqlite3, pdo_sqlite, bcmath, gd, zip, xml, fileinfo
+      - name: Install PHP dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+      - name: PHPStan
+        run: vendor/bin/phpstan analyse --memory-limit=1G --no-progress --error-format=github
+
   audit:
     name: Dependency audit (informational)
     runs-on: ubuntu-latest
@@ -112,9 +146,16 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: npm audit
+      # Only the packages that end up in the shipped bundle.
+      - name: npm audit (runtime packages)
         continue-on-error: true
-        run: npm audit --audit-level=high || echo "::warning::npm audit reports high or critical advisories (not blocking)"
+        run: npm audit --omit=dev --audit-level=moderate || echo "::warning::npm audit reports advisories in runtime packages (not blocking)"
+      # Includes the build toolchain (tailwindcss, vite, concurrently ...). It
+      # never runs in production. Clean since the Tailwind 4 upgrade; it stays
+      # informational like the rest of this job.
+      - name: npm audit (including build tools)
+        continue-on-error: true
+        run: npm audit --audit-level=moderate || echo "::warning::npm audit reports advisories in build tooling (not blocking)"
 
   gate:
     name: Quality gate (all checks must pass)

@@ -11,8 +11,6 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>tailwind.config = { corePlugins: { preflight: false } }</script>
     <style>
         :root { --accent: #a855f7; --accent-rgb: 168,85,247; }
         *, *::before, *::after { box-sizing: border-box; }
@@ -75,8 +73,10 @@
         .dot-badge-accent { background:rgba(168,85,247,0.12); color:#a855f7; }
         select.dot-input option { background:#1a1a1f; }
     </style>
+    {{-- After the <style> above on purpose: the utilities are unlayered and must come last, as
+         the Tailwind CDN script's did (see the header of resources/css/signed-in.css). --}}
+    @vite(['resources/css/signed-in.css', 'resources/js/app.js'])
     @livewireStyles
-    <script defer src="https://unpkg.com/alpinejs@3.10.2/dist/cdn.min.js"></script>
 </head>
 <body>
     <x-banner />

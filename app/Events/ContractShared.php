@@ -2,6 +2,7 @@
 
 namespace App\Events;
 
+use App\Events\Concerns\BroadcastsOnlyWhenEnabled;
 use App\Models\Contract;
 use App\Models\User;
 use Illuminate\Broadcasting\InteractsWithSockets;
@@ -12,11 +13,12 @@ use Illuminate\Queue\SerializesModels;
 
 class ContractShared implements ShouldBroadcast
 {
-    use Dispatchable, InteractsWithSockets, SerializesModels;
+    use BroadcastsOnlyWhenEnabled, Dispatchable, InteractsWithSockets, SerializesModels;
 
     public function __construct(
         public readonly Contract $contract,
         public readonly User $sharedWith,
+        public readonly ?int $sharedById = null,
     ) {}
 
     /**

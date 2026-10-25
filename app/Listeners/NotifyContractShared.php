@@ -14,7 +14,7 @@ class NotifyContractShared implements ShouldQueue
     public function handle(ContractShared $event): void
     {
         $event->sharedWith->notify(
-            new ContractSharedNotification($event->contract)
+            new ContractSharedNotification($event->contract, $event->sharedById)
         );
     }
 }

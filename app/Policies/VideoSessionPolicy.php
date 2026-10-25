@@ -24,11 +24,12 @@ class VideoSessionPolicy
     }
 
     /**
-     * Any team member may initiate a new video session.
+     * A team member whose role may create records (not a viewer) may initiate a session.
      */
     public function create(User $user): bool
     {
-        return true;
+        return $user->currentTeam !== null
+            && $user->hasTeamPermission($user->currentTeam, 'create');
     }
 
     /**
@@ -36,7 +37,7 @@ class VideoSessionPolicy
      */
     public function update(User $user, VideoSession $videoSession): bool
     {
-        return $user->belongsToTeam($videoSession->team)
+        return $user->hasTeamPermission($videoSession->team, 'update')
             && ($videoSession->initiated_by === $user->id
                 || $user->hasTeamRole($videoSession->team, 'admin'));
     }
@@ -46,7 +47,7 @@ class VideoSessionPolicy
      */
     public function delete(User $user, VideoSession $videoSession): bool
     {
-        return $user->belongsToTeam($videoSession->team)
+        return $user->hasTeamPermission($videoSession->team, 'update')
             && ($videoSession->initiated_by === $user->id
                 || $user->hasTeamRole($videoSession->team, 'admin'));
     }
@@ -70,7 +71,8 @@ class VideoSessionPolicy
     }
 
     /**
-     * Any team member may join an active session.
+     * Any team member (viewers included) may join an active session: joining only
+     * listens and watches, it writes nothing.
      */
     public function join(User $user, VideoSession $videoSession): bool
     {
@@ -83,7 +85,7 @@ class VideoSessionPolicy
      */
     public function sign(User $user, VideoSession $videoSession): bool
     {
-        return $user->belongsToTeam($videoSession->team)
+        return $user->hasTeamPermission($videoSession->team, 'create')
             && $videoSession->status === 'active'
             && $videoSession->contract_id !== null;
     }

@@ -2,6 +2,7 @@
 
 namespace App\Notifications;
 
+use App\Models\Contract;
 use App\Models\VideoSession;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -40,13 +41,18 @@ class VideoSessionInviteNotification extends Notification implements ShouldQueue
 
     public function toArray(object $notifiable): array
     {
+        $initiatorName = $this->session->initiator->name;
+        $contractTitle = Contract::find($this->session->contract_id)?->title;
+
         return [
             'type' => 'video_session_invite',
             'session_id' => $this->session->id,
             'room_id' => $this->session->room_id,
             'initiator_id' => $this->session->initiated_by,
-            'initiator_name' => $this->session->initiator->name,
+            'initiator_name' => $initiatorName,
             'contract_id' => $this->session->contract_id,
+            'message' => $initiatorName.' started a video session and invited you to join'
+                .($contractTitle ? '. '.$contractTitle.' needs signing during the call' : ''),
         ];
     }
 }

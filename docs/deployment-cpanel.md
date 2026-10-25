@@ -4,7 +4,7 @@ Production is `https://engage.infodot.co.za`, on the shared cPanel host that als
 
 | Workflow | Runs | What it does |
 |---|---|---|
-| `ci.yml` | every PR and push to `main`; called by `deploy.yml` | Pint, the PHP test suite, the frontend build and a check that the Vite manifest contains every entry the views use. One required check: **Quality gate**. Composer and npm audits report as warnings only. |
+| `ci.yml` | every PR and push to `main`; called by `deploy.yml` | Pint, the PHP test suite, the frontend build and a check that the Vite manifest contains every entry the views use. One required check: **Quality gate**. PHPStan and the composer and npm audits report as warnings only; a newer push to a pull request cancels the run in progress. |
 | `drift.yml` | manual, **read-only** | Compares every tracked file of `main` with the host's copy (sha256) and prints counts and paths. Run it before the takeover. |
 | `deploy.yml` | manual, `confirm=adopt` once, then `confirm=deploy` | See below. |
 | `server-logs.yml` | manual, read-only | Tails the newest Laravel log. |
@@ -28,13 +28,18 @@ Run **Deploy to Production** with `confirm=deploy` (`gh workflow run deploy.yml 
 
 - A rollback copy of the app folder (without `vendor/`, `node_modules/`, logs and the build) is written to `~/dot-engage-<mode>-<time>.tgz`; the newest three are kept. To restore: stop writes, `tar xzf` it over the app folder, `php artisan up`.
 - A failure after maintenance mode starts **leaves the site down** and says so, with the copy's name. A failure before it says the site is untouched.
-- `APP_DEBUG` is forced to `false` on every run, because with it on any error prints a ~840 KB debug page to every visitor. `APP_ENV=local` and an `http://` `APP_URL` are reported as warnings, not changed.
+- `APP_DEBUG` is forced to `false` on every run, because with it on any error prints a ~840 KB debug page to every visitor. `APP_ENV=local`, an `http://` `APP_URL` and any `.env` value that does not fit this host (see Not covered yet) are reported as warnings, not changed.
 - Cron: five scheduled commands (session cleanup, upload retries, team report, expiration reminders, advisory scan) and 21 queued classes on the default queue. The deploy installs 2 lines through the same locked, verified crontab block as the other Dot apps, so the account's crontab grows by 2 the first time. Every deploy log prints `== crontab: 2 line(s) for # dot-engage installed, M other line(s) preserved`; M must not shrink.
-- The smoke check requests `/`, `/login`, `/up`, the built CSS and a harmless `POST /up`, and fails the run if any is wrong or if a debug page is served.
+- The smoke check requests `/`, `/login`, `/up`, the built CSS and a harmless `POST /up`, and fails the run if any is wrong, if a debug page is served, or if `/` or `/login` point at a Vite dev server (`:5173` or `@vite/client`). A stray `public/hot` (the dev-server marker `npm run dev` writes) is removed right after the new build is swapped in.
 
 ## Not covered yet
 
-PHPStan is not in CI. There is no health document for the Dot.Brain guardian, no nightly backup and no scheduler probe for Projects; the other Dot apps have all three.
+Everything the other Dot apps have is here: a scheduler probe (`/up/scheduler`), a Dot.Brain health document (`/guardian/health`), a nightly SQLite backup (`engage:backup-database`) and a scheduler watchdog; see Monitoring below. What is still open:
+
+- **PHPStan does not gate.** It runs in CI as an informational job and reports 77 existing level-5 errors (mostly Jetstream/Eloquent typing). Fix or baseline them, then add the job to the gate's `needs`.
+- **Backups stay on the host.** The nightly copy sits beside the live file, so it protects against a bad migration or deletion, not a lost host. Nothing copies it off the host yet, and a restore has not been rehearsed on a scratch copy.
+- **No live push.** The host has no websocket server and no Node, so `BROADCAST_CONNECTION=null`: broadcast events are discarded, the browser opens no websocket and the chat screens poll every 5 s. Live updates need a Reverb server somewhere that can run one; the unmerged `feat/reverb-realtime-core` branch holds the groundwork.
+- **The host `.env` is only checked, never fixed.** The deploy warns when it holds a value that does not fit this host (a database other than SQLite, `reverb`/`pusher`/`ably` broadcasting, a `sync` or `redis` queue, Redis sessions or cache) but does not rewrite it.
 
 ## Monitoring (Dot.Brain guardian)
 
