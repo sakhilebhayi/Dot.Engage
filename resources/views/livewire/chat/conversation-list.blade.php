@@ -11,8 +11,9 @@
     </div>
     <ul class="flex-1 overflow-y-auto divide-y divide-gray-100">
         @forelse($conversations as $conversation)
-            <li wire:click="select({{ $conversation->id }})"
-                class="px-3 py-3 cursor-pointer hover:bg-indigo-50 {{ $selectedId === $conversation->id ? 'bg-indigo-50' : '' }}">
+            <li wire:click="select({{ $conversation->id }})" role="button" tabindex="0"
+                wire:keydown.enter="select({{ $conversation->id }})" wire:keydown.space.prevent="select({{ $conversation->id }})"
+                class="px-3 py-3 cursor-pointer hover:bg-indigo-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-indigo-500 {{ $selectedId === $conversation->id ? 'bg-indigo-50' : '' }}">
                 <div class="flex items-center justify-between">
                     <p class="text-sm font-medium text-gray-900 truncate">{{ $conversation->name ?? 'Direct Message' }}</p>
                     @if($conversation->unreadCount > 0)

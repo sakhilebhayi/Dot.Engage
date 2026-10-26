@@ -10,8 +10,9 @@
         </div>
         <ul class="max-h-80 overflow-y-auto divide-y divide-gray-100">
             @forelse($notifications as $notification)
-                <li wire:click="markRead('{{ $notification->id }}')"
-                    class="px-4 py-3 cursor-pointer hover:bg-gray-50 {{ is_null($notification->read_at) ? 'bg-indigo-50' : '' }}">
+                <li wire:click="markRead('{{ $notification->id }}')" role="button" tabindex="0"
+                    wire:keydown.enter="markRead('{{ $notification->id }}')" wire:keydown.space.prevent="markRead('{{ $notification->id }}')"
+                    class="px-4 py-3 cursor-pointer hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-indigo-500 {{ is_null($notification->read_at) ? 'bg-indigo-50' : '' }}">
                     <p class="text-sm text-gray-900">{{ $notification->data['message'] ?? 'New notification' }}</p>
                     <p class="text-xs text-gray-400 mt-0.5">{{ $notification->created_at->diffForHumans() }}</p>
                 </li>

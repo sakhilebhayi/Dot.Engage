@@ -17,7 +17,7 @@
 
             <div class="border border-[var(--line)] rounded-lg overflow-hidden bg-white">
                 @if($contract->file_path)
-                    <iframe src="{{ $downloadUrl }}"
+                    <iframe title="{{ __('Shared contract document') }}" src="{{ $downloadUrl }}"
                             class="w-full" style="min-height: 500px;"></iframe>
                 @else
                     <div class="flex items-center justify-center h-48 text-sm text-[var(--ink-soft)]">No document uploaded.</div>
