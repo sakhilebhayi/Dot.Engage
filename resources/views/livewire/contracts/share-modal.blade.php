@@ -11,8 +11,8 @@
 
             @if($hasTeam)
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Add team members</label>
-                <select wire:model="selectedUsers" multiple
+                <label for="livewire-contracts-share-modal-selectedusers" class="block text-sm font-medium text-gray-700 mb-1">Add team members</label>
+                <select id="livewire-contracts-share-modal-selectedusers" wire:model="selectedUsers" multiple
                         class="block w-full rounded-md border-gray-300 shadow-sm text-sm focus:ring-indigo-500 focus:border-indigo-500">
                     @foreach($teamMembers as $member)
                         <option value="{{ $member->id }}">{{ $member->name }} ({{ $member->email }})</option>

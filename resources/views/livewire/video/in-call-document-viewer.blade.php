@@ -13,7 +13,7 @@
     </div>
     <div class="flex-1 overflow-hidden">
         @if($contract->file_path)
-            <iframe src="{{ Storage::url($contract->file_path) }}" class="w-full h-full"></iframe>
+            <iframe title="{{ __('Contract document') }}" src="{{ Storage::url($contract->file_path) }}" class="w-full h-full"></iframe>
         @else
             <div class="flex items-center justify-center h-full text-gray-400 text-sm">No document available.</div>
         @endif

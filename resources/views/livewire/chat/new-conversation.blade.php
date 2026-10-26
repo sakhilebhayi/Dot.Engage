@@ -4,8 +4,8 @@
             <h3 class="text-lg font-semibold text-gray-900">New Conversation</h3>
 
             <div>
-                <label class="block text-sm font-medium text-gray-700">Name (optional for groups)</label>
-                <input wire:model="name" type="text" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm text-sm">
+                <label for="livewire-chat-new-conversation-name" class="block text-sm font-medium text-gray-700">Name (optional for groups)</label>
+                <input id="livewire-chat-new-conversation-name" wire:model="name" type="text" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm text-sm">
             </div>
 
             <div class="flex items-center gap-2">
@@ -14,8 +14,8 @@
             </div>
 
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Participants</label>
-                <select wire:model="selectedUsers" multiple
+                <label for="livewire-chat-new-conversation-selectedusers" class="block text-sm font-medium text-gray-700 mb-1">Participants</label>
+                <select id="livewire-chat-new-conversation-selectedusers" wire:model="selectedUsers" multiple
                         class="block w-full rounded-md border-gray-300 shadow-sm text-sm">
                     @foreach($teamMembers as $member)
                         <option value="{{ $member->id }}">{{ $member->name }}</option>

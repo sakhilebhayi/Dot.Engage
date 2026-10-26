@@ -10,8 +10,8 @@
             <p class="text-sm text-gray-500">Reuse this contract's file, description, and signing window for future contracts.</p>
 
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Template name</label>
-                <input wire:model="title" type="text"
+                <label for="livewire-contracts-save-as-template-title" class="block text-sm font-medium text-gray-700 mb-1">Template name</label>
+                <input id="livewire-contracts-save-as-template-title" wire:model="title" type="text"
                        class="block w-full rounded-md border-gray-300 shadow-sm text-sm focus:ring-indigo-500 focus:border-indigo-500" />
                 @error('title') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
             </div>

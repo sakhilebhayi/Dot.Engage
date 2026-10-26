@@ -30,7 +30,7 @@
 
     <div class="flex-1 border border-gray-300 rounded-lg overflow-hidden bg-gray-50">
         @if($contract->file_path)
-            <iframe src="{{ Storage::url($contract->file_path) }}" class="w-full h-full" style="min-height:600px;"></iframe>
+            <iframe title="{{ __('Contract document') }}" src="{{ Storage::url($contract->file_path) }}" class="w-full h-full" style="min-height:600px;"></iframe>
         @else
             <div class="flex items-center justify-center h-64 text-gray-400 text-sm">No document uploaded.</div>
         @endif

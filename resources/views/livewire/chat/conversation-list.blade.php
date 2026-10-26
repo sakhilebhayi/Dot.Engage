@@ -1,6 +1,6 @@
 <div class="flex flex-col h-full" @if($polling) wire:poll.5s.visible @endif>
     <div class="p-3 border-b border-gray-200">
-        <input wire:model.live.debounce.300ms="search" type="text" placeholder="Search conversations…"
+        <input aria-label="Search conversations" wire:model.live.debounce.300ms="search" type="text" placeholder="Search conversations…"
                class="w-full rounded-md border-gray-300 text-sm focus:ring-indigo-500 focus:border-indigo-500">
     </div>
     <div class="flex justify-between items-center px-3 py-2">
@@ -11,8 +11,9 @@
     </div>
     <ul class="flex-1 overflow-y-auto divide-y divide-gray-100">
         @forelse($conversations as $conversation)
-            <li wire:click="select({{ $conversation->id }})"
-                class="px-3 py-3 cursor-pointer hover:bg-indigo-50 {{ $selectedId === $conversation->id ? 'bg-indigo-50' : '' }}">
+            <li wire:click="select({{ $conversation->id }})" role="button" tabindex="0"
+                wire:keydown.enter="select({{ $conversation->id }})" wire:keydown.space.prevent="select({{ $conversation->id }})"
+                class="px-3 py-3 cursor-pointer hover:bg-indigo-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-indigo-500 {{ $selectedId === $conversation->id ? 'bg-indigo-50' : '' }}">
                 <div class="flex items-center justify-between">
                     <p class="text-sm font-medium text-gray-900 truncate">{{ $conversation->name ?? 'Direct Message' }}</p>
                     @if($conversation->unreadCount > 0)
