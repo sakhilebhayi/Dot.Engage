@@ -1,9 +1,9 @@
 <div class="space-y-4">
     <div class="flex items-center justify-between">
-        <input wire:model.live.debounce.300ms="search" type="text" placeholder="Search contracts…"
+        <input aria-label="Search contracts" wire:model.live.debounce.300ms="search" type="text" placeholder="Search contracts…"
                class="w-64 rounded-md border-gray-300 shadow-sm text-sm focus:ring-indigo-500 focus:border-indigo-500">
         <div class="flex items-center gap-3">
-            <select wire:model.live="statusFilter" class="rounded-md border-gray-300 shadow-sm text-sm">
+            <select aria-label="Statusfilter" wire:model.live="statusFilter" class="rounded-md border-gray-300 shadow-sm text-sm">
                 <option value="">All statuses</option>
                 <option value="draft">Draft</option>
                 <option value="pending">Pending</option>

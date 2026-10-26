@@ -11,11 +11,11 @@
             </div>
         @endif
         <div class="flex items-center gap-2 bg-gray-100 rounded-xl px-3 py-2">
-            <label class="cursor-pointer text-gray-400 hover:text-gray-600">
+            <label for="livewire-chat-message-composer-body" class="cursor-pointer text-gray-400 hover:text-gray-600">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/></svg>
                 <input wire:model="attachments" type="file" multiple class="sr-only" accept=".pdf,.doc,.docx,.png,.jpg,.jpeg">
             </label>
-            <input wire:model="body" wire:keydown.enter.prevent="send"
+            <input id="livewire-chat-message-composer-body" wire:model="body" wire:keydown.enter.prevent="send"
                    type="text" placeholder="Type a message…"
                    class="flex-1 bg-transparent text-sm border-none focus:ring-0 outline-none placeholder-gray-400">
         </div>

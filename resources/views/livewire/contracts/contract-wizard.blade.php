@@ -17,17 +17,17 @@
     @if($step === 1)
         <div class="space-y-4">
             <div>
-                <label class="block text-sm font-medium text-gray-700">Title <span class="text-red-500">*</span></label>
-                <input wire:model="title" type="text" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                <label for="livewire-contracts-contract-wizard-title" class="block text-sm font-medium text-gray-700">Title <span class="text-red-500">*</span></label>
+                <input id="livewire-contracts-contract-wizard-title" wire:model="title" type="text" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
                 @error('title') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
             </div>
             <div>
-                <label class="block text-sm font-medium text-gray-700">Description</label>
-                <textarea wire:model="description" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"></textarea>
+                <label for="livewire-contracts-contract-wizard-description" class="block text-sm font-medium text-gray-700">Description</label>
+                <textarea id="livewire-contracts-contract-wizard-description" wire:model="description" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"></textarea>
             </div>
             <div>
-                <label class="block text-sm font-medium text-gray-700">Expiry Date</label>
-                <input wire:model="expiresAt" type="date" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                <label for="livewire-contracts-contract-wizard-expiresat" class="block text-sm font-medium text-gray-700">Expiry Date</label>
+                <input id="livewire-contracts-contract-wizard-expiresat" wire:model="expiresAt" type="date" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
             </div>
         </div>
     @endif
@@ -36,8 +36,8 @@
     @if($step === 2)
         <div class="space-y-4">
             <div>
-                <label class="block text-sm font-medium text-gray-700">Contract Document (PDF) <span class="text-red-500">*</span></label>
-                <input wire:model="file" type="file" accept=".pdf,.doc,.docx"
+                <label for="livewire-contracts-contract-wizard-file" class="block text-sm font-medium text-gray-700">Contract Document (PDF) <span class="text-red-500">*</span></label>
+                <input id="livewire-contracts-contract-wizard-file" wire:model="file" type="file" accept=".pdf,.doc,.docx"
                        class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100">
                 @error('file') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
             </div>

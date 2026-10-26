@@ -28,7 +28,7 @@
                                             class="text-green-600 hover:text-green-900">Approve</button>
                                 </div>
                                 <div class="flex items-center justify-end gap-2">
-                                    <input type="text" wire:model="rejectReasons.{{ $proposal->id }}"
+                                    <input aria-label="Reason for rejecting" type="text" wire:model="rejectReasons.{{ $proposal->id }}"
                                            placeholder="Reason for rejecting…"
                                            class="w-48 rounded-md border-gray-300 shadow-sm text-xs">
                                     <button wire:click="reject({{ $proposal->id }})"

@@ -31,22 +31,22 @@
             <p class="text-sm text-gray-500">They'll get an emailed link to view and sign this contract — no Dot.Engage account required.</p>
 
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Name</label>
-                <input wire:model="name" type="text"
+                <label for="livewire-contracts-invite-external-signer-name" class="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                <input id="livewire-contracts-invite-external-signer-name" wire:model="name" type="text"
                        class="block w-full rounded-md border-gray-300 shadow-sm text-sm focus:ring-indigo-500 focus:border-indigo-500" />
                 @error('name') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
             </div>
 
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                <input wire:model="email" type="email"
+                <label for="livewire-contracts-invite-external-signer-email" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                <input id="livewire-contracts-invite-external-signer-email" wire:model="email" type="email"
                        class="block w-full rounded-md border-gray-300 shadow-sm text-sm focus:ring-indigo-500 focus:border-indigo-500" />
                 @error('email') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
             </div>
 
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Link expires in (days)</label>
-                <input wire:model="expiresInDays" type="number" min="1" max="90"
+                <label for="livewire-contracts-invite-external-signer-expiresindays" class="block text-sm font-medium text-gray-700 mb-1">Link expires in (days)</label>
+                <input id="livewire-contracts-invite-external-signer-expiresindays" wire:model="expiresInDays" type="number" min="1" max="90"
                        class="block w-full rounded-md border-gray-300 shadow-sm text-sm focus:ring-indigo-500 focus:border-indigo-500" />
                 @error('expiresInDays') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
             </div>

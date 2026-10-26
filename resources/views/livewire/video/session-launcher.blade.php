@@ -7,8 +7,8 @@
             <div class="border border-gray-200 rounded-lg p-4 space-y-3">
                 <h3 class="text-sm font-semibold text-gray-700">New Session</h3>
                 <div>
-                    <label class="block text-xs font-medium text-gray-600">Attach Contract (optional)</label>
-                    <select wire:model="contractId" class="mt-1 block w-full rounded-md border-gray-300 text-sm">
+                    <label for="livewire-video-session-launcher-contractid" class="block text-xs font-medium text-gray-600">Attach Contract (optional)</label>
+                    <select id="livewire-video-session-launcher-contractid" wire:model="contractId" class="mt-1 block w-full rounded-md border-gray-300 text-sm">
                         <option value="">— None —</option>
                         @foreach($teamContracts as $contract)
                             <option value="{{ $contract->id }}">{{ $contract->title }}</option>
@@ -29,8 +29,8 @@
             <div class="border border-gray-200 rounded-lg p-4 space-y-3">
                 <h3 class="text-sm font-semibold text-gray-700">Join Session</h3>
                 <div>
-                    <label class="block text-xs font-medium text-gray-600">Room ID</label>
-                    <input wire:model="joinRoomId" type="text" placeholder="Enter room ID…"
+                    <label for="livewire-video-session-launcher-joinroomid" class="block text-xs font-medium text-gray-600">Room ID</label>
+                    <input id="livewire-video-session-launcher-joinroomid" wire:model="joinRoomId" type="text" placeholder="Enter room ID…"
                            class="mt-1 block w-full rounded-md border-gray-300 text-sm focus:ring-indigo-500 focus:border-indigo-500">
                     @error('joinRoomId') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
                 </div>

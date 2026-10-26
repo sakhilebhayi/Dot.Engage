@@ -1,6 +1,6 @@
 <div class="flex flex-col h-full" @if($polling) wire:poll.5s.visible @endif>
     <div class="p-3 border-b border-gray-200">
-        <input wire:model.live.debounce.300ms="search" type="text" placeholder="Search conversations…"
+        <input aria-label="Search conversations" wire:model.live.debounce.300ms="search" type="text" placeholder="Search conversations…"
                class="w-full rounded-md border-gray-300 text-sm focus:ring-indigo-500 focus:border-indigo-500">
     </div>
     <div class="flex justify-between items-center px-3 py-2">
