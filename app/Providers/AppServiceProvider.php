@@ -22,7 +22,10 @@ use App\Policies\ContractTemplatePolicy;
 use App\Policies\ConversationPolicy;
 use App\Policies\MessagePolicy;
 use App\Policies\VideoSessionPolicy;
+use Illuminate\Foundation\Events\DiagnosingHealth;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Event;
 
 class AppServiceProvider extends AuthServiceProvider
 {
@@ -65,6 +68,10 @@ class AppServiceProvider extends AuthServiceProvider
      */
     public function boot(): void
     {
+        // /up answered 200 whenever PHP booted, even with the database down. The framework dispatches DiagnosingHealth
+        // before it renders the page: a failing query turns the answer into a 500 (the exception text is never shown).
+        Event::listen(DiagnosingHealth::class, fn () => DB::select('select 1'));
+
         $this->registerPolicies();
     }
 }
