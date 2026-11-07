@@ -268,6 +268,42 @@ class MeetingTest extends TestCase
         $this->assertSame(base64_encode(hash_hmac('sha1', $turn['username'], 'secret', true)), $turn['credential']);
     }
 
+    public function test_only_the_host_can_send_a_command_signal(): void
+    {
+        $m = $this->newMeeting();
+        $h = $this->svc->enter($m, $this->host(), 'h');
+        $this->svc->join($m, $h, $this->host());
+        $g = $this->svc->enter($m, $this->guestAccess(), 'g');
+        $this->svc->host($m, $this->host(), 'admit', $g);
+        $this->svc->join($m, $g->fresh(), $this->guestAccess());
+
+        try {
+            $this->svc->signal($m, $g->fresh(), $h->id, 'state', json_encode(['command' => 'mute']));
+            $this->fail('A guest sent a host command.');
+        } catch (InvalidArgumentException) {
+            $this->assertSame(0, MeetingSignal::where('from_attendee_id', $g->id)->count());
+        }
+
+        $this->assertNotNull($this->svc->signal($m, $h->fresh(), $g->id, 'state', json_encode(['command' => 'mute']))->id);
+        $this->assertNotNull($this->svc->signal($m, $g->fresh(), $h->id, 'state', json_encode(['mic' => false]))->id);
+    }
+
+    public function test_someone_unseen_for_a_while_drops_off_the_roster(): void
+    {
+        $m = $this->newMeeting();
+        $h = $this->svc->enter($m, $this->host(), 'h');
+        $this->svc->join($m, $h, $this->host());
+        $g = $this->svc->enter($m, $this->guestAccess(), 'g');
+        $this->svc->host($m, $this->host(), 'admit', $g);
+        $this->svc->join($m, $g->fresh(), $this->guestAccess());
+        $g->forceFill(['last_seen_at' => now()->subMinutes(3)])->save();
+
+        $snap = $this->svc->snapshot($m, $h->fresh(), 0);
+
+        $this->assertCount(1, $snap['roster']);
+        $this->assertSame('left', $g->fresh()->state);
+    }
+
     public function test_attendee_records_survive_for_the_meeting_history(): void
     {
         $m = $this->newMeeting();

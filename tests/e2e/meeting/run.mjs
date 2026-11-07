@@ -337,7 +337,7 @@ async function callChain(browser) {
         return `tile gone ${((Date.now() - t0) / 1000).toFixed(1)} s after a normal close (keepalive leave on pagehide)`;
     });
 
-    await scenario('(h) host lock: a new joiner is refused; unlock lets them in', async () => {
+    await scenario('(h) host lock: a new joiner is refused', async () => {
         await host.page.click('#ctl-lock');
         await host.page.waitForFunction(() => document.getElementById('ctl-lock').getAttribute('aria-pressed') === 'true');
         const gl = await newPerson(browser, { name: 'Guest 2', email: ensureGuest(2).email });
@@ -351,6 +351,18 @@ async function callChain(browser) {
         await host.page.click('#ctl-lock');
         await host.page.waitForFunction(() => document.getElementById('ctl-lock').getAttribute('aria-pressed') === 'false');
         return `joiner sees "${heading}" with a way out; lock button aria-pressed toggles`;
+    });
+
+    await scenario('(h2) host denies a person at the door', async () => {
+        const gd = await newPerson(browser, { name: 'Guest 4', email: ensureGuest(4).email });
+        await guestSignIn(gd, key);
+        await enter(gd, key, 'waiting');
+        await host.page.waitForSelector('#banner button:has-text("Deny")', { timeout: 15000 });
+        await host.page.click('#banner button:has-text("Deny")');
+        await waitPhase(gd, 'ended', 20000);
+        const heading = await text(gd.page, '#notice-h');
+        ok(/did not let you in/i.test(heading), 'denied person sees: ' + heading);
+        return `denied person sees "${heading}"`;
     });
 
     await scenario('(j) host mute command', async () => {

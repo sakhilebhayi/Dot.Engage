@@ -22,6 +22,9 @@ use InvalidArgumentException;
  */
 class MeetingService
 {
+    /** A joined person unseen this long is dropped from the roster. */
+    private const LOST_DROP_SECONDS = 90;
+
     public function __construct(
         private readonly AuditTrail $audit,
         private readonly EngagementStateMachine $states,
@@ -229,6 +232,11 @@ class MeetingService
         $meeting->refresh();
         $me->refresh();
 
+        // Someone whose tab died stays "not responding" for a while, then drops off the list.
+        MeetingAttendee::where('meeting_id', $meeting->id)->where('state', 'joined')->where('id', '!=', $me->id)
+            ->where('last_seen_at', '<', now()->subSeconds(self::LOST_DROP_SECONDS))
+            ->update(['state' => 'left', 'left_at' => now(), 'mic_on' => false, 'cam_on' => false, 'sharing' => false]);
+
         $roster = MeetingAttendee::where('meeting_id', $meeting->id)->whereIn('state', ['waiting', 'joined', 'admitted'])->orderBy('id')->get()
             ->map(fn (MeetingAttendee $a) => [
                 'id' => $a->id, 'name' => $a->name, 'is_host' => $a->is_host, 'state' => $a->state === 'joined' && ! $a->isPresent() ? 'lost' : $a->state,
@@ -259,6 +267,12 @@ class MeetingService
         }
         if ($from->state !== 'joined') {
             throw new InvalidArgumentException('Join the meeting first.');
+        }
+        if ($type === 'state' && ! $from->is_host && str_contains($payload, 'command')) {
+            $decoded = json_decode($payload, true);
+            if (is_array($decoded) && array_key_exists('command', $decoded)) {
+                throw new InvalidArgumentException('Only the host can send that.');
+            }
         }
         if ($to !== null && ! MeetingAttendee::where('meeting_id', $meeting->id)->where('state', 'joined')->whereKey($to)->exists()) {
             throw new InvalidArgumentException('That person is not in the meeting.');

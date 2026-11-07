@@ -39,8 +39,8 @@ async function sweep(ctx, list, who) {
                 const axe = await p.evaluate(async () => (await window.axe.run(document, { runOnly: ['wcag2a', 'wcag2aa', 'best-practice'] })).violations.map((v) => ({ id: v.id, impact: v.impact, n: v.nodes.length, ex: v.nodes[0]?.html.slice(0, 120) })));
                 const overflow = await p.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
                 const bad = axe.filter((v) => ['serious', 'critical'].includes(v.impact));
-                const row = { who, name, scheme, width, status: res.status?.(), errors: [...errors], axe: bad, minor: axe.length - bad.length, overflow };
-                if (bad.length || errors.length || overflow > 1) { failed++; summary.push(row); }
+                const row = { who, name, scheme, width, status: res.status?.(), errors: errors.filter((e) => !(res.status?.() === 404 && /status of 404/.test(e))), axe: bad, minor: axe.length - bad.length, overflow };
+                if (bad.length || row.errors.length || overflow > 1) { failed++; summary.push(row); }
             }
             await c.close();
         }

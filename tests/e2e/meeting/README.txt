@@ -17,11 +17,11 @@ The app must be running and reachable (default http://127.0.0.1:8781) with its d
 
 Run (from tests/e2e/meeting):
 
-    node run.mjs             # everything below, about 4 minutes
-    node run.mjs call        # (a) to (k): one meeting, three browsers (host, external on desktop, external on a 390x844 phone)
+    node run.mjs             # everything below, about 7 minutes
+    node run.mjs call        # (a) to (k) incl. (h2): one meeting, three browsers (host, external on desktop, external on a 390x844 phone)
     node run.mjs full        # (l) six people meshed, seventh refused as "full" (7 browser contexts; heavy)
     node run.mjs perms       # (n) camera / microphone denied (launches Chrome WITHOUT --use-fake-ui-for-media-stream)
-    node run.mjs misc        # keyboard, focus, light/dark, reduced motion, agreement tab, spotlight, 1/2-tile screenshots
+    node run.mjs misc        # (o1)-(o3), (s), (r), (q), (p): keyboard, focus, themes, reduced motion, agreement tab, spotlight, hidden tab, hostile network
     node smoke.mjs           # just the lobby and a screenshot
 
 Environment variables:
@@ -46,10 +46,12 @@ Scenario map (each prints PASS/FAIL with the numbers it measured):
     (f) HTTP offline for 8 s (Reconnecting shown, back to Live, same page); simulated ICE disconnect (tile "Connection lost",
         restartIce, new ICE credentials, healthy again)
     (g) crashed renderer (no leave request): tile gone after the presence timeout; (g2) polite close: tile gone in about a second
-    (h) host lock refuses a new joiner; (i) host removes a person (cannot come back, resources released);
+    (h) host lock refuses a new joiner; (h2) host denies someone at the door; (i) host removes a person (cannot come back, resources released);
     (j) host mute command; (k) host ends the meeting for everyone (message, redirect, resources released)
     (l) six meshed, seventh refused as full
     (n) camera denied -> audio-only join; both denied -> viewer; microphone denied -> listen only
+    (p) second window displaces the first (409); (q) 419 -> reload message (injected, the dev server does not enforce CSRF here)
+    (r) 429 / garbage 200 / 500 poll answers; (s) hidden tab polls every 5 s but never stops
     (o) keyboard shortcuts (ignored while typing), focus management, lazy Agreement iframe, spotlight, reduced motion, lobby themes
 
 Honest limits of this test setup:

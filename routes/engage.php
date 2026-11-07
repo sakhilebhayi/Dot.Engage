@@ -104,12 +104,12 @@ Route::post('/e/{engagement}/meetings', [MeetingController::class, 'store'])->mi
 Route::prefix('meetings/{roomKey}')->group(function () {
     Route::get('/', [MeetingController::class, 'room'])->name('meetings.room');
     Route::post('cancel', [MeetingController::class, 'cancel'])->name('meetings.cancel');
-    Route::post('enter', [MeetingController::class, 'enter'])->middleware('throttle:30,1,meetings.enter')->name('meetings.enter');
-    Route::get('poll', [MeetingController::class, 'poll'])->middleware('throttle:180,1,meetings.poll')->name('meetings.poll');
-    Route::post('join', [MeetingController::class, 'join'])->middleware('throttle:30,1,meetings.join')->name('meetings.join');
-    Route::get('ice', [MeetingController::class, 'ice'])->middleware('throttle:30,1,meetings.ice')->name('meetings.ice');
-    Route::post('signal', [MeetingController::class, 'signal'])->middleware('throttle:600,1,meetings.signal')->name('meetings.signal');
-    Route::post('state', [MeetingController::class, 'state'])->middleware('throttle:120,1,meetings.state')->name('meetings.state');
-    Route::post('leave', [MeetingController::class, 'leave'])->middleware('throttle:30,1,meetings.leave')->name('meetings.leave');
-    Route::post('host', [MeetingController::class, 'host'])->middleware('throttle:120,1,meetings.host')->name('meetings.host');
+    Route::post('enter', [MeetingController::class, 'enter'])->middleware('throttle:meeting-enter')->name('meetings.enter');
+    Route::get('poll', [MeetingController::class, 'poll'])->middleware('throttle:meeting-poll')->name('meetings.poll');
+    Route::post('join', [MeetingController::class, 'join'])->middleware('throttle:meeting-join')->name('meetings.join');
+    Route::get('ice', [MeetingController::class, 'ice'])->middleware('throttle:meeting-ice')->name('meetings.ice');
+    Route::post('signal', [MeetingController::class, 'signal'])->middleware('throttle:meeting-signal')->name('meetings.signal');
+    Route::post('state', [MeetingController::class, 'state'])->middleware('throttle:meeting-state')->name('meetings.state');
+    Route::post('leave', [MeetingController::class, 'leave'])->middleware('throttle:meeting-leave')->name('meetings.leave');
+    Route::post('host', [MeetingController::class, 'host'])->middleware('throttle:meeting-host')->name('meetings.host');
 });

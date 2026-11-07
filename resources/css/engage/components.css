@@ -107,9 +107,10 @@ dialog.sheet[open] { animation: sheet-in var(--d-mid) var(--ease); }
 .empty { padding: 36px 0; color: var(--muted); max-width: 56ch; }
 .empty b { color: var(--ink); display: block; margin-bottom: 4px; font-size: var(--t-md); }
 
-.kv { display: grid; grid-template-columns: max-content 1fr; gap: 6px 22px; font-size: var(--t-sm); }
+.kv { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 6px 22px; font-size: var(--t-sm); }
 .kv dt { color: var(--muted); }
-.kv dd { margin: 0; }
+.kv dd { margin: 0; overflow-wrap: anywhere; }
+@media (max-width: 560px) { .kv { grid-template-columns: minmax(0, 1fr); gap: 2px; } .kv dt { margin-top: 10px; } .kv dt:first-child { margin-top: 0; } }
 .kv dd.fig { font-size: var(--t-xs); word-break: break-all; }
 
 .spinner { width: 14px; height: 14px; border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%; animation: spin .7s linear infinite; }

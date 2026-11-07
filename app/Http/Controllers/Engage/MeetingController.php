@@ -121,7 +121,7 @@ class MeetingController extends Controller
             'meeting' => $meeting, 'engagement' => $engagement->load('parties'), 'access' => $access,
             'ws' => new Workspace($engagement, $access),
             'config' => [
-                'key' => $meeting->room_key, 'me' => $access->name(), 'isHost' => $access->can('host_meeting'), 'relay' => $ice['relay'],
+                'key' => $meeting->room_key, 'me' => $access->name(), 'isHost' => $access->can('host_meeting'), 'relay' => $ice['relay'], 'ice' => $ice['servers'],
                 'maxParticipants' => (int) config('engage.rtc.max_participants'),
                 'urls' => [
                     'enter' => route('meetings.enter', $meeting->room_key), 'poll' => route('meetings.poll', $meeting->room_key),
@@ -130,7 +130,7 @@ class MeetingController extends Controller
                     'host' => route('meetings.host', $meeting->room_key), 'ice' => route('meetings.ice', $meeting->room_key),
                     'agreement' => route('engagements.show', ['engagement' => $engagement, 'embed' => 1]),
                     'sign' => route('engagements.sign', ['engagement' => $engagement, 'embed' => 1]),
-                    'leaveTo' => route('engagements.meetings', $engagement),
+                    'leaveTo' => $access->isInternal() ? route('engagements.meetings', $engagement) : route('engagements.show', $engagement),
                 ],
                 'canSign' => $access->can('sign') && $engagement->envelopes()->where('status', 'sent')->exists(),
                 'hasDocument' => $engagement->contracts()->exists(),
