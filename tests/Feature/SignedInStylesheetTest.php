@@ -28,8 +28,10 @@ class SignedInStylesheetTest extends TestCase
         $this->publicPath = sys_get_temp_dir().'/engage-signed-in-vite-'.bin2hex(random_bytes(4));
         File::ensureDirectoryExists($this->publicPath.'/build/assets');
         File::put($this->publicPath.'/build/manifest.json', json_encode([
+            'resources/css/engage.css' => ['file' => 'assets/engage-TEST.css', 'src' => 'resources/css/engage.css', 'isEntry' => true],
             'resources/css/signed-in.css' => ['file' => 'assets/signed-in-TEST.css', 'src' => 'resources/css/signed-in.css', 'isEntry' => true],
             'resources/js/app.js' => ['file' => 'assets/app-TEST.js', 'src' => 'resources/js/app.js', 'isEntry' => true],
+            'resources/js/engage.js' => ['file' => 'assets/engage-TEST.js', 'src' => 'resources/js/engage.js', 'isEntry' => true],
         ]));
         $this->app->usePublicPath($this->publicPath);
         $this->app->instance(Vite::class, new Vite);
@@ -48,8 +50,10 @@ class SignedInStylesheetTest extends TestCase
 
         $html = $this->actingAs($user)->get('/dashboard')->assertOk()->getContent();
 
+        $this->assertStringContainsString('build/assets/engage-TEST.css', $html);
         $this->assertStringContainsString('build/assets/signed-in-TEST.css', $html);
         $this->assertStringContainsString('build/assets/app-TEST.js', $html);
+        $this->assertStringContainsString('build/assets/engage-TEST.js', $html);
 
         $this->assertStringNotContainsString('cdn.tailwindcss.com', $html);
         $this->assertStringNotContainsString('unpkg.com', $html);
@@ -59,26 +63,23 @@ class SignedInStylesheetTest extends TestCase
         $this->assertStringContainsString('/livewire/livewire', $html);
     }
 
-    public function test_the_stylesheet_comes_after_the_layouts_own_style_block(): void
+    public function test_the_design_system_loads_before_the_utility_sheet_that_the_jetstream_pages_still_use(): void
     {
         $user = User::factory()->withPersonalTeam()->create();
 
         $html = $this->actingAs($user)->get('/dashboard')->assertOk()->getContent();
 
-        // The utilities are unlayered and must win on equal specificity, as the CDN's did
-        // (it appended its <style> last). See resources/css/signed-in.css.
-        $this->assertLessThan(
-            strpos($html, 'signed-in-TEST.css'),
-            strpos($html, '.sidebar { position:fixed'),
-            'The built stylesheet must be linked after the inline <style> block in layouts/app.blade.php.'
-        );
+        $this->assertLessThan(strpos($html, 'signed-in-TEST.css'), strpos($html, 'engage-TEST.css'));
+        // Fonts are self-hosted: nothing asks Google for them.
+        $this->assertStringNotContainsString('fonts.googleapis.com', $html);
+        $this->assertStringNotContainsString('fonts.gstatic.com', $html);
     }
 
     public function test_every_signed_in_page_uses_the_layout_that_loads_the_build(): void
     {
         $user = User::factory()->withPersonalTeam()->create();
 
-        foreach (['/dashboard', '/chat', '/contracts', '/contracts/create', '/contracts/templates', '/video', '/notifications', '/user/profile', '/teams/create'] as $url) {
+        foreach (['/dashboard', '/chat', '/engagements', '/engagements/create', '/agreements', '/meetings', '/contracts/templates', '/notifications', '/user/profile', '/teams/create'] as $url) {
             $html = $this->actingAs($user)->get($url)->assertOk()->getContent();
 
             $this->assertStringContainsString('build/assets/signed-in-TEST.css', $html, "$url does not load the signed-in stylesheet");

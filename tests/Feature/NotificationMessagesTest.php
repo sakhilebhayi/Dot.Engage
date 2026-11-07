@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Enums\EngagementKind;
 use App\Livewire\Notifications\NotificationTray;
 use App\Models\Contract;
 use App\Models\ContractSignature;
@@ -12,9 +13,11 @@ use App\Models\VideoSession;
 use App\Notifications\ContractExpiringSoonNotification;
 use App\Notifications\ContractSharedNotification;
 use App\Notifications\ContractSignedNotification;
+use App\Notifications\EngagementNotice;
 use App\Notifications\NewMessageNotification;
 use App\Notifications\SignatureRequestedNotification;
 use App\Notifications\VideoSessionInviteNotification;
+use App\Services\Engage\EngagementService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Notifications\Notification;
 use Illuminate\Support\Str;
@@ -196,12 +199,25 @@ class NotificationMessagesTest extends TestCase
      * mail-only (external signers have no account and no tray). This fails when
      * someone adds a class and forgets to cover it here.
      */
+    public function test_engagement_notice_shows_its_message_in_the_tray(): void
+    {
+        $engagement = app(EngagementService::class)->create(
+            $this->owner->currentTeam, $this->owner, 'Supply terms', EngagementKind::Supplier, null, 'Acme',
+        );
+
+        $this->assertTrayShows(
+            new EngagementNotice($engagement, 'engagement_message', 'Olivia posted in the discussion', route('engagements.show', $engagement)),
+            'Olivia posted in the discussion',
+        );
+    }
+
     public function test_every_notification_class_is_covered(): void
     {
         $covered = [
             ContractExpiringSoonNotification::class,
             ContractSharedNotification::class,
             ContractSignedNotification::class,
+            EngagementNotice::class,
             NewMessageNotification::class,
             SignatureRequestedNotification::class,
             VideoSessionInviteNotification::class,
@@ -209,6 +225,7 @@ class NotificationMessagesTest extends TestCase
         $mailOnly = [
             'ExternalSignatureRequestNotification',
             'ExternalSignerExpiringSoonNotification',
+            'VerificationCodeNotification',
         ];
 
         $classes = collect(glob(app_path('Notifications/*.php')))

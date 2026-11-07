@@ -11,9 +11,26 @@ class ContractVersion extends Model
         'contract_id',
         'created_by',
         'version_number',
+        'kind',
         'file_path',
+        'sha256',
+        'size',
+        'page_count',
+        'mime',
+        'label',
+        'stampable',
         'change_notes',
     ];
+
+    protected function casts(): array
+    {
+        return ['stampable' => 'boolean'];
+    }
+
+    public function isSigned(): bool
+    {
+        return $this->kind === 'signed';
+    }
 
     public function contract(): BelongsTo
     {

@@ -63,42 +63,6 @@ Route::middleware([
     'verified',
 ])->group(function () {
 
-    // ── Dashboard ───────────────────────────────────────────────────────────
-    // Scoped to the authenticated user's current team — a prior pass (commit
-    // 5dae85f) added these queries without team scoping, which leaked
-    // cross-tenant aggregate counts (every team's contracts/conversations/
-    // sessions) into every team's dashboard. Fixed here.
-    Route::get('/dashboard', function () {
-        if (! Auth::user()->currentTeam) {
-            return redirect()->route('teams.create');
-        }
-
-        $teamId = Auth::user()->currentTeam->id;
-
-        $stats = [
-            'total_contracts' => Contract::where('team_id', $teamId)->count(),
-            'pending_signatures' => Contract::where('team_id', $teamId)->where('status', 'pending')->count(),
-            'signed_contracts' => Contract::where('team_id', $teamId)->where('status', 'signed')->count(),
-            'active_conversations' => Conversation::where('team_id', $teamId)->whereNotNull('last_message_at')->count(),
-            'active_video_sessions' => VideoSession::where('team_id', $teamId)->whereIn('status', ['waiting', 'active'])->count(),
-        ];
-
-        $recentContracts = Contract::with('creator')
-            ->where('team_id', $teamId)
-            ->latest()
-            ->limit(5)
-            ->get();
-
-        $activeConversations = Conversation::withCount('participants')
-            ->where('team_id', $teamId)
-            ->whereNotNull('last_message_at')
-            ->orderByDesc('last_message_at')
-            ->limit(5)
-            ->get();
-
-        return view('dashboard', compact('stats', 'recentContracts', 'activeConversations'));
-    })->name('dashboard');
-
     // ── Contracts ───────────────────────────────────────────────────────────
     // Livewire components handle all mutations; these are page-view routes only.
     Route::get('/contracts', fn () => view('contracts.index'))
@@ -164,3 +128,5 @@ Route::get('/guardian/health', GuardianHealthController::class)
 if (! Features::enabled(Features::registration())) {
     Route::redirect('/register', '/login')->name('register');
 }
+
+require __DIR__.'/engage.php';
