@@ -1,33 +1,42 @@
-<div @open-new-conversation.window="show = true" x-data="{ show: false }">
-    <div x-show="show" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-        <div class="bg-white rounded-xl shadow-xl p-6 w-full max-w-md space-y-4" @click.stop>
-            <h3 class="text-lg font-semibold text-gray-900">New Conversation</h3>
+<div x-on:open-new-conversation.window="show = true" x-data="{ show: false }" x-on:keydown.escape.window="show = false">
+    <div x-show="show" class="dlg" style="display: none;">
+        <div class="dlg-back" x-on:click="show = false" aria-hidden="true"></div>
 
-            <div>
-                <label for="livewire-chat-new-conversation-name" class="block text-sm font-medium text-gray-700">Name (optional for groups)</label>
-                <input id="livewire-chat-new-conversation-name" wire:model="name" type="text" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm text-sm">
+        <div class="dlg-panel" style="--dlg-w: 480px" role="dialog" aria-modal="true" aria-labelledby="new-conversation-title" x-trap.inert.noscroll="show">
+            <div class="sheet-head">
+                <h2 class="dlg-title" id="new-conversation-title">New conversation</h2>
+                <button type="button" class="iconbtn dlg-close" x-on:click="show = false" aria-label="Close"><x-icon name="x" /></button>
             </div>
 
-            <div class="flex items-center gap-2">
-                <input wire:model="isGroup" type="checkbox" id="is-group" class="rounded border-gray-300 text-indigo-600">
-                <label for="is-group" class="text-sm text-gray-700">Group conversation</label>
+            <div class="sheet-body">
+                <div class="field field-first">
+                    <label for="livewire-chat-new-conversation-name">Name <span class="muted" style="font-weight:400">(optional for groups)</span></label>
+                    <input id="livewire-chat-new-conversation-name" class="input" wire:model="name" type="text">
+                </div>
+
+                <label class="checkline" for="is-group">
+                    <input class="check-box" wire:model="isGroup" type="checkbox" id="is-group">
+                    <span>Group conversation</span>
+                </label>
+
+                <fieldset class="fieldset" id="livewire-chat-new-conversation-selectedusers" style="margin-top:14px">
+                    <legend>Who is in it</legend>
+                    @forelse($teamMembers as $member)
+                        <label class="checkline">
+                            <input class="check-box" type="checkbox" wire:model="selectedUsers" value="{{ $member->id }}">
+                            <span>{{ $member->name }}</span>
+                        </label>
+                    @empty
+                        <p class="hint">There is nobody else in this business yet. Add people from Business and members.</p>
+                    @endforelse
+                </fieldset>
+
+                @error('selectedUsers') <p class="err">{{ $message }}</p> @enderror
             </div>
 
-            <div>
-                <label for="livewire-chat-new-conversation-selectedusers" class="block text-sm font-medium text-gray-700 mb-1">Participants</label>
-                <select id="livewire-chat-new-conversation-selectedusers" wire:model="selectedUsers" multiple
-                        class="block w-full rounded-md border-gray-300 shadow-sm text-sm">
-                    @foreach($teamMembers as $member)
-                        <option value="{{ $member->id }}">{{ $member->name }}</option>
-                    @endforeach
-                </select>
-            </div>
-
-            @error('selectedUsers') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
-
-            <div class="flex justify-end gap-3 pt-2">
-                <button @click="show = false" class="px-4 py-2 text-sm text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50">Cancel</button>
-                <button wire:click="create" @click="show = false" class="px-4 py-2 text-sm text-white bg-indigo-600 rounded-md hover:bg-indigo-700">Start</button>
+            <div class="sheet-foot">
+                <button type="button" x-on:click="show = false" class="btn btn-quiet"><span>Cancel</span></button>
+                <button type="button" wire:click="create" x-on:click="show = false" class="btn"><span>Start</span></button>
             </div>
         </div>
     </div>

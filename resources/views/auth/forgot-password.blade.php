@@ -1,33 +1,22 @@
-<x-guest-layout>
-    <x-authentication-card>
-        <x-slot name="logo">
-            <x-authentication-card-logo />
-        </x-slot>
-
-        <div class="mb-4 text-sm text-[var(--ink-soft)]">
-            {{ __('Forgot your password? No problem. Just let us know your email address and we will email you a password reset link that will allow you to choose a new one.') }}
-        </div>
-
+<x-guest-layout title="Reset your password">
+    <x-authentication-card title="Reset your password" lede="Give us your email address and we will send a link to choose a new password.">
         @session('status')
-            <div class="mb-4 font-medium text-sm text-emerald-600">
-                {{ $value }}
-            </div>
+            <div class="flash is-ok" role="status">{{ $value }}</div>
         @endsession
 
-        <x-validation-errors class="mb-4" />
+        <x-validation-errors />
 
         <form method="POST" action="{{ route('password.email') }}">
             @csrf
 
-            <div class="block">
+            <div class="field">
                 <x-label for="email" value="{{ __('Email') }}" />
-                <x-input id="email" class="block mt-1 w-full" type="email" name="email" :value="old('email')" required autofocus autocomplete="username" />
+                <x-input id="email" type="email" name="email" :value="old('email')" required autofocus autocomplete="username" />
             </div>
 
-            <div class="flex items-center justify-end mt-4">
-                <x-button>
-                    {{ __('Email Password Reset Link') }}
-                </x-button>
+            <div class="door-actions">
+                <a href="{{ route('login') }}">Back to sign in</a>
+                <x-button>{{ __('Email the reset link') }}</x-button>
             </div>
         </form>
     </x-authentication-card>

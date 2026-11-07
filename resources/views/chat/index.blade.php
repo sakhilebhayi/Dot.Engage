@@ -1,16 +1,19 @@
-<x-app-layout>
-    <x-slot name="header"><h2 class="text-xl font-semibold text-gray-800">Messages</h2></x-slot>
-    <div class="py-0 flex" style="height:calc(100vh - 64px)">
-        <div class="w-72 border-r border-gray-200 bg-white flex-shrink-0">
+<x-app-layout title="Team chat" wide>
+    <div class="page-head chat-head">
+        <div>
+            <h1>Team chat</h1>
+        </div>
+    </div>
+
+    <div class="chat tap">
+        <aside class="chat-list" aria-label="Conversations">
             <livewire:chat.conversation-list />
             <livewire:chat.new-conversation />
-        </div>
-        <div class="flex-1">
-            @isset($conversationId)
-                <livewire:chat.conversation-thread :conversation-id="$conversationId" />
-            @else
-                <div class="flex items-center justify-center h-full text-gray-400">Select a conversation to start messaging.</div>
-            @endisset
-        </div>
+        </aside>
+        <section class="chat-pane" aria-label="Conversation" x-data x-on:conversation-selected.window="window.location.assign('{{ url('/chat') }}/' + $event.detail.conversationId)">
+            <div class="chat-none">
+                <div><b>Pick a conversation</b>Choose one from the list, or start a new one with the people in your business.</div>
+            </div>
+        </section>
     </div>
 </x-app-layout>

@@ -1,0 +1,7 @@
+{
+  "name": "engage-meeting-e2e",
+  "private": true,
+  "type": "module",
+  "description": "Playwright scripts for the Dot.Engage meeting room. Not part of the app build.",
+  "dependencies": { "playwright-core": "^1.49.0" }
+}

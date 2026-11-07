@@ -1,48 +1,41 @@
-<x-guest-layout>
-    <x-authentication-card>
-        <x-slot name="logo">
-            <x-authentication-card-logo />
-        </x-slot>
-
-        <x-validation-errors class="mb-4" />
+<x-guest-layout title="Sign in">
+    <x-authentication-card title="Sign in" lede="Use the email and password for your Dot.Engage account.">
+        <x-validation-errors />
 
         @session('status')
-            <div class="mb-4 font-medium text-sm text-emerald-600">
-                {{ $value }}
-            </div>
+            <div class="flash is-ok" role="status">{{ $value }}</div>
         @endsession
 
         <form method="POST" action="{{ route('login') }}">
             @csrf
 
-            <div>
+            <div class="field">
                 <x-label for="email" value="{{ __('Email') }}" />
-                <x-input id="email" class="block mt-1 w-full" type="email" name="email" :value="old('email')" required autofocus autocomplete="username" />
+                <x-input id="email" type="email" name="email" :value="old('email')" required autofocus autocomplete="username" />
             </div>
 
-            <div class="mt-4">
+            <div class="field">
                 <x-label for="password" value="{{ __('Password') }}" />
-                <x-input id="password" class="block mt-1 w-full" type="password" name="password" required autocomplete="current-password" />
+                <x-input id="password" type="password" name="password" required autocomplete="current-password" />
             </div>
 
-            <div class="block mt-4">
-                <label for="remember_me" class="flex items-center">
-                    <x-checkbox id="remember_me" name="remember" />
-                    <span class="ms-2 text-sm text-[var(--ink-soft)]">{{ __('Remember me') }}</span>
-                </label>
-            </div>
+            <label class="checkline" for="remember_me">
+                <x-checkbox id="remember_me" name="remember" />
+                <span>{{ __('Remember me') }}</span>
+            </label>
 
-            <div class="flex items-center justify-end mt-4">
+            <div class="door-actions">
                 @if (Route::has('password.request'))
-                    <a class="underline text-sm text-[var(--ink-soft)] hover:text-[var(--ink)] rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--gold)]" href="{{ route('password.request') }}">
-                        {{ __('Forgot your password?') }}
-                    </a>
+                    <a href="{{ route('password.request') }}">{{ __('Forgot your password?') }}</a>
                 @endif
 
-                <x-button class="ms-4">
-                    {{ __('Log in') }}
-                </x-button>
+                <x-button>{{ __('Sign in') }}</x-button>
             </div>
         </form>
+
+        <p class="door-note">
+            In production, sign-in goes through InfoDot. Open Dot.Engage from InfoDot to arrive signed in, and your account is created the first time you do. This form is for accounts that already have a password here.
+            <a href="{{ config('ecosystem.platforms.infodot.url', 'https://infodot.co.za') }}">Go to InfoDot</a>
+        </p>
     </x-authentication-card>
 </x-guest-layout>

@@ -15,19 +15,20 @@ Artisan::command('inspire', function () {
 
 // ─── Dot.Engage Scheduled Maintenance ────────────────────────────────────────
 
-// Clean up stale video sessions (waiting/active for more than 24 h) every hour.
-Schedule::command('dotengage:clean-expired-sessions --hours=24')
-    ->hourly()
-    ->withoutOverlapping()
-    ->runInBackground()
-    ->appendOutputTo(storage_path('logs/clean-expired-sessions.log'));
+// Everything that has to happen without a person pressing a button. The host runs the scheduler every minute.
 
-// Re-queue any contract uploads stuck in draft every 15 minutes.
-Schedule::command('dotengage:retry-failed-uploads --limit=50')
-    ->everyFifteenMinutes()
-    ->withoutOverlapping()
-    ->runInBackground()
-    ->appendOutputTo(storage_path('logs/retry-failed-uploads.log'));
+// Close engagements past their end date, expire signing requests past their deadline, remind people whose
+// signature is waiting, and warn owners three days before an engagement lapses.
+Schedule::command('engage:housekeeping')->hourly()->withoutOverlapping()->runInBackground()->appendOutputTo(storage_path('logs/engage-housekeeping.log'));
+
+// Finish signed agreements whose final copy was not produced (a crash, a restart): idempotent.
+Schedule::command('engage:finalise-pending')->everyFiveMinutes()->withoutOverlapping()->runInBackground()->appendOutputTo(storage_path('logs/engage-finalise.log'));
+
+// End meetings nobody is in any more, and drop signalling messages older than an hour.
+Schedule::command('engage:meetings-clean')->everyFiveMinutes()->withoutOverlapping()->runInBackground()->appendOutputTo(storage_path('logs/engage-meetings.log'));
+
+// Recompute every recently active engagement's audit chain. A break is logged as an error.
+Schedule::command('engage:verify-audit')->dailyAt('03:20')->withoutOverlapping()->runInBackground()->appendOutputTo(storage_path('logs/engage-audit.log'));
 
 // Generate monthly team activity reports on the 1st of each month at 06:00.
 Schedule::command('dotengage:team-activity-report')
@@ -35,15 +36,6 @@ Schedule::command('dotengage:team-activity-report')
     ->withoutOverlapping()
     ->runInBackground()
     ->appendOutputTo(storage_path('logs/team-activity-report.log'));
-
-// Remind pending signers on contracts expiring within 3 days, and flag
-// unsigned contracts already past their expiry. Once daily is enough --
-// signers don't need a fresh nudge every few minutes.
-Schedule::command('dotengage:send-expiration-reminders --days=3')
-    ->dailyAt('08:00')
-    ->withoutOverlapping()
-    ->runInBackground()
-    ->appendOutputTo(storage_path('logs/send-expiration-reminders.log'));
 
 // Scan composer/npm dependencies for security advisories weekly and propose a patch per
 // manager for operator approval -- never applies automatically. See docs/superpowers/specs/

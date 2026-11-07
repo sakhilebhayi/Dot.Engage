@@ -1,6 +1,12 @@
-<x-app-layout>
-    <x-slot name="header"><h2 class="text-xl font-semibold text-gray-800">Dependency Patches</h2></x-slot>
-    <div class="py-6"><div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+<x-app-layout title="Dependency patches">
+    <div class="tap">
+        <div class="page-head">
+            <div>
+                <h1>Dependency patches</h1>
+                <p class="lede">Updates the platform has proposed for its own packages. Nothing runs until an operator approves it here.</p>
+            </div>
+        </div>
+
         <livewire:operator.dependency-patch-queue />
-    </div></div>
+    </div>
 </x-app-layout>

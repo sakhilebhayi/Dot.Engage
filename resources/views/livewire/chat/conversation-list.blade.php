@@ -1,31 +1,35 @@
-<div class="flex flex-col h-full" @if($polling) wire:poll.5s.visible @endif>
-    <div class="p-3 border-b border-gray-200">
-        <input aria-label="Search conversations" wire:model.live.debounce.300ms="search" type="text" placeholder="Search conversations…"
-               class="w-full rounded-md border-gray-300 text-sm focus:ring-indigo-500 focus:border-indigo-500">
+<div class="cl" @if($polling) wire:poll.5s.visible @endif>
+    <div class="cl-search">
+        <input class="input" aria-label="Search conversations" wire:model.live.debounce.300ms="search" type="search" placeholder="Search conversations">
     </div>
-    <div class="flex justify-between items-center px-3 py-2">
-        <span class="text-xs font-semibold text-gray-500 uppercase">Messages</span>
+    <div class="cl-head">
+        <h2>Conversations</h2>
         @can('create', App\Models\Conversation::class)
-            <button wire:click="$dispatch('open-new-conversation')" class="text-xs text-indigo-600 hover:underline">+ New</button>
+            <button type="button" wire:click="$dispatch('open-new-conversation')" class="btn btn-sm"><x-icon name="plus" size="sm" /><span>New</span></button>
         @endcan
     </div>
-    <ul class="flex-1 overflow-y-auto divide-y divide-gray-100">
+    <ul class="cl-items">
         @forelse($conversations as $conversation)
-            <li wire:click="select({{ $conversation->id }})" role="button" tabindex="0"
-                wire:keydown.enter="select({{ $conversation->id }})" wire:keydown.space.prevent="select({{ $conversation->id }})"
-                class="px-3 py-3 cursor-pointer hover:bg-indigo-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-indigo-500 {{ $selectedId === $conversation->id ? 'bg-indigo-50' : '' }}">
-                <div class="flex items-center justify-between">
-                    <p class="text-sm font-medium text-gray-900 truncate">{{ $conversation->name ?? 'Direct Message' }}</p>
+            @php($label = $conversation->name ?? 'Direct message')
+            <li>
+                <a class="cl-item {{ $conversation->unreadCount > 0 ? 'is-unread' : '' }}" href="{{ route('chat.show', $conversation) }}"
+                   @if($selectedId === $conversation->id) aria-current="true" @endif>
+                    <span class="ini pen-{{ ($conversation->id % 4) + 1 }}" aria-hidden="true">{{ strtoupper(mb_substr($label, 0, 1)) }}</span>
+                    <span>
+                        <span class="cl-name">{{ $label }}</span>
+                        <span class="cl-when">{{ $conversation->last_message_at?->diffForHumans() ?? 'No messages yet' }}</span>
+                    </span>
                     @if($conversation->unreadCount > 0)
-                        <span class="ml-2 inline-flex items-center justify-center w-5 h-5 rounded-full bg-indigo-600 text-white text-xs">
-                            {{ $conversation->unreadCount }}
-                        </span>
+                        <span class="sq" aria-hidden="true"></span>
+                        <span class="sr-only">{{ $conversation->unreadCount }} unread</span>
                     @endif
-                </div>
-                <p class="text-xs text-gray-400 mt-0.5">{{ $conversation->last_message_at?->diffForHumans() ?? '' }}</p>
+                </a>
             </li>
         @empty
-            <li class="px-3 py-4 text-sm text-gray-500 text-center">No conversations yet.</li>
+            <li class="cl-empty">
+                <b>No conversations yet.</b>
+                Start one with the people in your business.
+            </li>
         @endforelse
     </ul>
 </div>

@@ -16,20 +16,55 @@ class Contract extends Model
 
     protected $fillable = [
         'team_id',
+        'engagement_id',
         'created_by',
         'title',
         'description',
         'file_path',
         'file_size',
+        'mime',
+        'sha256',
+        'page_count',
+        'current_version',
         'status',
         'expires_at',
+        'locked_at',
+        'shared_at',
     ];
 
     protected function casts(): array
     {
         return [
             'expires_at' => 'datetime',
+            'locked_at' => 'datetime',
+            'shared_at' => 'datetime',
         ];
+    }
+
+    public function engagement(): BelongsTo
+    {
+        return $this->belongsTo(Engagement::class);
+    }
+
+    public function isPdf(): bool
+    {
+        return $this->mime === 'application/pdf' || str_ends_with(strtolower((string) $this->file_path), '.pdf');
+    }
+
+    /** A signing request has been sent for this document: the file can no longer be replaced in place. */
+    public function isLocked(): bool
+    {
+        return $this->locked_at !== null || $this->status === 'signed';
+    }
+
+    public function isShared(): bool
+    {
+        return $this->shared_at !== null;
+    }
+
+    public function currentVersionRecord(): ?ContractVersion
+    {
+        return $this->versions()->orderByDesc('version_number')->first();
     }
 
     public function team(): BelongsTo

@@ -2,187 +2,111 @@
 
 namespace Tests\Feature;
 
-use App\Livewire\Contracts\ContractWizard;
-use App\Livewire\Contracts\SaveAsTemplate;
-use App\Livewire\Contracts\TemplateList;
-use App\Models\Contract;
 use App\Models\ContractTemplate;
-use App\Models\User;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
+use App\Models\Engagement;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
-use Livewire\Livewire;
+use Tests\Support\BuildsEngagements;
 use Tests\TestCase;
 
 class ContractTemplateTest extends TestCase
 {
-    use RefreshDatabase;
+    use BuildsEngagements, RefreshDatabase;
 
-    // -----------------------------------------------------------------------
-    // Saving a contract as a template
-    // -----------------------------------------------------------------------
-
-    public function test_contract_creator_can_save_it_as_a_template(): void
+    public function test_a_document_can_be_saved_as_a_template_with_its_file_copied(): void
     {
-        Storage::fake('contracts');
-        Storage::disk('contracts')->put('original.pdf', 'fake pdf content');
+        $engagement = $this->makeEngagement();
+        $contract = $this->addDocument($engagement);
 
-        $owner = User::factory()->withPersonalTeam()->create();
-        $contract = Contract::factory()->pending()->create([
-            'team_id' => $owner->currentTeam->id,
-            'created_by' => $owner->id,
-            'file_path' => 'original.pdf',
-            'description' => 'Standard NDA',
-            'expires_at' => now()->addDays(30),
-        ]);
+        $this->actingAs($engagement->owner)->post(route('contracts.templates.store'), ['document' => $contract->id, 'title' => 'Supply template'])->assertRedirect(route('contracts.templates'));
 
-        Livewire::actingAs($owner)
-            ->test(SaveAsTemplate::class)
-            ->call('open', $contract->id)
-            ->set('title', 'NDA Template')
-            ->call('save')
-            ->assertHasNoErrors();
-
-        $template = ContractTemplate::where('title', 'NDA Template')->first();
-        $this->assertNotNull($template);
-        $this->assertSame($owner->currentTeam->id, $template->team_id);
-        $this->assertSame('Standard NDA', $template->description);
-        $this->assertEqualsWithDelta(30, $template->expires_in_days, 1);
-        $this->assertNotNull($template->file_path);
-        Storage::disk('contracts')->assertExists($template->file_path);
+        $template = ContractTemplate::sole();
+        $this->assertSame('Supply template', $template->title);
+        $this->assertTrue(Storage::disk('contracts')->exists($template->file_path));
+        $this->assertNotSame($contract->file_path, $template->file_path, 'the file is copied, not shared');
     }
 
-    public function test_non_team_member_cannot_save_a_template_from_someone_elses_contract(): void
+    public function test_someone_cannot_save_another_teams_document_as_a_template(): void
     {
-        $owner = User::factory()->withPersonalTeam()->create();
-        $outsider = User::factory()->withPersonalTeam()->create();
-        $contract = Contract::factory()->pending()->create([
-            'team_id' => $owner->currentTeam->id,
-            'created_by' => $owner->id,
-        ]);
+        $engagement = $this->makeEngagement();
+        $contract = $this->addDocument($engagement);
+        $outsider = $this->makeOwner();
 
-        // Contract carries HasTeamScope, so an outsider's Contract::findOrFail()
-        // inside SaveAsTemplate::open() never finds the row in the first
-        // place -- a 404-shaped failure, not a 403, matching the same
-        // scope-before-Gate pattern documented for SignatureController.
-        $this->expectException(ModelNotFoundException::class);
-
-        Livewire::actingAs($outsider)
-            ->test(SaveAsTemplate::class)
-            ->call('open', $contract->id);
+        $this->actingAs($outsider)->post(route('contracts.templates.store'), ['document' => $contract->id, 'title' => 'Mine now'])->assertNotFound();
+        $this->assertSame(0, ContractTemplate::withoutGlobalScopes()->count());
     }
 
-    // -----------------------------------------------------------------------
-    // Listing / deleting templates
-    // -----------------------------------------------------------------------
-
-    public function test_team_member_only_sees_their_own_teams_templates(): void
+    public function test_the_list_shows_only_this_teams_templates(): void
     {
-        $owner = User::factory()->withPersonalTeam()->create();
-        $other = User::factory()->withPersonalTeam()->create();
+        $mine = $this->makeOwner();
+        $theirs = $this->makeOwner();
+        ContractTemplate::create(['team_id' => $mine->currentTeam->id, 'created_by' => $mine->id, 'title' => 'Our NDA']);
+        ContractTemplate::create(['team_id' => $theirs->currentTeam->id, 'created_by' => $theirs->id, 'title' => 'Their secret terms']);
 
-        ContractTemplate::factory()->create(['team_id' => $owner->currentTeam->id, 'created_by' => $owner->id, 'title' => 'Mine']);
-        ContractTemplate::factory()->create(['team_id' => $other->currentTeam->id, 'created_by' => $other->id, 'title' => 'Not Mine']);
-
-        Livewire::actingAs($owner)
-            ->test(TemplateList::class)
-            ->assertSee('Mine')
-            ->assertDontSee('Not Mine');
+        $this->actingAs($mine)->get(route('contracts.templates'))->assertOk()->assertSee('Our NDA')->assertDontSee('Their secret terms');
     }
 
-    public function test_template_creator_can_delete_it(): void
+    public function test_starting_an_engagement_from_a_template_prefills_it_and_copies_the_document(): void
     {
-        $owner = User::factory()->withPersonalTeam()->create();
-        $template = ContractTemplate::factory()->create([
-            'team_id' => $owner->currentTeam->id,
-            'created_by' => $owner->id,
-        ]);
+        $engagement = $this->makeEngagement();
+        $source = $this->addDocument($engagement);
+        $owner = $engagement->owner;
+        $this->actingAs($owner)->post(route('contracts.templates.store'), ['document' => $source->id, 'title' => 'Supply template']);
+        $template = ContractTemplate::sole();
 
-        Livewire::actingAs($owner)
-            ->test(TemplateList::class)
-            ->call('delete', $template->id);
+        $this->actingAs($owner)->get(route('engagements.create', ['template' => $template->id]))->assertOk()->assertSee('Supply template');
 
-        $this->assertNull(ContractTemplate::find($template->id));
+        $this->actingAs($owner)->post(route('engagements.store'), ['title' => 'Second supply deal', 'kind' => 'supplier_agreement', 'counterparty' => 'Beta Foods', 'template' => $template->id])->assertRedirect();
+
+        $created = Engagement::where('title', 'Second supply deal')->sole();
+        $doc = $created->contracts()->sole();
+        $this->assertSame(1, $doc->versions()->count());
+        $this->assertNotSame($template->file_path, $doc->file_path);
     }
 
-    public function test_non_creator_non_admin_cannot_delete_a_template(): void
+    public function test_an_outsider_cannot_start_from_someone_elses_template(): void
     {
-        $owner = User::factory()->withPersonalTeam()->create();
-        $member = User::factory()->create();
-        $owner->currentTeam->users()->attach($member, ['role' => 'editor']);
+        $theirs = $this->makeOwner();
+        $template = ContractTemplate::create(['team_id' => $theirs->currentTeam->id, 'created_by' => $theirs->id, 'title' => 'Private']);
 
-        $template = ContractTemplate::factory()->create([
-            'team_id' => $owner->currentTeam->id,
-            'created_by' => $owner->id,
-        ]);
-
-        Livewire::actingAs($member)
-            ->test(TemplateList::class)
-            ->call('delete', $template->id)
-            ->assertForbidden();
+        $this->actingAs($this->makeOwner())->get(route('engagements.create', ['template' => $template->id]))->assertNotFound();
     }
 
-    // -----------------------------------------------------------------------
-    // Creating a contract from a template
-    // -----------------------------------------------------------------------
-
-    public function test_wizard_prefills_fields_from_a_template(): void
+    public function test_only_the_creator_or_an_admin_may_delete_a_template(): void
     {
-        $owner = User::factory()->withPersonalTeam()->create();
-        $template = ContractTemplate::factory()->create([
-            'team_id' => $owner->currentTeam->id,
-            'created_by' => $owner->id,
-            'title' => 'MSA Template',
-            'description' => 'Master Services Agreement boilerplate',
-            'expires_in_days' => 21,
-        ]);
+        $owner = $this->makeOwner();
+        $editor = $this->addTeamMember($owner->currentTeam, 'editor');
+        $template = ContractTemplate::create(['team_id' => $owner->currentTeam->id, 'created_by' => $owner->id, 'title' => 'Mine']);
 
-        Livewire::actingAs($owner)
-            ->test(ContractWizard::class, ['templateId' => $template->id])
-            ->assertSet('title', 'MSA Template')
-            ->assertSet('description', 'Master Services Agreement boilerplate')
-            ->assertSet('expiresAt', now()->addDays(21)->format('Y-m-d'));
+        $this->actingAs($editor)->delete(route('contracts.templates.destroy', $template))->assertForbidden();
+        $this->actingAs($owner)->delete(route('contracts.templates.destroy', $template))->assertRedirect();
+        $this->assertSame(0, ContractTemplate::count());
     }
 
-    public function test_creating_from_a_template_copies_its_file_when_none_is_uploaded(): void
+    public function test_a_viewer_cannot_save_or_use_templates(): void
     {
-        Storage::fake('contracts');
-        Storage::disk('contracts')->put('templates/original.pdf', 'template pdf content');
+        $engagement = $this->makeEngagement();
+        $contract = $this->addDocument($engagement);
+        $viewer = $this->addTeamMember($engagement->team, 'viewer');
 
-        $owner = User::factory()->withPersonalTeam()->create();
-        $template = ContractTemplate::factory()->create([
-            'team_id' => $owner->currentTeam->id,
-            'created_by' => $owner->id,
-            'file_path' => 'templates/original.pdf',
-        ]);
-
-        Livewire::actingAs($owner)
-            ->test(ContractWizard::class, ['templateId' => $template->id])
-            ->set('title', 'New Deal')
-            ->call('save');
-
-        $contract = Contract::where('title', 'New Deal')->first();
-        $this->assertNotNull($contract);
-        $this->assertNotNull($contract->file_path);
-        $this->assertNotSame($template->file_path, $contract->file_path);
-        Storage::disk('contracts')->assertExists($contract->file_path);
+        $this->actingAs($viewer)->post(route('contracts.templates.store'), ['document' => $contract->id, 'title' => 'x'])->assertForbidden();
+        $this->actingAs($viewer)->get(route('engagements.create'))->assertForbidden();
     }
 
-    public function test_outsider_cannot_create_a_contract_from_someone_elses_template(): void
+    public function test_old_contract_addresses_lead_to_the_engagement_and_never_to_other_teams(): void
     {
-        $owner = User::factory()->withPersonalTeam()->create();
-        $outsider = User::factory()->withPersonalTeam()->create();
+        $engagement = $this->makeEngagement();
+        $contract = $this->addDocument($engagement);
 
-        $template = ContractTemplate::factory()->create([
-            'team_id' => $owner->currentTeam->id,
-            'created_by' => $owner->id,
-        ]);
+        $this->actingAs($engagement->owner)->get('/contracts/'.$contract->id)->assertRedirect(route('engagements.show', ['engagement' => $engagement, 'doc' => $contract->id]));
+        $this->actingAs($this->makeOwner())->get('/contracts/'.$contract->id)->assertNotFound();
+        $this->actingAs($engagement->owner)->get('/contracts')->assertRedirect(route('engagements.index'));
+        $this->actingAs($engagement->owner)->get('/video')->assertRedirect(route('meetings.index'));
+    }
 
-        // ContractTemplate also carries HasTeamScope -- same 404-not-403
-        // shape as above.
-        $this->expectException(ModelNotFoundException::class);
-
-        Livewire::actingAs($outsider)
-            ->test(ContractWizard::class, ['templateId' => $template->id]);
+    public function test_an_old_signing_link_explains_it_was_replaced(): void
+    {
+        $this->get('/sign/12?expires=1&signature=abc')->assertStatus(410)->assertSee('replaced');
+        $this->post('/sign/12')->assertStatus(410);
     }
 }

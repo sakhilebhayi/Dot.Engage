@@ -16,9 +16,9 @@ class SecurityHeadersTest extends TestCase
         $response->assertHeader('X-Content-Type-Options', 'nosniff')
             ->assertHeader('X-Frame-Options', 'SAMEORIGIN')
             ->assertHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
-        // In-app video calls (Daily.co): camera, microphone and screen sharing are allowed for this site and for the Daily call frame, the rest stays denied.
+        // Meetings: camera, microphone and screen sharing for this site only, the rest stays denied.
         $this->assertSame(
-            'camera=(self "https://*.daily.co"), microphone=(self "https://*.daily.co"), display-capture=(self "https://*.daily.co"), geolocation=(), payment=(), usb=()',
+            'camera=(self), microphone=(self), display-capture=(self), geolocation=(), payment=(), usb=()',
             $response->headers->get('Permissions-Policy'),
         );
         $this->get('/up')->assertHeader('X-Content-Type-Options', 'nosniff');
@@ -45,34 +45,45 @@ class SecurityHeadersTest extends TestCase
         $this->get('/__strict')->assertHeader('X-Frame-Options', 'DENY');
     }
 
-    public function test_the_policy_is_report_only_and_reports_to_the_csp_endpoint(): void
+    public function test_the_policy_is_enforced_and_reports_to_the_csp_endpoint(): void
     {
         $response = $this->get('/');
 
-        $policy = (string) $response->headers->get('Content-Security-Policy-Report-Only');
+        $policy = (string) $response->headers->get('Content-Security-Policy');
         $this->assertStringContainsString("default-src 'self'", $policy);
         $this->assertStringContainsString('report-uri /csp-report', $policy);
         $this->assertStringContainsString("frame-ancestors 'self'", $policy);
         $this->assertStringContainsString("object-src 'none'", $policy);
         $this->assertStringContainsString("base-uri 'self'", $policy);
-        $this->assertFalse($response->headers->has('Content-Security-Policy'), 'report-only: nothing is enforced yet');
+        $this->assertFalse($response->headers->has('Content-Security-Policy-Report-Only'));
     }
 
-    public function test_the_policy_allows_the_outside_origins_the_layouts_load(): void
+    public function test_the_kill_switch_makes_the_policy_report_only_again(): void
     {
-        $policy = (string) $this->get('/')->headers->get('Content-Security-Policy-Report-Only');
+        config(['security.csp_report_only' => true]);
+
+        $response = $this->get('/');
+
+        $this->assertTrue($response->headers->has('Content-Security-Policy-Report-Only'));
+        $this->assertFalse($response->headers->has('Content-Security-Policy'));
+    }
+
+    public function test_nothing_is_loaded_from_outside_this_site_except_the_default_avatar(): void
+    {
+        $policy = (string) $this->get('/')->headers->get('Content-Security-Policy');
 
         preg_match('/script-src ([^;]+);/', $policy, $script);
-        $this->assertStringContainsString('https://unpkg.com', $script[1], 'Alpine on the landing page');
+        $this->assertStringNotContainsString('http', $script[1], 'no outside script origin');
         $this->assertStringContainsString("'unsafe-inline'", $script[1], 'Livewire and Jetstream render inline scripts');
         $this->assertStringContainsString("'unsafe-eval'", $script[1], 'Alpine evaluates its expressions with the Function constructor');
 
-        $this->assertMatchesRegularExpression('/style-src [^;]*https:\/\/fonts\.googleapis\.com/', $policy);
-        $this->assertMatchesRegularExpression('/font-src [^;]*https:\/\/fonts\.gstatic\.com/', $policy);
-        $this->assertMatchesRegularExpression('/img-src [^;]*data: blob:[^;]*https:\/\/images\.unsplash\.com/', $policy);
-        $this->assertMatchesRegularExpression('/img-src [^;]*https:\/\/ui-avatars\.com/', $policy, "Jetstream's default avatar");
-        $this->assertStringContainsString("connect-src 'self' wss: https:", $policy);
-        $this->assertStringContainsString("frame-src 'self' https://*.daily.co", $policy, 'the embedded video call frame');
+        $this->assertDoesNotMatchRegularExpression('/style-src [^;]*https:/', $policy, 'no Google Fonts stylesheet');
+        $this->assertDoesNotMatchRegularExpression('/font-src [^;]*https:/', $policy);
+        $this->assertMatchesRegularExpression('/img-src [^;]*data: blob:[^;]*https:\/\/ui-avatars\.com/', $policy, "Jetstream's default avatar");
+        $this->assertStringContainsString("connect-src 'self'", $policy);
+        $this->assertStringContainsString("frame-src 'self';", $policy);
+        $this->assertStringNotContainsString('daily.co', $policy);
+        $this->assertStringContainsString("worker-src 'self' blob:", $policy, 'the PDF reader runs in a worker');
     }
 
     public function test_violation_reports_are_accepted_without_a_session_a_csrf_token_or_a_login(): void

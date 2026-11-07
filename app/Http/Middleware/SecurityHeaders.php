@@ -22,11 +22,9 @@ use Symfony\Component\HttpFoundation\Response;
 class SecurityHeaders
 {
     /**
-     * The in-app video calls (Daily.co) need the camera, the microphone and screen sharing, so Engage allows them for itself and for the
-     * Daily call frame: Daily's call is embedded as a cross-origin iframe, and a page that allows a feature for 'self' alone also blocks it
-     * inside that frame. Everything else stays denied.
+     * Meetings use the camera, the microphone and screen sharing, in this page and in no other. Everything else stays denied.
      */
-    private const PERMISSIONS_POLICY = 'camera=(self "https://*.daily.co"), microphone=(self "https://*.daily.co"), display-capture=(self "https://*.daily.co"), geolocation=(), payment=(), usb=()';
+    private const PERMISSIONS_POLICY = 'camera=(self), microphone=(self), display-capture=(self), geolocation=(), payment=(), usb=()';
 
     public function handle(Request $request, Closure $next): Response
     {
@@ -37,7 +35,8 @@ class SecurityHeaders
             'X-Frame-Options' => 'SAMEORIGIN',
             'Referrer-Policy' => 'strict-origin-when-cross-origin',
             'Permissions-Policy' => self::PERMISSIONS_POLICY,
-            'Content-Security-Policy-Report-Only' => $this->policy(),
+            // Enforced. SECURITY_CSP_REPORT_ONLY=true switches it back to report-only without a deploy of code.
+            (config('security.csp_report_only', false) ? 'Content-Security-Policy-Report-Only' : 'Content-Security-Policy') => $this->policy(),
         ];
 
         $hstsSeconds = (int) config('security.hsts_seconds', 0);
@@ -56,20 +55,22 @@ class SecurityHeaders
     }
 
     /**
-     * Outside origins in use: unpkg.com (Alpine on the landing page), Google Fonts (stylesheet host and font host), Unsplash (landing and
-     * sign-in photographs), ui-avatars.com (Jetstream's HasProfilePhoto default avatar) and *.daily.co, the embedded video call frame.
+     * Everything is served from this site: scripts, styles, fonts and the PDF worker. 'unsafe-inline' and 'unsafe-eval' stay on
+     * script-src because Livewire and Alpine need them. The one outside origin is ui-avatars.com, Jetstream's default profile photo.
      */
     private function policy(): string
     {
         return "default-src 'self'; "
-            ."script-src 'self' 'unsafe-inline' 'unsafe-eval' https://unpkg.com; "
-            ."style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
-            ."font-src 'self' data: https://fonts.gstatic.com; "
-            ."img-src 'self' data: blob: https://images.unsplash.com https://ui-avatars.com; "
+            ."script-src 'self' 'unsafe-inline' 'unsafe-eval'; "
+            ."style-src 'self' 'unsafe-inline'; "
+            ."font-src 'self'; "
+            ."img-src 'self' data: blob: https://ui-avatars.com; "
             ."media-src 'self' blob:; "
+            ."worker-src 'self' blob:; "
             // Local development talks to Reverb over plaintext ws:; production websockets are wss: only.
-            ."connect-src 'self' wss: https:".(app()->isLocal() ? ' ws:' : '').'; '
-            ."frame-src 'self' https://*.daily.co; frame-ancestors 'self'; object-src 'none'; base-uri 'self'; "
+            ."connect-src 'self'".(app()->isLocal() ? ' ws:' : '').'; '
+            ."frame-src 'self'; frame-ancestors 'self'; object-src 'none'; base-uri 'self'; "
+            ."form-action 'self' https://infodot.co.za https://*.infodot.co.za; "
             .'report-uri /csp-report';
     }
 }

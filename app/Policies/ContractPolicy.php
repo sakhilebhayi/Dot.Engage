@@ -82,23 +82,4 @@ class ContractPolicy
         return $user->belongsToTeam($contract->team)
             && $user->hasTeamRole($contract->team, 'admin');
     }
-
-    /**
-     * Sharing sends notifications to teammates, so it needs a role that may change
-     * things; a viewer can read a contract but not push it at other people.
-     */
-    public function share(User $user, Contract $contract): bool
-    {
-        return $user->hasTeamPermission($contract->team, 'update');
-    }
-
-    /**
-     * A user may sign a contract as long as their role may create records (a signature
-     * is one), they belong to the team and have not already signed it.
-     */
-    public function sign(User $user, Contract $contract): bool
-    {
-        return $user->hasTeamPermission($contract->team, 'create')
-            && ! $contract->signatures()->where('user_id', $user->id)->exists();
-    }
 }

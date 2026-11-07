@@ -1,6 +1,12 @@
-<x-app-layout>
-    <x-slot name="header"><h2 class="text-xl font-semibold text-gray-800">Notifications</h2></x-slot>
-    <div class="py-6"><div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+<x-app-layout title="Notifications">
+    <div class="frame-narrow tap">
+        <div class="page-head">
+            <div>
+                <h1>Notifications</h1>
+                <p class="lede">What has happened on your engagements and in your chats since you last looked.</p>
+            </div>
+        </div>
+
         <livewire:notifications.notification-tray />
-    </div></div>
+    </div>
 </x-app-layout>

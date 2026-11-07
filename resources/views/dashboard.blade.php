@@ -1,84 +1,120 @@
-<x-app-layout>
-
-<div style="padding:2rem 2.5rem 3rem;">
-
-    {{-- Header --}}
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2rem;">
+<x-app-layout title="Desk">
+    <div class="page-head">
         <div>
-            <h1 style="font-family:'Syne',sans-serif;font-size:1.5rem;font-weight:700;color:#f4f4f5;margin:0 0 0.2rem;letter-spacing:-0.01em;">Client Engagement</h1>
-            <p style="font-size:0.78rem;color:#52525b;margin:0;">{{ now()->format('l, F j, Y') }}</p>
+            <h1>Desk</h1>
+            <p class="lede">{{ $team->name }}. What needs you, what is coming up, and where each agreement stands.</p>
         </div>
-        <a href="{{ route('video.index') }}" class="dot-btn dot-btn-primary">
-            <span class="material-symbols-rounded" style="font-size:15px;">add</span>
-            New Session
-        </a>
+        <div class="page-actions">
+            <a class="btn" href="{{ route('engagements.create') }}"><span>New engagement</span></a>
+            <a class="btn btn-quiet" href="{{ route('meetings.index') }}"><span>Meetings</span></a>
+        </div>
     </div>
 
-    {{-- KPI Strip --}}
-    <div style="display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:1rem;margin-bottom:2rem;">
-        @php
-            $kpis = [
-                ['label' => 'Total Contracts',      'val' => $stats['total_contracts'],      'color' => 'var(--accent)'],
-                ['label' => 'Pending Signatures',    'val' => $stats['pending_signatures'],    'color' => '#f59e0b'],
-                ['label' => 'Signed Contracts',      'val' => $stats['signed_contracts'],      'color' => '#10b981'],
-                ['label' => 'Active Conversations',  'val' => $stats['active_conversations'],  'color' => '#3b82f6'],
-                ['label' => 'Active Video Sessions', 'val' => $stats['active_video_sessions'], 'color' => '#06b6d4'],
-            ];
-        @endphp
-        @foreach($kpis as $kpi)
-        <div class="dot-card" style="padding:1.25rem 1.5rem;">
-            <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.09em;color:#52525b;margin-bottom:0.75rem;">{{ $kpi['label'] }}</div>
-            <div class="metric-val" style="font-size:2rem;font-weight:600;color:{{ $kpi['color'] }};">{{ $kpi['val'] }}</div>
+    <section aria-labelledby="h-waiting">
+        <div class="section-head"><h2 id="h-waiting">Waiting for you <span class="n">{{ $waiting->count() }}</span></h2></div>
+        @if ($waiting->isNotEmpty())
+            <ul class="rows">
+                @foreach ($waiting as $item)
+                    <li style="--cols: 1fr auto 130px">
+                        <div>
+                            <a class="row-title" href="{{ $item['url'] }}">{{ $item['what'] }}</a>
+                            <div class="row-sub">{{ $item['engagement']->title }} <span class="fig">{{ $item['engagement']->reference }}</span></div>
+                        </div>
+                        <span class="state is-warn">{{ $item['engagement']->state->label() }}</span>
+                        <time class="row-end fig" data-local datetime="{{ optional($item['since'])->toIso8601String() }}">{{ optional($item['since'])->format('j M H:i') }}</time>
+                    </li>
+                @endforeach
+            </ul>
+        @else
+            <p class="empty"><b>You are clear.</b>Nothing is waiting on you. Approvals, signatures and changes to review will show up here.</p>
+        @endif
+    </section>
+
+    <section class="section" aria-labelledby="h-meet">
+        <div class="section-head"><h2 id="h-meet">Meetings <span class="n">{{ $upcoming->count() }}</span></h2><a href="{{ route('meetings.index') }}">All meetings</a></div>
+        @if ($upcoming->isNotEmpty())
+            <ul class="rows">
+                @foreach ($upcoming as $m)
+                    <li style="--cols: 1fr auto 130px">
+                        <div><a class="row-title" href="{{ route('meetings.room', $m->room_key) }}">{{ $m->title }}</a><div class="row-sub">{{ $m->engagement->title }}</div></div>
+                        @if ($m->status === 'live')<span class="state is-live">Live now</span>@else<span class="state">Scheduled</span>@endif
+                        <time class="row-end fig" data-local datetime="{{ optional($m->scheduled_for)->toIso8601String() }}">{{ optional($m->scheduled_for)->format('j M H:i') }}</time>
+                    </li>
+                @endforeach
+            </ul>
+        @else
+            <p class="empty">No meetings booked. Start one from inside an engagement so the agreement is one click away.</p>
+        @endif
+    </section>
+
+    <section class="section" aria-labelledby="h-active">
+        <div class="section-head">
+            <h2 id="h-active">Active engagements <span class="n">{{ $activeCount }}</span></h2>
+            <a href="{{ route('engagements.index') }}">All engagements</a>
         </div>
-        @endforeach
+        @if ($active->isNotEmpty())
+            <ul class="rows">
+                @foreach ($active as $e)
+                    <li style="--cols: 1fr minmax(170px,auto) 130px">
+                        <div>
+                            <a class="row-title" href="{{ route('engagements.show', $e) }}">{{ $e->title }}</a>
+                            <div class="row-sub">{{ $e->state->nextStep() }}</div>
+                        </div>
+                        <x-state :state="$e->state" />
+                        <span class="row-end fig">{{ $e->reference }}</span>
+                    </li>
+                @endforeach
+            </ul>
+        @else
+            <p class="empty"><b>No engagements yet.</b>An engagement is a business conversation about one agreement: invite the other party, discuss, agree changes, sign. Start with the other party and the document.</p>
+        @endif
+    </section>
+
+    <div class="dash-split">
+        <section class="section" aria-labelledby="h-sign">
+            <div class="section-head"><h2 id="h-sign">Out for signature <span class="n">{{ $awaitingSignature->count() }}</span></h2></div>
+            @if ($awaitingSignature->isNotEmpty())
+                <ul class="rows">
+                    @foreach ($awaitingSignature as $env)
+                        <li><div><a class="row-title" href="{{ route('engagements.signing', $env->engagement) }}">{{ $env->engagement->title }}</a><div class="row-sub">Sent <time data-local="day" datetime="{{ $env->sent_at?->toIso8601String() }}">{{ $env->sent_at?->format('j M Y') }}</time></div></div></li>
+                    @endforeach
+                </ul>
+            @else
+                <p class="empty">Nothing is out for signature.</p>
+            @endif
+        </section>
+
+        <section class="section" aria-labelledby="h-changes">
+            <div class="section-head"><h2 id="h-changes">Changes to review <span class="n">{{ $outstandingChanges }}</span></h2></div>
+            <p class="empty">{{ $outstandingChanges === 0 ? 'No proposed changes are waiting.' : $outstandingChanges.' proposed '.str('change')->plural($outstandingChanges).' across your engagements. Open an engagement in negotiation to review them.' }}</p>
+        </section>
     </div>
 
-    {{-- Two columns: recent contracts + active conversations --}}
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;">
+    <div class="dash-split">
+        <section class="section" aria-labelledby="h-done">
+            <div class="section-head"><h2 id="h-done">Recently completed</h2><a href="{{ route('agreements.index') }}">Agreements</a></div>
+            @if ($completed->isNotEmpty())
+                <ul class="rows">
+                    @foreach ($completed as $e)
+                        <li><div><a class="row-title" href="{{ route('engagements.show', $e) }}">{{ $e->title }}</a><div class="row-sub fig">{{ $e->reference }}</div></div><time class="row-end" data-local="day" datetime="{{ $e->completed_at?->toIso8601String() }}">{{ $e->completed_at?->format('j M Y') }}</time></li>
+                    @endforeach
+                </ul>
+            @else
+                <p class="empty">No completed agreements yet.</p>
+            @endif
+        </section>
 
-        {{-- Recent Contracts --}}
-        <div class="dot-card" style="padding:1.5rem;">
-            <h3 style="font-family:'Syne',sans-serif;font-size:0.875rem;font-weight:700;color:#f4f4f5;margin:0 0 1.25rem;">Recent Contracts</h3>
-            @forelse($recentContracts as $contract)
-            <div style="display:flex;align-items:center;gap:0.75rem;padding:0.65rem 0;border-bottom:1px solid rgba(255,255,255,0.05);">
-                <div style="width:32px;height:32px;border-radius:8px;background:rgba(var(--accent-rgb),0.12);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                    <span class="material-symbols-rounded" style="font-size:15px;color:var(--accent);">description</span>
-                </div>
-                <div style="min-width:0;flex:1;">
-                    <div style="font-size:12px;font-weight:600;color:#d4d4d8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ $contract->title }}</div>
-                    <div style="font-size:11px;color:#52525b;">{{ $contract->creator->name ?? 'Unknown' }} · {{ $contract->created_at->format('M d') }}</div>
-                </div>
-                <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:#52525b;flex-shrink:0;">{{ ucfirst($contract->status) }}</div>
-            </div>
-            @empty
-            <div style="text-align:center;padding:2rem 0;">
-                <span class="material-symbols-rounded" style="font-size:32px;color:#3f3f46;display:block;margin-bottom:0.75rem;">description</span>
-                <p style="font-size:0.8rem;color:#52525b;margin:0;">No contracts yet. Create your first contract to get started.</p>
-            </div>
-            @endforelse
-        </div>
-
-        {{-- Active Conversations --}}
-        <div class="dot-card" style="padding:1.5rem;">
-            <h3 style="font-family:'Syne',sans-serif;font-size:0.875rem;font-weight:700;color:#f4f4f5;margin:0 0 1.25rem;">Active Conversations</h3>
-            @forelse($activeConversations as $conversation)
-            <div style="display:flex;align-items:center;gap:0.75rem;padding:0.65rem 0;border-bottom:1px solid rgba(255,255,255,0.05);">
-                <div style="width:28px;height:28px;border-radius:50%;background:rgba(var(--accent-rgb),0.15);border:1px solid rgba(var(--accent-rgb),0.25);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--accent);font-family:'Syne',sans-serif;flex-shrink:0;">{{ strtoupper(substr($conversation->name ?? 'D', 0, 1)) }}</div>
-                <div style="min-width:0;flex:1;">
-                    <div style="font-size:12px;font-weight:600;color:#d4d4d8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ $conversation->name ?? 'Direct message' }}</div>
-                    <div style="font-size:11px;color:#52525b;">{{ $conversation->participants_count }} {{ $conversation->participants_count === 1 ? 'participant' : 'participants' }} · {{ $conversation->last_message_at->diffForHumans() }}</div>
-                </div>
-            </div>
-            @empty
-            <div style="text-align:center;padding:2rem 0;">
-                <span class="material-symbols-rounded" style="font-size:32px;color:#3f3f46;display:block;margin-bottom:0.75rem;">forum</span>
-                <p style="font-size:0.8rem;color:#52525b;margin:0;">No active conversations yet.</p>
-            </div>
-            @endforelse
-        </div>
-
+        <section class="section" aria-labelledby="h-closed">
+            <div class="section-head"><h2 id="h-closed">Closed without agreement</h2></div>
+            @if ($closed->isNotEmpty())
+                <ul class="rows">
+                    @foreach ($closed as $e)
+                        <li><div><a class="row-title" href="{{ route('engagements.show', $e) }}">{{ $e->title }}</a><div class="row-sub fig">{{ $e->reference }}</div></div><x-state :state="$e->state" /></li>
+                    @endforeach
+                </ul>
+            @else
+                <p class="empty">No declined, cancelled or expired engagements.</p>
+            @endif
+        </section>
     </div>
-
-</div>
-
 </x-app-layout>

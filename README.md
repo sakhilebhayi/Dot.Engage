@@ -4,94 +4,69 @@
 
 <br /><br />
 
-**Share contracts, chat, and get them signed — live on a call or async.**
+**Meet. Agree. Sign. Move business forward.**
 
-<br />
+![Laravel](https://img.shields.io/badge/Laravel-13-FF2D20?style=flat-square&logo=laravel&logoColor=white) ![PHP](https://img.shields.io/badge/PHP-8.4-777BB4?style=flat-square&logo=php&logoColor=white) ![SQLite](https://img.shields.io/badge/SQLite-production-003B57?style=flat-square&logo=sqlite&logoColor=white)
 
-![Laravel](https://img.shields.io/badge/Laravel-13-FF2D20?style=flat-square&logo=laravel&logoColor=white) ![PHP](https://img.shields.io/badge/PHP-8.4-777BB4?style=flat-square&logo=php&logoColor=white) ![Livewire](https://img.shields.io/badge/Livewire-3-FB70A9?style=flat-square) ![SQLite](https://img.shields.io/badge/SQLite-production-003B57?style=flat-square&logo=sqlite&logoColor=white)
-
-<br /><br />
-
-**Part of the [InfoDot Ecosystem](https://github.com/sakhileb/InfoDot)** &nbsp;·&nbsp; `engage.infodot.app`
+Part of the [InfoDot ecosystem](https://github.com/sakhileb/InfoDot) · `engage.infodot.co.za`
 
 </div>
 
 ---
 
-## What is Dot.Engage?
+## What it is
 
-Dot.Engage is a business contract-sharing, real-time chat, and video-call document-signing platform in the InfoDot ecosystem. A team uploads a contract, shares it with colleagues or a client, discusses it over real-time chat, and gets it signed — either from a standalone signature pad or live during a video call, with the signature captured the moment it happens.
+Dot.Engage is where two or more businesses reach an agreement: invite the other party, talk the contract through (in the discussion or in a meeting with the document on screen), change it in a controlled way, approve it, and sign it, in one place. The central object is the **engagement**. Its state is worked out from what has actually happened, never typed in.
 
-## Core Features
+**Engage → Discuss → Negotiate → Approve → Sign → Complete**
 
-- Contract upload, versioning, and team-scoped sharing
-- Canvas-based e-signature capture (`signature_pad`), stored on a private disk and streamed back only to authorized viewers
-- Real-time team chat via Laravel Reverb, with unread badges and file attachments
-- Video calls (Daily.co, with a Reverb-signalling fallback when no Daily.co key is configured) with in-call document viewing and in-call signing
-- Signed-contract PDF generation and email delivery
-- Real-time notifications (contract shared/signed, message received, video session invite)
-- Ecosystem SSO from the InfoDot hub via a single-use `PersonalAccessToken` handoff
+| | |
+|---|---|
+| **Engagements** | Reference, parties, people, documents, discussion, notes, proposed changes, approvals, meetings, signing and an append-only history, in one workspace. 15 lifecycle states derived by `EngagementStateMachine`. |
+| **Outside parties** | No account. An emailed link shows who invited them; a one-time code to the same address opens a session limited to that engagement. Links can be revoked or replaced. |
+| **Negotiation** | Notes anchored to a rectangle on a page, with the quoted text. Proposed changes (replace, add, remove) reviewed by someone other than the author; accepted ones become a new version made of the previous PDF plus a schedule of agreed amendments. Version compare. Approvals per version. A readiness checklist gates signing. |
+| **Signing** | Fields placed on the page (signature, initials, date, text, tick box), sequential or parallel, drawn/typed/uploaded signatures, consent, reminders, reassignment, decline, cancel, expiry. Atomic and idempotent. The finished file is the original with signatures drawn on and a certificate appended, an evidence record sealed by the platform, and a public check page. |
+| **Meetings** | WebRTC between browsers (up to six) with a waiting room, host controls, device selection, screen sharing, reconnection and honest presence. The agreement and the signing sheet open beside the call. Signalled over HTTP polling: no websocket server, daemon or SFU is needed. |
+| **Evidence** | SHA-256 of every version; hash-chained audit log refused for UPDATE/DELETE by database triggers; Ed25519 seal over the evidence record; optional RFC 3161 timestamp; verification at `/verify`. |
 
-## Domain Models
+What it does **not** do: it provides a *basic* electronic signature (email-confirmed identity). It is not an advanced or qualified signature and says so. No meeting is recorded. Dot.Files is not used for storage in this release. See `/how-signing-works` and `docs/programme/R39_READINESS.md`.
 
-- **Contract** — uploaded document with status (`draft`/`pending`/`signed`), versioning, and expiry
-- **ContractSignature** / **VideoSessionSignature** — a captured e-signature, either standalone or during a live call
-- **Conversation** / **Message** — team-scoped real-time chat, 1:1 or group
-- **VideoSession** — a call, optionally linked to a contract for live signing
+## Stack
 
-There is no Client/Proposal/Session-scheduling/CRM layer in this repository — an earlier draft of this README described that as the product; it did not match the actual code and has been corrected here. See [`wiki.md`](wiki.md) for the full, code-verified breakdown.
+| Layer | Technology |
+|---|---|
+| Framework | Laravel 13, PHP 8.4, Jetstream teams, InfoDot sign-in (`/auth/ecosystem`) |
+| Interface | Blade, Livewire 3 (chat, notifications, account pages), vanilla JS modules built by Vite for the document viewer, signing and meetings, pdf.js 6 |
+| Design | "The Margin", see [`DESIGN.md`](DESIGN.md). Self-hosted Public Sans, Literata, IBM Plex Mono, Caveat. No CDN. |
+| PDF | `app/Services/Pdf`: a reader and incremental writer for xref tables, xref streams and object streams. No external PDF library or binary. DomPDF generates the certificate and schedules. |
+| Database | SQLite in production (WAL, immediate transactions); MySQL works. |
+| Queue and schedule | Database queue, cron every minute (`schedule:run`, `queue:work`). `engage:housekeeping`, `engage:finalise-pending`, `engage:meetings-clean`, `engage:verify-audit`. |
+| Security | Enforced CSP (self only), per-route throttle keys, server-side `EngagementAccess` on every endpoint, private disks, content-sniffed uploads. |
 
-## Tech Stack
+## Layout of the code
 
-| Layer | Technology | Notes |
-|---|---|---|
-| Framework | Laravel 13, PHP 8.4 | `composer.json` requires `^8.4`, platform pinned to 8.4.1 |
-| Frontend | Livewire 3 · Alpine.js 3 · Tailwind CSS 4 (Vite) | Two CSS entries, one for the guest pages and one for the signed-in app; Alpine is the copy bundled with Livewire. See "Tailwind CSS 4" below |
-| Database | SQLite (`DB_CONNECTION=sqlite`) | One file, `database/database.sqlite`, on the cPanel host. WAL, 5 s busy timeout and `IMMEDIATE` transactions are set in `config/database.php`. PostgreSQL is not used in production |
-| Realtime | Laravel Reverb, **off in production** | Production has no websocket server (`BROADCAST_CONNECTION=null`): broadcast events are discarded, the browser opens no websocket, and chat polls every 5 s instead. Live push needs a Reverb server, `BROADCAST_CONNECTION=reverb`, the `REVERB_*` values and a rebuild |
-| Video | Daily.co (`@daily-co/daily-js`), Reverb-signalling fallback | Degrades gracefully with no `DAILY_API_KEY` configured |
-| Documents | Spatie MediaLibrary, `barryvdh/laravel-dompdf` | Signed-contract PDF generation |
-| Auth | Laravel Sanctum (InfoDot SSO) | |
-| Queue | Database driver (`QUEUE_CONNECTION=database`) | |
-| Storage | Local/Flysystem, private disks for contracts/signatures/attachments | AWS credentials are present in `.env.example` but S3 is not the configured default disk |
+- `app/Services/Engage/` the domain: `EngagementService`, `EngagementStateMachine`, `EngagementAccess`, `ParticipantAccess`, `DocumentService`, `NegotiationService`, `AmendmentSchedule`, `SigningService`, `SigningReadiness`, `EnvelopeFinaliser`, `EvidenceSeal`, `Rfc3161Client`, `MeetingService`, `IceConfig`, `AuditTrail`.
+- `app/Http/Controllers/Engage/` thin controllers; `routes/engage.php`.
+- `resources/js/viewer`, `resources/js/signing`, `resources/js/meeting` the browser modules.
+- `docs/programme/` the brief, the plan and decisions (`R39_PLAN.md`), the readiness report and the owner's list (`R39_READINESS.md`).
 
-No AI integration, no search service (Scout/Meilisearch), and no Redis/Horizon queue exist in this repository — all three appeared in a previous draft of this README without corresponding code and have been removed.
-
-## Tailwind CSS 4
-
-Tailwind is v4, built by `@tailwindcss/vite` (`vite.config.js`). There is no `tailwind.config.js`, `postcss.config.js` or autoprefixer: everything that used to be config lives in `resources/css/app.css`.
-
-- **Two entries, because the two sets of pages were built differently.** `resources/css/app.css` is for the guest pages: `layouts/guest.blade.php` (login, register, password reset, terms, privacy, cookies, external signing), `welcome.blade.php` and the `errors/*` pages. `resources/css/signed-in.css` is for the signed-in app (`layouts/app.blade.php`), which used to load the Tailwind Play CDN script (v3) and a second Alpine from unpkg at run time and now loads the built stylesheet like everything else. Both come from the same `npm run build`, which the deploy runs on the runner. The signed-contract PDF (`pdf/signed-contract.blade.php`, dompdf) and the mails (Markdown mail with `vendor/mail/html/themes/default.css`) are self-contained and never load either.
-- **Why the signed-in entry is not `app.css`.** The CDN pages had Tailwind's preflight OFF and no forms or typography plugin, and their own `<style>` block is the reset. `signed-in.css` therefore imports only the theme and the utilities (no preflight, no plugins), keeps the utilities out of a cascade layer and is linked after the layout's inline `<style>` (the order the CDN's late-appended `<style>` produced), restores v3's `space-*` margins (the browser's own margins on `<h3>`/`<p>` still count without preflight), and defaults `--tw-border-style` to each element's browser default (v3 without preflight never set a border style, so `border` drew nothing on a `<div>`). Read the header of the file before changing it.
-- **Livewire ships Alpine.** `@livewireScripts` loads Alpine (with its plugins) and starts it; never add another copy. The CDN layout did, and every Livewire response then failed in `morph` (`window.Alpine.cloneNode is not a function`), so the page only changed after a reload. `welcome.blade.php` has no Livewire and still loads Alpine 3.10.2 from unpkg.
-- `app.css`: `@import 'tailwindcss' source(none)` plus four `@source` lines (the old `content` globs, nothing wider: automatic detection would scan `app/`, `docs/` and `tests/`), `@plugin` for forms and typography.
-- **Every v4 default that moved a pixel is put back**, each with a comment in `app.css`: border colour (gray-200, not `currentColor`), pointer cursor on buttons, placeholder colour, `hover:` on touch screens, `ring` (3px blue-500/50), the `shadow`/`rounded`/`blur` scale renames, the transparent `outline-none`, the v3 `transition` property lists, the browser's own padding on `th`/`td`/`option`/the file button, `ltr:`/`rtl:` needing an explicit `dir`, the v3 `font-sans` (Figtree first) and `font-mono` stacks (declared `@theme inline`, because the pages define their own `--font-mono`), the v3 palette hex values (`tailwind-v3-palette.css`; v4 moved to oklch) and the v3 colours of `prose`. The rule of the migration is NO visual change: fix a difference in `app.css`, never by redesigning.
-- Things v4 does differently that a view can trip over, not compensated: a responsive text size (`sm:text-4xl`) no longer resets an earlier `leading-*` (the welcome headings carry an explicit `sm:leading-*` for that); `space-x-*`/`space-y-*` and `divide-*` put the margin or border on every child but the LAST instead of every child but the first (a hidden last child leaves a trailing gap; `signed-in.css` restores the v3 `space-*` rules, `app.css` does not); `bg-opacity-*` and `ring-opacity-*` no longer exist (use `bg-black/5`); the important marker goes last (`grid!`); `scale-*`, `translate-*` and `rotate-*` set their own properties, not `transform`.
-- `@tailwindcss/typography` still pins a flagged `postcss-selector-parser`; `package.json` `overrides` pins it to ^7.1.6 so `npm audit --audit-level=moderate` is clean. Leave it until the plugin itself moves.
-- Browser floor: Chrome 111, Safari 16.4, Firefox 128 (cascade layers, `@property`, `color-mix`).
-
-## Quick Start
+## Run it
 
 ```bash
-git clone https://github.com/sakhileb/Dot.Engage.git
-cd Dot.Engage
-cp .env.example .env
-composer install
-npm install && npm run build
-php artisan key:generate
-touch database/database.sqlite
-php artisan migrate
+cp .env.example .env && composer install && npm install && npm run build
+php artisan key:generate && touch database/database.sqlite && php artisan migrate
+php artisan db:seed --class=EngageDemoSeeder   # local only: owner@demo.test / password, one engagement with a document
 php artisan serve
 ```
 
-> **Database:** `DB_CONNECTION=sqlite` is the default. Create the file first (`touch database/database.sqlite`), then `php artisan migrate`. Production is SQLite too; PostgreSQL is not used in production.
->
-> **Ecosystem SSO:** Users authenticated through InfoDot gain access via a one-time Sanctum token handoff at `/auth/ecosystem`.
+Tests: `php artisan test` (PHPUnit, SQLite in memory). Browser end-to-end tests live in `tests/e2e/` and are described in the README files next to them; they need Playwright and a running copy of the app.
 
-## Ecosystem
+Configuration is in `config/engage.php` and `.env.example` (invitation lifetime, retention years, signing deadlines, timestamp authority, seal key, TURN relay for meetings).
 
-**Dot.Engage** is part of the InfoDot ecosystem, connected via Sanctum SSO. Visit [InfoDot](https://github.com/sakhileb/InfoDot) to explore the full platform map, and see [`wiki.md`](wiki.md) for this platform's own knowledge base, including a security-scan and ethical-engagement writeup.
+## Deploying
+
+Manual only: `gh workflow run deploy.yml -f confirm=deploy`. It gates on CI, builds the frontend on the runner, backs up the host, runs migrations (including the one that turns every existing contract into an engagement), mirrors fonts and reader files into the docroot, installs the cron lines and smoke-checks the live site. See [`docs/deployment-cpanel.md`](docs/deployment-cpanel.md).
 
 ## License
 
-MIT © [SK Digital / BluPin Incorporated](https://github.com/sakhileb)
+MIT

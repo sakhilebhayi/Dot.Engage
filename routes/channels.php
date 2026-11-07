@@ -2,7 +2,6 @@
 
 use App\Models\Conversation;
 use App\Models\Team;
-use App\Models\VideoSession;
 use Illuminate\Support\Facades\Broadcast;
 
 /*
@@ -24,8 +23,7 @@ Broadcast::channel('App.Models.User.{id}', function ($user, $id) {
 });
 
 // ── Team channel ─────────────────────────────────────────────────────────────
-// Used by ContractSigned, VideoSessionStarted, VideoSessionEnded,
-// SignatureRequestedDuringCall, and VideoSessionInviteNotification events.
+// Used for team-wide notifications.
 // Any confirmed member of the team may subscribe.
 Broadcast::channel('team.{teamId}', function ($user, $teamId) {
     return $user->belongsToTeam(Team::findOrFail($teamId));
@@ -42,26 +40,4 @@ Broadcast::channel('conversation.{conversationId}', function ($user, $conversati
     }
 
     return $conversation->participants()->where('users.id', $user->id)->exists();
-});
-
-// ── Video session channel ─────────────────────────────────────────────────────
-// Presence channel used for WebRTC signalling, in-call document overlay,
-// and signature events during a live call.
-// Only members of the session's team may join the presence channel.
-Broadcast::channel('video-session.{sessionId}', function ($user, $sessionId) {
-    $session = VideoSession::find($sessionId);
-
-    if (! $session) {
-        return false;
-    }
-
-    if (! $user->belongsToTeam(Team::findOrFail($session->team_id))) {
-        return false;
-    }
-
-    // Return user info so presence channel can expose participant list.
-    return [
-        'id' => $user->id,
-        'name' => $user->name,
-    ];
 });
