@@ -7,9 +7,11 @@ use App\Enums\EngagementState;
 use App\Enums\ParticipantRole;
 use App\Http\Controllers\Controller;
 use App\Models\Contract;
+use App\Models\ContractTemplate;
 use App\Models\Engagement;
 use App\Models\EngagementParticipant;
 use App\Services\Engage\AuditTrail;
+use App\Services\Engage\DocumentService;
 use App\Services\Engage\EngagementAccess;
 use App\Services\Engage\EngagementService;
 use App\Services\Engage\EngagementStateMachine;
@@ -19,6 +21,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use InvalidArgumentException;
 
@@ -61,7 +64,12 @@ class EngagementController extends Controller
         abort_unless($request->user()->currentTeam, 403, 'Pick or create a business first.');
         Gate::authorize('create', Contract::class);
 
-        return view('engagements.create', ['kinds' => EngagementKind::options()]);
+        $template = $request->integer('template') ? ContractTemplate::findOrFail($request->integer('template')) : null;
+        if ($template) {
+            Gate::authorize('view', $template);
+        }
+
+        return view('engagements.create', ['kinds' => EngagementKind::options(), 'template' => $template]);
     }
 
     public function store(Request $request): RedirectResponse
@@ -76,12 +84,26 @@ class EngagementController extends Controller
             'description' => ['nullable', 'string', 'max:2000'],
             'counterparty' => ['required', 'string', 'max:160'],
             'expires_at' => ['nullable', 'date', 'after:today'],
+            'template' => ['nullable', 'integer'],
         ]);
+
+        $template = ! empty($data['template']) ? ContractTemplate::findOrFail($data['template']) : null;
+        if ($template) {
+            Gate::authorize('view', $template);
+        }
 
         $engagement = $this->engagements->create(
             $user->currentTeam, $user, $data['title'], EngagementKind::from($data['kind']), $data['description'] ?? null,
             $data['counterparty'], isset($data['expires_at']) ? Carbon::parse($data['expires_at'])->endOfDay() : null, Actor::user($user, $request),
         );
+
+        if ($template?->file_path && Storage::disk('contracts')->exists($template->file_path)) {
+            try {
+                app(DocumentService::class)->uploadStored($engagement, $template->file_path, $template->title, Actor::user($user, $request), $user->id);
+            } catch (InvalidArgumentException $e) {
+                // The engagement still exists; the owner can upload the document by hand.
+            }
+        }
 
         return redirect()->route('engagements.people', $engagement)->with('status', 'Engagement created. Now add the people who need to take part.');
     }

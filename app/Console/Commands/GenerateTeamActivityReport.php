@@ -2,10 +2,10 @@
 
 namespace App\Console\Commands;
 
-use App\Models\Contract;
 use App\Models\Conversation;
+use App\Models\Engagement;
+use App\Models\Meeting;
 use App\Models\Message;
-use App\Models\VideoSession;
 use Carbon\Carbon;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
@@ -17,7 +17,7 @@ use Illuminate\Support\Facades\Log;
     {--team= : Restrict report to a specific team ID (omit for all teams)}
     {--month= : Report month as YYYY-MM (defaults to last calendar month)}
     {--output=table : Output format: table or csv}')]
-#[Description('Generate a monthly activity summary per team: contracts, messages, and video sessions.')]
+#[Description('Generate a monthly activity summary per team: engagements, completed agreements, messages and meetings.')]
 class GenerateTeamActivityReport extends Command
 {
     public function handle(): int
@@ -53,13 +53,12 @@ class GenerateTeamActivityReport extends Command
         $rows = [];
 
         foreach ($teams as $team) {
-            $contracts = Contract::where('team_id', $team->id)
+            $contracts = Engagement::withoutGlobalScopes()->where('team_id', $team->id)
                 ->whereBetween('created_at', [$start, $end])
                 ->count();
 
-            $signed = Contract::where('team_id', $team->id)
-                ->where('status', 'signed')
-                ->whereBetween('updated_at', [$start, $end])
+            $signed = Engagement::withoutGlobalScopes()->where('team_id', $team->id)
+                ->whereBetween('completed_at', [$start, $end])
                 ->count();
 
             $conversationIds = Conversation::where('team_id', $team->id)->pluck('id');
@@ -68,7 +67,7 @@ class GenerateTeamActivityReport extends Command
                 ->whereBetween('created_at', [$start, $end])
                 ->count();
 
-            $sessions = VideoSession::where('team_id', $team->id)
+            $sessions = Meeting::whereIn('engagement_id', Engagement::withoutGlobalScopes()->where('team_id', $team->id)->pluck('id'))
                 ->whereBetween('created_at', [$start, $end])
                 ->count();
 
@@ -82,7 +81,7 @@ class GenerateTeamActivityReport extends Command
             ];
         }
 
-        $headers = ['Team ID', 'Team Name', 'Contracts Created', 'Contracts Signed', 'Messages Sent', 'Video Sessions'];
+        $headers = ['Team ID', 'Team Name', 'Engagements Started', 'Agreements Completed', 'Messages Sent', 'Meetings'];
 
         if ($output === 'csv') {
             $this->line(implode(',', $headers));

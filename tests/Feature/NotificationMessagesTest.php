@@ -5,18 +5,12 @@ namespace Tests\Feature;
 use App\Enums\EngagementKind;
 use App\Livewire\Notifications\NotificationTray;
 use App\Models\Contract;
-use App\Models\ContractSignature;
 use App\Models\Conversation;
 use App\Models\Message;
 use App\Models\User;
 use App\Models\VideoSession;
-use App\Notifications\ContractExpiringSoonNotification;
-use App\Notifications\ContractSharedNotification;
-use App\Notifications\ContractSignedNotification;
 use App\Notifications\EngagementNotice;
 use App\Notifications\NewMessageNotification;
-use App\Notifications\SignatureRequestedNotification;
-use App\Notifications\VideoSessionInviteNotification;
 use App\Services\Engage\EngagementService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Notifications\Notification;
@@ -81,88 +75,6 @@ class NotificationMessagesTest extends TestCase
         ]);
     }
 
-    public function test_contract_shared_has_a_message(): void
-    {
-        $this->assertTrayShows(
-            new ContractSharedNotification($this->contract, $this->owner->id),
-            'Olivia Owner shared Master Services Agreement with you',
-        );
-    }
-
-    public function test_contract_expiring_soon_has_a_message(): void
-    {
-        $this->assertTrayShows(
-            new ContractExpiringSoonNotification($this->contract),
-            'Master Services Agreement is waiting for your signature and expires on 5th March 2027',
-        );
-    }
-
-    public function test_contract_expiring_soon_without_a_date_still_has_a_message(): void
-    {
-        // The reminder command only picks contracts with an expiry, but the
-        // payload must not break (or go blank) if one ever has none.
-        $this->contract->update(['expires_at' => null]);
-
-        $payload = (new ContractExpiringSoonNotification($this->contract->fresh()))->toArray($this->recipient);
-
-        $this->assertSame('Master Services Agreement is waiting for your signature', $payload['message']);
-    }
-
-    public function test_contract_signed_by_one_party_has_a_message(): void
-    {
-        $signature = ContractSignature::create([
-            'contract_id' => $this->contract->id,
-            'user_id' => $this->owner->id,
-            'signature_image_path' => 'signatures/x.png',
-            'signed_at' => now(),
-        ]);
-
-        $this->assertTrayShows(
-            new ContractSignedNotification($this->contract, $signature),
-            'Olivia Owner signed Master Services Agreement',
-        );
-    }
-
-    public function test_contract_fully_signed_has_a_message(): void
-    {
-        $this->contract->update(['status' => 'signed']);
-        $signature = ContractSignature::create([
-            'contract_id' => $this->contract->id,
-            'user_id' => $this->owner->id,
-            'signature_image_path' => 'signatures/x.png',
-            'signed_at' => now(),
-        ]);
-
-        $this->assertTrayShows(
-            new ContractSignedNotification($this->contract->fresh(), $signature),
-            'Master Services Agreement is fully signed',
-        );
-    }
-
-    public function test_video_session_invite_has_a_message(): void
-    {
-        $this->assertTrayShows(
-            new VideoSessionInviteNotification($this->videoSession()),
-            'Olivia Owner started a video session and invited you to join',
-        );
-    }
-
-    public function test_video_session_invite_with_a_contract_says_so(): void
-    {
-        $this->assertTrayShows(
-            new VideoSessionInviteNotification($this->videoSession($this->contract)),
-            'Olivia Owner started a video session and invited you to join. Master Services Agreement needs signing during the call',
-        );
-    }
-
-    public function test_signature_requested_has_a_message(): void
-    {
-        $this->assertTrayShows(
-            new SignatureRequestedNotification($this->videoSession($this->contract), $this->contract),
-            'Your signature is requested on Master Services Agreement in a live video session',
-        );
-    }
-
     public function test_new_message_has_a_message(): void
     {
         $conversation = Conversation::factory()->direct()->create(['team_id' => $this->owner->currentTeam->id]);
@@ -214,17 +126,10 @@ class NotificationMessagesTest extends TestCase
     public function test_every_notification_class_is_covered(): void
     {
         $covered = [
-            ContractExpiringSoonNotification::class,
-            ContractSharedNotification::class,
-            ContractSignedNotification::class,
             EngagementNotice::class,
             NewMessageNotification::class,
-            SignatureRequestedNotification::class,
-            VideoSessionInviteNotification::class,
         ];
         $mailOnly = [
-            'ExternalSignatureRequestNotification',
-            'ExternalSignerExpiringSoonNotification',
             'VerificationCodeNotification',
         ];
 

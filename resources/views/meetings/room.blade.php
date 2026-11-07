@@ -7,7 +7,7 @@
     <meta name="robots" content="noindex, nofollow">
     <title>{{ $meeting->title }} · Dot.Engage</title>
     <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('favicon-32x32.png') }}">
-    @vite(['resources/css/engage.css', 'resources/css/engage-meeting.css', 'resources/js/engage.js', 'resources/js/meeting/room.js'])
+    @vite(['resources/css/engage-meeting.css', 'resources/js/engage.js', 'resources/js/meeting/room.js'])
 </head>
 <body class="room" data-state="lobby">
     <a class="skip" href="#stage">Skip to the call</a>
@@ -24,7 +24,7 @@
         <div class="room-meta">
             <span id="room-clock" class="fig" aria-label="Time in the meeting">00:00</span>
             <span id="room-net" class="net" data-q="" title="Your connection"><x-icon name="signal" size="sm" /><span>Connection</span></span>
-            <button type="button" class="iconbtn" data-theme-toggle aria-label="Switch light and dark" hidden><x-icon name="eye" /></button>
+            <button type="button" class="iconbtn" data-theme-toggle aria-label="Switch light and dark" title="Switch light and dark"><x-icon name="eye" /></button>
         </div>
     </header>
 

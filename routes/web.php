@@ -2,16 +2,13 @@
 
 use App\Http\Controllers\Auth\EcosystemAuthController;
 use App\Http\Controllers\CspReportController;
-use App\Http\Controllers\ExternalSigningController;
+use App\Http\Controllers\Engage\LegacyController;
+use App\Http\Controllers\Engage\TemplateController;
 use App\Http\Controllers\GuardianHealthController;
 use App\Http\Controllers\SchedulerProbeController;
 use App\Http\Middleware\AuthenticateGuardian;
-use App\Models\Contract;
-use App\Models\Conversation;
-use App\Models\VideoSession;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
 use Illuminate\Session\Middleware\StartSession;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
@@ -47,15 +44,10 @@ Route::get('/cookies', function () {
     ]);
 })->name('cookies');
 
-// ── External Signing ────────────────────────────────────────────────────────
-// Guest-facing (no auth:sanctum) -- security is the `signed` middleware
-// validating the emailed link itself, not a session, matching the
-// DocuSign/PandaDoc emailed-link trust model. See ExternalSigningController.
-Route::middleware('signed')->prefix('sign')->name('external.contracts.')->group(function () {
-    Route::get('/{signer}', [ExternalSigningController::class, 'show'])->name('show');
-    Route::get('/{signer}/download', [ExternalSigningController::class, 'download'])->name('download');
-    Route::post('/{signer}', [ExternalSigningController::class, 'sign'])->name('sign');
-});
+// ── Links from the earlier signing system ────────────────────────────────────
+// Signing links issued before the engagement workspace existed are retired: the sender issues a new request, which
+// asks the signer to confirm their email address before anything is shown.
+Route::any('/sign/{signer}/{rest?}', [LegacyController::class, 'retiredSigningLink'])->where('rest', '.*')->name('external.contracts.retired');
 
 Route::middleware([
     'auth:sanctum',
@@ -63,24 +55,14 @@ Route::middleware([
     'verified',
 ])->group(function () {
 
-    // ── Contracts ───────────────────────────────────────────────────────────
-    // Livewire components handle all mutations; these are page-view routes only.
-    Route::get('/contracts', fn () => view('contracts.index'))
-        ->name('contracts.index');
-
-    Route::get('/contracts/create', fn () => view('contracts.create'))
-        ->name('contracts.create');
-
-    // Must be registered before /contracts/{contract} -- otherwise "templates"
-    // is swallowed by that route's implicit Contract binding.
-    Route::get('/contracts/templates', fn () => view('contracts.templates'))
-        ->name('contracts.templates');
-
-    Route::get('/contracts/{contract}', fn (Contract $contract) => view('contracts.show', ['contractId' => $contract->id]))
-        ->name('contracts.show');
-
-    Route::get('/contracts/{contract}/edit', fn (Contract $contract) => view('contracts.edit', ['contractId' => $contract->id]))
-        ->name('contracts.edit');
+    // ── Contracts (now documents inside engagements) ────────────────────────
+    Route::get('/contracts', fn () => redirect()->route('engagements.index'))->name('contracts.index');
+    Route::get('/contracts/create', fn () => redirect()->route('engagements.create'))->name('contracts.create');
+    Route::get('/contracts/templates', [TemplateController::class, 'index'])->name('contracts.templates');
+    Route::post('/contracts/templates', [TemplateController::class, 'store'])->name('contracts.templates.store');
+    Route::delete('/contracts/templates/{template}', [TemplateController::class, 'destroy'])->name('contracts.templates.destroy');
+    Route::get('/contracts/{contract}', [LegacyController::class, 'contract'])->name('contracts.show');
+    Route::get('/contracts/{contract}/edit', [LegacyController::class, 'contract'])->name('contracts.edit');
 
     // ── Chat ─────────────────────────────────────────────────────────────────
     Route::get('/chat', fn () => view('chat.index'))
@@ -89,16 +71,9 @@ Route::middleware([
     Route::get('/chat/{conversation}', fn (Conversation $conversation) => view('chat.show', ['conversationId' => $conversation->id]))
         ->name('chat.show');
 
-    // ── Video Sessions ────────────────────────────────────────────────────────
-    // {room} matches room_id (UUID string) — NOT the numeric primary key.
-    Route::get('/video', fn () => view('video.index'))
-        ->name('video.index');
-
-    Route::get('/video/{room}', function (string $room) {
-        $session = VideoSession::where('room_id', $room)->firstOrFail();
-
-        return view('video.room', ['sessionId' => $session->id]);
-    })->name('video.room');
+    // ── Video (replaced by meetings inside engagements) ─────────────────────
+    Route::get('/video', fn () => redirect()->route('meetings.index'));
+    Route::get('/video/{room}', fn () => redirect()->route('meetings.index'));
 
     // ── Notifications ─────────────────────────────────────────────────────────
     Route::get('/notifications', fn () => view('notifications.index'))

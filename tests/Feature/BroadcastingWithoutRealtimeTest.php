@@ -2,12 +2,7 @@
 
 namespace Tests\Feature;
 
-use App\Events\ContractShared;
-use App\Events\ContractSigned;
 use App\Events\MessageSent;
-use App\Events\SignatureRequestedDuringCall;
-use App\Events\VideoSessionEnded;
-use App\Events\VideoSessionStarted;
 use App\Livewire\Chat\ConversationList;
 use App\Livewire\Chat\ConversationThread;
 use App\Livewire\Chat\MessageComposer;
@@ -36,12 +31,7 @@ class BroadcastingWithoutRealtimeTest extends TestCase
     public static function broadcastEvents(): array
     {
         return [
-            'ContractShared' => [ContractShared::class],
-            'ContractSigned' => [ContractSigned::class],
             'MessageSent' => [MessageSent::class],
-            'SignatureRequestedDuringCall' => [SignatureRequestedDuringCall::class],
-            'VideoSessionEnded' => [VideoSessionEnded::class],
-            'VideoSessionStarted' => [VideoSessionStarted::class],
         ];
     }
 

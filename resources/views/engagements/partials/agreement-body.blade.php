@@ -59,6 +59,7 @@
                 </form>
                 @if ($versions->count() > 1)<a href="{{ route('documents.compare', [$engagement, $current]) }}">Compare versions</a>@endif
                 <a href="{{ route('documents.file', [$engagement, $current, 'v' => request('v', $versions->last()->id), 'download' => 1]) }}">Download</a>
+                @if ($access->isInternal() && $can('manage_documents'))<button type="button" class="linkbtn" data-open-dialog="template-dialog">Save as template</button>@endif
             </div>
             @if ($can('manage_documents') && ! $current->isLocked())
                 <div class="page-actions">
@@ -73,6 +74,18 @@
             <noscript><p class="empty">The agreement viewer needs JavaScript. <a href="{{ route('documents.file', [$engagement, $current, 'download' => 1]) }}">Download the PDF</a> instead.</p></noscript>
         </div>
 
+        @if ($access->isInternal() && $can('manage_documents'))
+            <dialog class="sheet" id="template-dialog" aria-labelledby="tpl-h">
+                <form method="post" action="{{ route('contracts.templates.store') }}">
+                    @csrf
+                    <input type="hidden" name="document" value="{{ $current->id }}">
+                    <div class="sheet-head"><h2 id="tpl-h">Save as template</h2><button type="button" class="iconbtn" data-close-dialog aria-label="Close"><x-icon name="x" /></button></div>
+                    <div class="sheet-body"><div class="field"><label for="tpl-title">Template name</label><input class="input" id="tpl-title" name="title" required maxlength="160" value="{{ $current->title }} template"></div>
+                        <p class="hint">The current version of the document is copied. Comments, changes and signatures are not.</p></div>
+                    <div class="sheet-foot"><button type="button" class="btn btn-quiet" data-close-dialog><span>Cancel</span></button><button class="btn" type="submit"><span>Save template</span></button></div>
+                </form>
+            </dialog>
+        @endif
         @if ($can('manage_documents') && ! $current->isLocked())
             <dialog class="sheet" id="version-dialog" aria-labelledby="version-title">
                 <form method="post" action="{{ route('documents.version', [$engagement, $current]) }}" enctype="multipart/form-data">

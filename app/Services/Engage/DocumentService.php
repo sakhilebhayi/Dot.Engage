@@ -79,6 +79,22 @@ class DocumentService
         return $contract;
     }
 
+    /** Start a document from a file already on the contracts disk (a template). The file is copied, never shared. */
+    public function uploadStored(Engagement $engagement, string $path, string $title, Actor $actor, int $userId): Contract
+    {
+        $bytes = (string) Storage::disk(self::DISK)->get($path);
+        $file = tmpfile();
+        fwrite($file, $bytes);
+        $meta = stream_get_meta_data($file);
+        $upload = new UploadedFile($meta['uri'], 'template.pdf', 'application/pdf', null, true);
+
+        try {
+            return $this->upload($engagement, $upload, $title, $actor, $userId);
+        } finally {
+            fclose($file);
+        }
+    }
+
     /**
      * Replace the working file with a new version. The earlier versions stay exactly as they were.
      * Refused once a signing request exists: a document that is out for signature is never changed under the signers.

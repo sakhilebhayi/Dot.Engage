@@ -145,6 +145,7 @@ export class Grid {
         this.mode = focusKey && this.tiles.has(focusKey) && models.length > 1 ? 'focus' : 'grid';
         this.el.dataset.mode = this.mode;
         this.el.dataset.count = String(models.length);
+        this.el.style.setProperty('--strip', String(Math.max(1, models.length - 1)));
         this.layout();
     }
 

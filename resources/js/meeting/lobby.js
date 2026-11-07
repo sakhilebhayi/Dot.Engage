@@ -85,12 +85,10 @@ export class Lobby {
     }
 
     async networkCheck() {
-        let servers = null;
-        let source = 'default';
-        try {
-            const reply = await this.api.get(this.cfg.urls.ice);
-            if (Array.isArray(reply.ice)) { servers = reply.ice; source = 'server'; }
-        } catch (e) { /* not entered yet: the server only hands out relay logins to people in the meeting */ }
+        // The room page hands over the same servers the call will use (cfg.ice) when the server provides them.
+        // Otherwise the check runs against the default public STUN servers and says so.
+        let servers = Array.isArray(this.cfg.ice) ? this.cfg.ice : null;
+        const source = servers ? 'server' : 'default';
         if (!servers) servers = [{ urls: ['stun:stun.cloudflare.com:3478', 'stun:stun.l.google.com:19302'] }];
         const result = await gatherCandidates(servers);
         if (this.closed) return;
@@ -99,6 +97,7 @@ export class Lobby {
         if (source === 'default' && verdict.relay.tone === 'warn' && this.cfg.relay) {
             verdict.relay = { tone: 'warn', text: 'The server has a relay, but it is only tested once you join' };
         }
+        if (source === 'default' && verdict.direct.tone === 'ok') verdict.direct.text += ', checked with public servers';
         this.setCheck('direct', 'Direct connection', verdict.direct);
         this.setCheck('relay', 'Relay', verdict.relay);
     }
