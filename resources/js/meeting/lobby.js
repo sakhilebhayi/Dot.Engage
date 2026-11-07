@@ -157,8 +157,9 @@ export class Lobby {
         swapIcon(e.cam, m.camOn ? 'cam' : 'cam-off');
 
         // Selects
-        this.fillSelect(e.selCam, m.devices.cams, m.camId, 'Camera', s.cam === 'denied' ? 'Camera is blocked' : 'No camera found');
-        this.fillSelect(e.selMic, m.devices.mics, m.micId, 'Microphone', s.mic === 'denied' ? 'Microphone is blocked' : 'No microphone found');
+        const usable = (status) => status === 'ok' || status === 'busy' || status === 'pending';
+        this.fillSelect(e.selCam, usable(s.cam) ? m.devices.cams : [], m.camId, 'Camera', s.cam === 'denied' ? 'Camera is blocked' : 'No camera found');
+        this.fillSelect(e.selMic, usable(s.mic) ? m.devices.mics : [], m.micId, 'Microphone', s.mic === 'denied' ? 'Microphone is blocked' : 'No microphone found');
         if (m.canPickSpeaker) {
             e.spkWrap.hidden = false;
             this.fillSelect(e.selSpk, m.devices.spks, m.spkId, 'Speaker', 'Default speaker', true);

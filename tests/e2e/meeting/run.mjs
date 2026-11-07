@@ -69,10 +69,10 @@ function noErrors(people, label, induced = /status of 403|Failed to load resourc
 // ─────────────────────────────────────────────────────────────────────────────
 async function callChain(browser) {
     const host = await newPerson(browser, { name: 'Host Naledi', kind: 'host' });
-    const g1 = await newPerson(browser, { name: 'Thandi', email: 'thandi@karoofresh.example', fakeScreen: true });
+    const g1 = await newPerson(browser, { name: 'Thandi', email: 'thandi@karoofresh.example', fakeScreen: process.env.FAKE_SCREEN === '1' });
     const g2 = await newPerson(browser, { name: 'Pieter (phone)', email: 'pieter@karoofresh.example', mobile: true, viewport: { width: 390, height: 844 } });
     await login(host);
-    // Screen capture: tried for real on the host (flags above); the guests use the canvas fake.
+    // Screen capture is real getDisplayMedia (auto-selected screen); FAKE_SCREEN=1 swaps in a canvas stream instead.
     const key = await createMeeting(host, 'E2E call chain');
     let state = { key };
 
@@ -137,6 +137,16 @@ async function callChain(browser) {
         ok(small.length === 0, 'phone controls below 44px: ' + JSON.stringify(small));
         const overflow = await g2.page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth);
         ok(!overflow, 'phone page scrolls horizontally');
+        // The side panel is a full-height sheet on a phone; every button in it is a proper touch target.
+        await g2.page.click('#ctl-people');
+        await g2.page.waitForSelector('#side:not([hidden])');
+        await sleep(400);
+        const sheet = await g2.page.evaluate(() => { const r = document.getElementById('side').getBoundingClientRect(); return [Math.round(r.width), Math.round(r.height), innerWidth, innerHeight]; });
+        ok(sheet[0] === sheet[2], 'side panel should be a full-width sheet on a phone: ' + sheet);
+        const panelSmall = await g2.page.evaluate(() => [...document.querySelectorAll('#side button, #controls button')].filter((b) => b.offsetParent && (b.getBoundingClientRect().height < 44 || b.getBoundingClientRect().width < 44)).map((b) => [b.id || b.textContent.trim(), Math.round(b.getBoundingClientRect().width), Math.round(b.getBoundingClientRect().height)]));
+        ok(panelSmall.length === 0, 'small touch targets with the panel open: ' + JSON.stringify(panelSmall));
+        await shot(g2, 'm-phone-people-sheet.png');
+        await g2.page.keyboard.press('Escape');
         const total = f.map((x) => x.map((p) => `${p.frames}f/${(p.vBytes / 1000) | 0}kB/e${p.energy.toFixed(1)}`).join(' ')).join(' | ');
         return `3-way mesh connected in ${tConn} ms after admit; per-peer remote video frames/bytes/audio energy: ${total}`;
     });
@@ -216,7 +226,7 @@ async function callChain(browser) {
     });
 
     await scenario('(e) screen share start / banner / one sharer / stop via browser stop', async () => {
-        // Guest 1 shares (canvas-backed fake: see README), the host and the phone see a large screen tile.
+        // Guest 1 shares a real captured screen, the host and the phone see a large screen tile.
         await g1.page.click('#ctl-share');
         await waitTile(host.page, (t) => t.some((x) => x.kind === 'screen'), 'screen tile on host', 20000);
         const hostBanner = await text(host.page, '#banner');
@@ -235,8 +245,12 @@ async function callChain(browser) {
         await shot(host, 'e-screenshare-desktop.png'); await shot(g2, 'e-screenshare-phone.png');
         const mine = await text(g1.page, '#banner');
         ok(/You are sharing your screen/.test(mine), 'sharer banner: ' + mine);
-        // The browser's own "Stop sharing" ends the track.
-        await g1.page.evaluate(() => window.__fakeScreen.stop());
+        // The browser's own "Stop sharing" ends the track: stop it and fire 'ended' as the browser does.
+        await g1.page.evaluate(() => {
+            if (window.__fakeScreen) return window.__fakeScreen.stop();
+            const t = [...window.__tracks].reverse().find((x) => x.kind === 'video' && x.readyState === 'live' && /screen|window|tab|web-contents/i.test(x.label));
+            t.stop(); t.dispatchEvent(new Event('ended'));
+        });
         await waitTile(host.page, (t) => !t.some((x) => x.kind === 'screen'), 'screen tile gone', 15000);
         await host.page.waitForFunction(() => !/sharing their screen/.test(document.getElementById('banner').innerText), null, { timeout: 15000 });
         ok(!(await host.page.$eval('#ctl-share', (b) => b.disabled)), 'host share button should be enabled again');
@@ -245,7 +259,7 @@ async function callChain(browser) {
         await waitTile(host.page, (t) => t.some((x) => x.kind === 'screen'), 'screen tile again', 20000);
         await g1.page.click('#ctl-share');
         await waitTile(host.page, (t) => !t.some((x) => x.kind === 'screen'), 'screen tile gone after toolbar stop', 15000);
-        return `screen frames decoded on host: ${screenFrames}; large tile + strip layout; host's share disabled meanwhile; stop via browser stop and via toolbar both clean up (canvas fake, not a real screen)`;
+        return `screen frames decoded on host: ${screenFrames}; large tile + strip layout; host's share disabled meanwhile; stop via browser stop (simulated 'ended' on the real capture track) and via toolbar both clean up`;
     });
 
     await scenario('(f) offline 8 s (signalling) and ICE flap: recovers without reload', async () => {
@@ -410,15 +424,11 @@ async function fullRoom(browser) {
             guests.push(g);
         }
         // Admit five (the host plus five = six). The sixth guest stays at the door and tries once the room is full.
+        await host.page.click('#ctl-people');
+        await host.page.waitForFunction(() => document.querySelectorAll('#waiters button[data-act="admit"]').length === 6, null, { timeout: 60000 });
         for (let i = 0; i < 5; i++) {
-            await host.page.waitForFunction(() => document.querySelectorAll('#waiters button[data-act="admit"]').length > 0 || document.querySelector('#banner button'), null, { timeout: 30000 });
-            if (!(await host.page.$('#waiters button[data-act="admit"]'))) await host.page.click('#ctl-people');
-            await host.page.waitForSelector('#waiters button[data-act="admit"]', { timeout: 20000 });
-            // admit the first waiter that is among the first five
-            const names = await host.page.$$eval('#waiters button[data-act="admit"]', (b) => b.map((x) => x.dataset.name));
-            const pick = names.find((n) => !/Guest 6|Pieter|Thandi/.test(n) || true);
-            await host.page.click(`#waiters button[data-act="admit"][data-name="${pick}"]`);
-            await sleep(700);
+            await host.page.locator('#waiters button[data-act="admit"]').first().click();
+            await sleep(900);
         }
         for (const g of guests) {
             const ph = await g.page.evaluate(() => document.body.dataset.state);
@@ -639,6 +649,26 @@ async function misc(browser) {
         await shot(host, 'o-spotlight.png');
         await host.page.click('#grid .tile[data-key^="p"] .tile-hit');
         return 'screenshots taken; spotlight toggles focus layout';
+    });
+
+    await scenario('(s) hidden tab: polling slows to a heartbeat when stable, speeds up on return', async () => {
+        const { page } = host;
+        await sleep(22000); // let the "recent roster change" window (20 s) pass so the call counts as stable
+        const times = [];
+        await page.route('**/meetings/*/poll*', (r) => { times.push(Date.now()); r.continue(); });
+        await page.evaluate(() => { Object.defineProperty(document, 'hidden', { configurable: true, get: () => true }); document.dispatchEvent(new Event('visibilitychange')); });
+        await sleep(18000);
+        const gaps = times.slice(1).map((t, i) => t - times[i]);
+        const slow = gaps.slice(1); // the first one may have been scheduled before the tab was hidden
+        ok(times.length >= 3, 'heartbeats must continue while hidden, saw ' + times.length + ' polls in 18 s');
+        ok(slow.every((g) => g >= 4500 && g <= 9000), 'hidden and stable should poll about every 5 s, gaps: ' + gaps);
+        ok(Math.max(...gaps) < 18000, 'never anywhere near the 20 s presence limit');
+        await page.evaluate(() => { delete document.hidden; document.dispatchEvent(new Event('visibilitychange')); });
+        await sleep(1500);
+        await page.unroute('**/meetings/*/poll*');
+        const people = await text(page, '#people');
+        ok(/Thandi/.test(people) && !/Not responding/.test(people), 'still counted as present: ' + people.replace(/\n/g, ' '));
+        return `${times.length} polls in 18 s hidden, gaps ${gaps.map((g) => (g / 1000).toFixed(1)).join(' ')} s (visible-stable is 2.5 s, busy is 1 s); still present afterwards`;
     });
 
     await scenario('(r) hostile network: 429, garbage and 500 responses on the poll', async () => {

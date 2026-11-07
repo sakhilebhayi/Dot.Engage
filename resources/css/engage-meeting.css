@@ -238,7 +238,7 @@ body[data-state='live'] #room-root { overflow: hidden; }
 .panel { flex: 1 1 auto; min-height: 0; overflow: auto; }
 .panel iframe { display: block; width: 100%; height: 100%; border: 0; background: #fff; }
 .people-list { display: block; }
-.person { display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 4px 12px; align-items: start; padding: 12px 16px; border-bottom: 1px solid var(--line); }
+.person { display: grid; grid-template-columns: 28px minmax(0, 1fr) auto; gap: 4px 12px; align-items: start; padding: 12px 16px; border-bottom: 1px solid var(--line); }
 .person .ini { margin-top: 1px; }
 .person-name { font-weight: 600; font-size: var(--t-sm); word-break: break-word; }
 .person-name .tag { margin-left: 4px; font-weight: 500; }
@@ -247,7 +247,7 @@ body[data-state='live'] #room-root { overflow: hidden; }
 .person-meta .state { font-size: var(--t-xs); color: var(--ink-2); }
 .person-flag { display: inline-grid; color: var(--ink-2); }
 .person-net { display: inline-flex; align-items: center; gap: 5px; font-size: var(--t-xs); color: var(--ink-2); }
-.person-actions { grid-column: 2; display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.person-actions { grid-column: 3; grid-row: 1; display: flex; flex-wrap: nowrap; gap: 6px; }
 .person-actions .btn { min-height: 34px; }
 .waiters { border-bottom: 1px solid var(--line-strong); background: var(--paper-sunk); }
 .waiters-h { font-size: var(--t-sm); padding: 12px 16px 0; }

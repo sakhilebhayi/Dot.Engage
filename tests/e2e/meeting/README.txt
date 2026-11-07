@@ -53,9 +53,10 @@ Scenario map (each prints PASS/FAIL with the numbers it measured):
     (o) keyboard shortcuts (ignored while typing), focus management, lazy Agreement iframe, spotlight, reduced motion, lobby themes
 
 Honest limits of this test setup:
-    - Screen sharing uses a canvas.captureStream-backed navigator.mediaDevices.getDisplayMedia override (FAKE_SCREEN in lib.mjs).
-      Headless Chrome cannot pick a real screen without a person. "Stop sharing in the browser" is simulated by stopping the
-      track and firing its 'ended' event.
+    - Screen sharing is real getDisplayMedia: headless Chrome auto-selects the screen with --auto-select-desktop-capture-source
+      (a 1280x800 "screen:" track). If your Chrome cannot do that, run with FAKE_SCREEN=1 for a canvas.captureStream-backed
+      override. Pressing the browser's own "Stop sharing" bar cannot be automated; it is simulated by stopping the track and
+      firing its 'ended' event.
     - The ICE restart path is exercised with a simulated connectionState flap on a healthy connection (the restart offer/answer
       and new ICE credentials are real); a real UDP outage cannot be produced from Playwright. The HTTP offline test is real
       (it breaks the signalling and heartbeat requests, not the media path).
