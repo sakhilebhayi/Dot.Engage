@@ -11,7 +11,7 @@ if (root) run(JSON.parse(root.dataset.config)).catch((e) => {
 });
 
 async function linesOf(url) {
-    const pdf = await pdfjsLib.getDocument({ url, standardFontDataUrl: '/vendor/pdfjs/standard_fonts/' }).promise;
+    const pdf = await pdfjsLib.getDocument({ url, standardFontDataUrl: '/vendor/pdfjs/standard_fonts/', isEvalSupported: false, enableScripting: false }).promise;
     const out = [];
     for (let n = 1; n <= pdf.numPages; n++) {
         const page = await pdf.getPage(n);

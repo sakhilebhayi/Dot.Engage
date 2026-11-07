@@ -1,28 +1,30 @@
-<div class="flex items-end gap-2">
-    <div class="flex-1 space-y-2">
+<div class="cmp">
+    <div class="cmp-field">
         @if($attachments)
-            <div class="flex flex-wrap gap-2">
+            <div class="cmp-chips">
                 @foreach($attachments as $i => $attachment)
-                    <div class="flex items-center gap-1 bg-gray-100 rounded px-2 py-1 text-xs text-gray-700">
-                        {{ $attachment->getClientOriginalName() }}
-                        <button wire:click="removeAttachment({{ $i }})" class="ml-1 text-red-400 hover:text-red-600">&times;</button>
-                    </div>
+                    <span class="chip">
+                        <span>{{ $attachment->getClientOriginalName() }}</span>
+                        <button type="button" wire:click="removeAttachment({{ $i }})" aria-label="Remove {{ $attachment->getClientOriginalName() }}"><x-icon name="x" size="sm" /></button>
+                    </span>
                 @endforeach
             </div>
         @endif
-        <div class="flex items-center gap-2 bg-gray-100 rounded-xl px-3 py-2">
-            <label for="livewire-chat-message-composer-body" class="cursor-pointer text-gray-400 hover:text-gray-600">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/></svg>
-                <input wire:model="attachments" type="file" multiple class="sr-only" accept=".pdf,.doc,.docx,.png,.jpg,.jpeg">
+        @error('body')<p class="err">{{ $message }}</p>@enderror
+        @error('attachments')<p class="err">{{ $message }}</p>@enderror
+        @error('attachments.*')<p class="err">{{ $message }}</p>@enderror
+        <div class="cmp-row">
+            <label class="cmp-attach" title="Attach files">
+                <x-icon name="clip" />
+                <span class="sr-only">Attach files</span>
+                <input wire:model="attachments" type="file" multiple accept=".pdf,.doc,.docx,.png,.jpg,.jpeg">
             </label>
-            <input id="livewire-chat-message-composer-body" wire:model="body" wire:keydown.enter.prevent="send"
-                   type="text" placeholder="Type a message…"
-                   class="flex-1 bg-transparent text-sm border-none focus:ring-0 outline-none placeholder-gray-400">
+            <label for="livewire-chat-message-composer-body" class="sr-only">Message</label>
+            <input id="livewire-chat-message-composer-body" class="cmp-input" wire:model="body" wire:keydown.enter.prevent="send"
+                   type="text" placeholder="Write a message" autocomplete="off">
         </div>
     </div>
-    <button wire:click="send" aria-label="{{ __('Send message') }}"
-            class="p-2.5 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 disabled:opacity-50"
-            wire:loading.attr="disabled">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+    <button type="button" wire:click="send" aria-label="{{ __('Send message') }}" class="btn cmp-send" wire:loading.attr="disabled">
+        <x-icon name="send" />
     </button>
 </div>

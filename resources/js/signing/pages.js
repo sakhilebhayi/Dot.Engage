@@ -10,7 +10,7 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = workerUrl;
  * { num, wrap, layer, width, height } in CSS pixels.
  */
 export async function loadPages(container, url, { maxWidth = 860, fonts = '/vendor/pdfjs/standard_fonts/' } = {}) {
-    const pdf = await pdfjsLib.getDocument({ url, standardFontDataUrl: fonts, cMapUrl: '/vendor/pdfjs/cmaps/', cMapPacked: true }).promise;
+    const pdf = await pdfjsLib.getDocument({ url, standardFontDataUrl: fonts, cMapUrl: '/vendor/pdfjs/cmaps/', cMapPacked: true, isEvalSupported: false, enableScripting: false }).promise;
     const avail = Math.min(container.clientWidth || maxWidth, maxWidth);
     const pages = [];
     const lazy = new IntersectionObserver((items) => {

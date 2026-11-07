@@ -46,6 +46,7 @@ body[data-state='live'] .room-back:hover { color: var(--stage-ink); }
 .room-title h1 { font-size: var(--t-md); font-weight: 600; letter-spacing: -.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
 .room-meta { display: flex; align-items: center; gap: 16px; margin-left: auto; flex: none; font-size: var(--t-sm); }
 #room-clock { font-size: var(--t-sm); min-width: 4.2ch; text-align: right; }
+body:not([data-state='live']) #room-clock, body:not([data-state='live']) #room-net { display: none; }
 .net { display: inline-flex; align-items: center; gap: 7px; white-space: nowrap; font-size: var(--t-sm); }
 .net[data-q='good'] .icon { color: var(--ok); }
 .net[data-q='fair'] .icon, .net[data-q='poor'] .icon { color: var(--warn); }
@@ -82,6 +83,9 @@ body[data-state='live'] #room-root { overflow: hidden; }
 @media (max-width: 860px) {
     .lobby { grid-template-columns: 1fr; gap: 22px; padding: 16px; margin: 0 auto; width: calc(100% - 24px); }
     .lobby-preview { aspect-ratio: 4 / 3; max-height: 46dvh; width: 100%; }
+    /* Join stays in reach on a phone, however long the form is. */
+    .lobby-form .page-actions { position: sticky; bottom: 0; z-index: 3; background: var(--paper); padding: 12px 0 calc(12px + env(safe-area-inset-bottom)); margin-top: 4px; border-top: 1px solid var(--line); }
+    #btn-join { flex: 1 1 auto; }
 }
 
 /* ── Waiting room and notices ───────────────────────────────────────────── */

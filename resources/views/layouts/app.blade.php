@@ -58,6 +58,15 @@
                             <a href="{{ route('contracts.templates') }}">Templates</a>
                             <a href="{{ route('legal.signatures') }}">How signing works</a>
                             @if ($user->is_platform_operator)<a href="{{ route('operator.dependency-patches.index') }}">Operator</a>@endif
+                            @php($businesses = $user->allTeams())
+                            @if ($businesses->count() > 1)
+                                <div class="menu-sep" role="separator"></div>
+                                <div class="menu-label" id="switch-business">Switch business</div>
+                                <div role="group" aria-labelledby="switch-business">
+                                    @foreach ($businesses as $business)<x-switchable-team :team="$business" />@endforeach
+                                </div>
+                                <div class="menu-sep" role="separator"></div>
+                            @endif
                             <button type="button" data-theme-toggle>Switch light and dark</button>
                             <form method="POST" action="{{ route('logout') }}">@csrf<button type="submit">Sign out</button></form>
                         </div>

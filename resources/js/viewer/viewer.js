@@ -34,7 +34,7 @@ async function boot(root) {
         return;
     }
 
-    S.pdf = await pdfjsLib.getDocument({ url: S.state.file_url, standardFontDataUrl: cfg.standardFonts, cMapUrl: cfg.cmaps, cMapPacked: true }).promise;
+    S.pdf = await pdfjsLib.getDocument({ url: S.state.file_url, standardFontDataUrl: cfg.standardFonts, cMapUrl: cfg.cmaps, cMapPacked: true, isEvalSupported: false, enableScripting: false }).promise;
 
     async function refresh() {
         S.state = await getJson(stateUrl());

@@ -1,12 +1,17 @@
-<x-app-layout>
-    <x-slot name="header"><h2 class="text-xl font-semibold text-gray-800">Messages</h2></x-slot>
-    <div class="py-0 flex" style="height:calc(100vh - 64px)">
-        <div class="w-72 border-r border-gray-200 bg-white flex-shrink-0">
-            <livewire:chat.conversation-list />
+<x-app-layout title="Team chat" wide>
+    <div class="page-head chat-head">
+        <div>
+            <h1>Team chat</h1>
+        </div>
+    </div>
+
+    <div class="chat has-thread tap">
+        <aside class="chat-list" aria-label="Conversations">
+            <livewire:chat.conversation-list :selected-id="$conversationId" />
             <livewire:chat.new-conversation />
-        </div>
-        <div class="flex-1">
+        </aside>
+        <section class="chat-pane" aria-label="Conversation">
             <livewire:chat.conversation-thread :conversation-id="$conversationId" />
-        </div>
+        </section>
     </div>
 </x-app-layout>

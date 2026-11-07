@@ -91,10 +91,7 @@
                     @foreach ($team->users->sortBy('name') as $user)
                         <li>
                             <span class="ini pen-{{ ($loop->index % 4) + 1 }}" aria-hidden="true">{{ strtoupper(mb_substr($user->name, 0, 1)) }}</span>
-                            <div>
-                                <div class="row-title">{{ $user->name }}</div>
-                                <div class="row-sub">{{ $user->email }}</div>
-                            </div>
+                            <div class="row-title">{{ $user->name }}</div>
 
                             <div class="member-end">
                                 @if (Gate::check('updateTeamMember', $team) && Laravel\Jetstream\Jetstream::hasRoles())

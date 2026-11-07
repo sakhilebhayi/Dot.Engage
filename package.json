@@ -17,7 +17,7 @@
     },
     "dependencies": {
         "laravel-echo": "^2.1",
-        "pdfjs-dist": "^5.7.284",
+        "pdfjs-dist": "6.5.438",
         "pusher-js": "^8.4",
         "signature_pad": "^5.1.3"
     },
