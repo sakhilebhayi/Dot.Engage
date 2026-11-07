@@ -16,6 +16,8 @@ return new class extends Migration
             $table->unsignedInteger('current_version')->default(1)->after('page_count');
             // Set when a signing envelope is sent: the file can no longer be replaced in place.
             $table->timestamp('locked_at')->nullable()->after('expires_at');
+            // Outside parties see a document only once it has been shared with them.
+            $table->timestamp('shared_at')->nullable()->after('locked_at');
 
             $table->index('engagement_id');
         });
@@ -43,7 +45,7 @@ return new class extends Migration
 
         Schema::table('contracts', function (Blueprint $table) {
             $table->dropConstrainedForeignId('engagement_id');
-            $table->dropColumn(['mime', 'sha256', 'page_count', 'current_version', 'locked_at']);
+            $table->dropColumn(['mime', 'sha256', 'page_count', 'current_version', 'locked_at', 'shared_at']);
         });
     }
 };

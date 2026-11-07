@@ -37,7 +37,7 @@
                 <div class="page-actions">
                     <a class="btn" href="{{ route('signing.download', [$e, $envelope, 'final']) }}"><span>Download the signed agreement</span></a>
                     <a class="btn btn-quiet" href="{{ route('signing.download', [$e, $envelope, 'certificate']) }}"><span>Certificate</span></a>
-                    @if ($can('view_audit') || $can('sign'))<a class="btn btn-quiet" href="{{ route('signing.download', [$e, $envelope, 'evidence']) }}"><span>Evidence record</span></a>@endif
+                    @if ($can('view_audit') || $access->participant?->hasCapability('sign'))<a class="btn btn-quiet" href="{{ route('signing.download', [$e, $envelope, 'evidence']) }}"><span>Evidence record</span></a>@endif
                     <a class="btn btn-quiet" href="{{ route('verify.show', $e->reference) }}"><span>Check it</span></a>
                 </div>
             </div>

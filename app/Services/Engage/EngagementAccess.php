@@ -3,10 +3,12 @@
 namespace App\Services\Engage;
 
 use App\Enums\ParticipantRole;
+use App\Models\Contract;
 use App\Models\Engagement;
 use App\Models\EngagementParticipant;
 use App\Models\User;
 use App\Support\Engage\Actor;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Request;
 
 /**
@@ -27,9 +29,10 @@ final class EngagementAccess
         public readonly Engagement $engagement,
         public readonly ?User $user,
         public readonly ?EngagementParticipant $participant,
+        private readonly ?Request $request = null,
     ) {}
 
-    public static function forUser(Engagement $engagement, User $user): ?self
+    public static function forUser(Engagement $engagement, User $user, ?Request $request = null): ?self
     {
         if (! $user->belongsToTeam($engagement->team)) {
             return null;
@@ -41,10 +44,10 @@ final class EngagementAccess
             ->whereNull('revoked_at')
             ->first();
 
-        return new self($engagement, $user, $participant);
+        return new self($engagement, $user, $participant, $request);
     }
 
-    public static function forParticipant(Engagement $engagement, EngagementParticipant $participant): ?self
+    public static function forParticipant(Engagement $engagement, EngagementParticipant $participant, ?Request $request = null): ?self
     {
         if ($participant->engagement_id !== $engagement->id || ! $participant->isActive()) {
             return null;
@@ -53,14 +56,14 @@ final class EngagementAccess
             return null;
         }
 
-        return new self($engagement, null, $participant);
+        return new self($engagement, null, $participant, $request);
     }
 
     /** Signed-in team member first; otherwise the verified outside participant held in this browser session. */
     public static function resolve(Request $request, Engagement $engagement): ?self
     {
         $user = $request->user();
-        if ($user && ($access = self::forUser($engagement, $user))) {
+        if ($user && ($access = self::forUser($engagement, $user, $request))) {
             return $access;
         }
 
@@ -69,7 +72,7 @@ final class EngagementAccess
         if ($participantId) {
             $participant = EngagementParticipant::query()->where('engagement_id', $engagement->id)->find($participantId);
             if ($participant && $participant->verified_at && $participant->verified_at->gt(now()->subHours((int) config('engage.session_hours', 12)))) {
-                return self::forParticipant($engagement, $participant);
+                return self::forParticipant($engagement, $participant, $request);
             }
         }
 
@@ -133,13 +136,28 @@ final class EngagementAccess
         return ParticipantRole::Participant;
     }
 
+    /** Team members see every document; outside parties only those that were shared with them. */
+    public function canSeeDocument(Contract $contract): bool
+    {
+        return $contract->engagement_id === $this->engagement->id && ($this->isInternal() || $contract->isShared());
+    }
+
+    /** @return Collection<int, Contract> */
+    public function documents(): Collection
+    {
+        return $this->engagement->contracts()->when($this->isExternal(), fn ($q) => $q->whereNotNull('shared_at'))->orderBy('id')->get();
+    }
+
     public function isViewerOnly(): bool
     {
         return $this->user && ! $this->user->hasTeamPermission($this->engagement->team, 'create');
     }
 
+    /** Who is acting, with the network address and browser of the request this access was resolved from. */
     public function actor(?Request $request = null): Actor
     {
+        $request ??= $this->request;
+
         return $this->user
             ? Actor::user($this->user, $request)
             : Actor::participant($this->participant, $request);

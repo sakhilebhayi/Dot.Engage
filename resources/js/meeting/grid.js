@@ -4,7 +4,8 @@
 import { h, icon, initials, QUALITY_WORD } from './util.js';
 
 const GAP = 8;
-const ASPECTS = [16 / 9, 4 / 3, 1, 3 / 4];
+const LANDSCAPE = [16 / 9, 4 / 3];
+const PORTRAIT = [16 / 9, 4 / 3, 1, 3 / 4];
 
 export class Tile {
     constructor(model, hooks) {
@@ -175,7 +176,7 @@ export class Grid {
         const H = this.el.clientHeight - parseFloat(style.paddingTop) - parseFloat(style.paddingBottom);
         if (W <= 0 || H <= 0) return;
         let best = { area: 0, w: 0, h: 0 };
-        for (const aspect of ASPECTS) {
+        for (const aspect of (H > W ? PORTRAIT : LANDSCAPE)) {
             for (let cols = 1; cols <= count; cols++) {
                 const rows = Math.ceil(count / cols);
                 const w = Math.min((W - GAP * (cols - 1)) / cols, ((H - GAP * (rows - 1)) / rows) * aspect);

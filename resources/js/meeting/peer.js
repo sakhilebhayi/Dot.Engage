@@ -15,7 +15,7 @@ export class Peer {
     /**
      * ctx: { myId, sid, iceServers(), media (LocalMedia), send(type, to, payloadString), changed(peer, what), log(...) }
      */
-    constructor(ctx, remote) {
+    constructor(ctx, remote, { fromOffer = false } = {}) {
         this.ctx = ctx;
         this.id = remote.id;
         this.remote = remote;
@@ -35,14 +35,17 @@ export class Peer {
         this.remoteErrors = 0;
         this.qualityStreak = { value: null, count: 0 };
         this.timers = {};
-        this.build({ deferNegotiation: this.polite });
+        // Created because they offered: just answer. Otherwise the impolite side opens, and the polite side waits a
+        // few seconds for that offer before opening itself.
+        this.build({ initiator: !fromOffer && !this.polite });
+        if (!fromOffer && this.polite) this.deferOffer();
     }
 
     get name() { return this.remote.name; }
 
     // ── Building and tearing down ────────────────────────────────────────────
 
-    build({ deferNegotiation = false } = {}) {
+    build({ initiator = true } = {}) {
         this.teardownPc();
         clearTimeout(this.timers.defer);
         this.timers.defer = null;
@@ -52,21 +55,29 @@ export class Peer {
         this.ignoreOffer = false;
         this.settingRemoteAnswerPending = false;
         this.hasRemote = false;
+        this.firstNegotiated = false;
+        this.initiator = false;
         this.pendingCandidates = [];
         this.candidateBuffer = [];
-        this.deferDone = !deferNegotiation;
         this.media = new MediaStream();
         this.screen = new MediaStream();
+        this.camStreamId = null;
         this.prevStats = null;
-
-        const local = this.ctx.media;
-        this.audioTx = pc.addTransceiver(local.audioTrack || 'audio', { direction: 'sendrecv', streams: [local.camStream] });
-        this.videoTx = pc.addTransceiver(local.videoTrack || 'video', { direction: 'sendrecv', streams: [local.camStream] });
-        this.screenTx = local.screenTrack ? pc.addTransceiver(local.screenTrack, { direction: 'sendonly', streams: [local.screenStream] }) : null;
+        this.audioTx = this.videoTx = this.screenTx = null;
 
         pc.ontrack = (event) => {
             if (pc !== this.pc) return;
-            const target = (event.transceiver === this.audioTx || event.transceiver === this.videoTx) ? this.media : this.screen;
+            const streamId = event.streams[0] && event.streams[0].id;
+            let camera;
+            if (streamId) {
+                // The first stream that shows up is the camera and microphone; any other one is a shared screen.
+                if (!this.camStreamId) this.camStreamId = streamId;
+                camera = streamId === this.camStreamId;
+            } else {
+                const videos = pc.getTransceivers().filter((t) => t.receiver.track.kind === 'video');
+                camera = event.track.kind === 'audio' || videos[0] === event.transceiver;
+            }
+            const target = camera ? this.media : this.screen;
             if (!target.getTracks().includes(event.track)) target.addTrack(event.track);
             this.ctx.changed(this, 'tracks');
         };
@@ -81,17 +92,8 @@ export class Peer {
         };
         pc.onnegotiationneeded = () => {
             if (pc !== this.pc) return;
-            if (!this.deferDone && !this.hasRemote) {
-                // The other side offers first; we only step in if nothing arrives.
-                if (!this.timers.defer) {
-                    this.timers.defer = setTimeout(() => {
-                        this.timers.defer = null;
-                        this.deferDone = true;
-                        if (!this.hasRemote && !this.closed) this.negotiate();
-                    }, POLITE_DEFER_MS);
-                }
-                return;
-            }
+            // A connection that has not been told to open yet waits for the other side's offer.
+            if (!this.initiator && !this.hasRemote && !this.firstNegotiated) return;
             this.negotiate();
         };
         const onState = () => this.onConnectionState(pc);
@@ -99,7 +101,50 @@ export class Peer {
         pc.oniceconnectionstatechange = onState;
 
         this.armWatchdog(FIRST_CONNECT_MS);
+        if (initiator) this.becomeInitiator();
         this.ctx.changed(this, 'rebuilt');
+    }
+
+    /** Add our own audio and video lines to the connection; this is what makes it send the first offer. */
+    becomeInitiator() {
+        const pc = this.pc;
+        if (!pc || this.initiator) return;
+        this.initiator = true;
+        const local = this.ctx.media;
+        this.audioTx = pc.addTransceiver(local.audioTrack || 'audio', { direction: 'sendrecv', streams: [local.camStream] });
+        this.videoTx = pc.addTransceiver(local.videoTrack || 'video', { direction: 'sendrecv', streams: [local.camStream] });
+        if (local.screenTrack) this.screenTx = pc.addTransceiver(local.screenTrack, { direction: 'sendonly', streams: [local.screenStream] });
+    }
+
+    deferOffer() {
+        clearTimeout(this.timers.defer);
+        this.timers.defer = setTimeout(() => {
+            this.timers.defer = null;
+            if (!this.closed && !this.hasRemote && !this.firstNegotiated) this.becomeInitiator();
+        }, POLITE_DEFER_MS);
+    }
+
+    /**
+     * We answered an offer on a connection that had no lines of its own: our microphone and camera must ride on the
+     * lines the other side created (a line made by addTransceiver is never matched to an incoming offer).
+     */
+    adoptLines(before) {
+        const pc = this.pc;
+        if (!pc || this.firstNegotiated) return;
+        const local = this.ctx.media;
+        const created = pc.getTransceivers().filter((t) => !before.has(t));
+        for (const kind of ['audio', 'video']) {
+            const line = created.find((t) => t.receiver.track.kind === kind);
+            if (!line) continue;
+            const key = kind === 'audio' ? 'audioTx' : 'videoTx';
+            if (this[key] && this[key] !== line) { try { this[key].stop(); } catch (e) { /* already stopped */ } }
+            this[key] = line;
+            line.direction = 'sendrecv';
+            try { line.sender.setStreams(local.camStream); } catch (e) { /* older browsers: the other side finds the camera by order */ }
+            const track = kind === 'audio' ? local.audioTrack : local.videoTrack;
+            if (track) line.sender.replaceTrack(track).catch(() => {});
+        }
+        if (local.screenTrack) setTimeout(() => this.setScreenTrack(local.screenTrack), 0);
     }
 
     teardownPc() {
@@ -122,7 +167,7 @@ export class Peer {
         this.gen += 1;
         this.rebuilds += 1;
         this.hasRemote = false;
-        this.build({ deferNegotiation: false });
+        this.build({ initiator: true });
         this.ctx.log('rebuilt link', this.id, 'generation', this.gen);
     }
 
@@ -177,7 +222,7 @@ export class Peer {
             this.remoteSid = p.s;
             this.gen = theirGen;
             this.hasRemote = false;
-            this.build({ deferNegotiation: false });
+            this.build({ initiator: false });
         } else if (!this.remoteSid) {
             this.remoteSid = p.s;
         }
@@ -186,7 +231,7 @@ export class Peer {
             if (type !== 'offer') return;
             this.gen = theirGen;
             this.hasRemote = false;
-            this.build({ deferNegotiation: false });
+            this.build({ initiator: false });
         }
 
         const pc = this.pc;
@@ -211,6 +256,7 @@ export class Peer {
         this.ignoreOffer = !this.polite && collision;
         if (this.ignoreOffer) return;
 
+        const before = new Set(pc.getTransceivers());
         try {
             this.settingRemoteAnswerPending = !isOffer;
             await pc.setRemoteDescription({ type, sdp: desc.sdp });
@@ -225,6 +271,8 @@ export class Peer {
         if (pc !== this.pc) return;
         this.remoteErrors = 0;
         this.hasRemote = true;
+        if (isOffer) this.adoptLines(before);
+        else this.firstNegotiated = true;
 
         const queued = this.pendingCandidates.splice(0);
         for (const candidate of queued) {
@@ -234,7 +282,10 @@ export class Peer {
         if (isOffer) {
             await pc.setLocalDescription();
             const ld = pc.localDescription;
-            if (pc === this.pc && ld) this.send('answer', { d: { type: ld.type, sdp: ld.sdp } });
+            if (pc === this.pc && ld) {
+                this.firstNegotiated = true;
+                this.send('answer', { d: { type: ld.type, sdp: ld.sdp } });
+            }
         }
     }
 

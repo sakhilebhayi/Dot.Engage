@@ -100,7 +100,7 @@ return new class extends Migration
                     DB::table('contracts')->where('id', $c->id)->update(['mime' => $isPdf ? 'application/pdf' : null, 'sha256' => $bytes !== null ? hash('sha256', $bytes) : null]);
                 }
 
-                DB::table('contracts')->where('id', $c->id)->update(['engagement_id' => $engagementId, 'current_version' => $current, 'locked_at' => $signed ? now() : null]);
+                DB::table('contracts')->where('id', $c->id)->update(['engagement_id' => $engagementId, 'current_version' => $current, 'locked_at' => $signed ? now() : null, 'shared_at' => $c->created_at]);
 
                 $audit->record($engagementId, 'engagement.created', Actor::system('migration'), null, ['reference' => $reference, 'migrated_from_contract' => $c->id, 'title' => $c->title]);
             });

@@ -137,8 +137,13 @@ class EngagementController extends Controller
 
     public function show(Request $request, Engagement $engagement)
     {
+        $access = $this->access($request, $engagement);
+        $docs = $access->documents();
+        $contract = $request->integer('doc') ? ($docs->firstWhere('id', $request->integer('doc')) ?? $docs->last()) : $docs->last();
+
         return $this->workspace($request, $engagement, 'agreement', $request->boolean('embed') ? 'engagements.agreement-embed' : 'engagements.agreement', [
-            'contract' => $engagement->primaryContract(),
+            'contract' => $contract,
+            'docs' => $docs,
         ]);
     }
 
@@ -252,5 +257,60 @@ class EngagementController extends Controller
         $this->engagements->cancel($engagement, $data['reason'], $access->actor($request));
 
         return redirect()->route('engagements.show', $engagement)->with('status', 'The engagement was cancelled. Everyone involved has been told.');
+    }
+
+    public function update(Request $request, Engagement $engagement): RedirectResponse
+    {
+        $access = $this->access($request, $engagement, 'manage_participants');
+        $data = $request->validate([
+            'title' => ['required', 'string', 'max:160'],
+            'kind' => ['required', Rule::enum(EngagementKind::class)],
+            'description' => ['nullable', 'string', 'max:2000'],
+            'expires_at' => ['nullable', 'date', 'after:today'],
+        ]);
+
+        $before = $engagement->only(['title', 'kind', 'expires_at']);
+        $engagement->forceFill([
+            'title' => $data['title'], 'kind' => EngagementKind::from($data['kind']), 'description' => $data['description'] ?? null,
+            'expires_at' => isset($data['expires_at']) ? Carbon::parse($data['expires_at'])->endOfDay() : null,
+        ])->save();
+        app(AuditTrail::class)->record($engagement, 'engagement.updated', $access->actor($request), $engagement, ['title' => $data['title'], 'was' => $before['title']]);
+
+        return redirect()->back()->with('status', 'Details saved.');
+    }
+
+    public function decline(Request $request, Engagement $engagement): RedirectResponse
+    {
+        $access = $this->access($request, $engagement, 'view');
+        $participant = $access->participant;
+        abort_unless($participant && $participant->role->value !== 'owner' && $access->can('comment'), 403, 'Only a party to the engagement can decline it.');
+        $data = $request->validate(['reason' => ['required', 'string', 'max:500']]);
+
+        $this->engagements->decline($engagement, $participant, $data['reason'], $access->actor($request));
+
+        return redirect()->route('engagements.show', $engagement)->with('status', 'You declined. The owner has been told and the engagement is closed.');
+    }
+
+    public function updateParticipant(Request $request, Engagement $engagement, EngagementParticipant $participant): RedirectResponse
+    {
+        $access = $this->access($request, $engagement, 'manage_participants');
+        abort_unless($participant->engagement_id === $engagement->id, 404);
+        abort_if($participant->role === ParticipantRole::Owner, 422, 'The owner\'s role cannot be changed.');
+        $data = $request->validate([
+            'role' => ['required', Rule::in(array_map(fn ($r) => $r->value, [ParticipantRole::Admin, ParticipantRole::Manager, ParticipantRole::Reviewer, ParticipantRole::Participant, ParticipantRole::External]))],
+            'capabilities' => ['nullable', 'array'],
+            'capabilities.*' => ['in:approve,sign,host'],
+            'required' => ['nullable', 'boolean'],
+        ]);
+
+        $role = ParticipantRole::from($data['role']);
+        if (! $participant->party?->is_host && $role->isInternalKind()) {
+            $role = ParticipantRole::External;
+        }
+        $participant->forceFill(['role' => $role, 'capabilities' => array_values($data['capabilities'] ?? []), 'required' => (bool) ($data['required'] ?? false)])->save();
+        app(AuditTrail::class)->record($engagement, 'participant.updated', $access->actor($request), $participant, ['email' => $participant->email, 'role' => $role->value, 'capabilities' => $participant->capabilities]);
+        $this->states->sync($engagement, $access->actor($request));
+
+        return redirect()->route('engagements.people', $engagement)->with('status', $participant->name.' was updated.');
     }
 }

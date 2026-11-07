@@ -54,7 +54,7 @@ class EngageDemoSeeder extends Seeder
         ])->setPaper('a4')->output();
         $path = sys_get_temp_dir().'/engage-demo-'.uniqid().'.pdf';
         file_put_contents($path, $pdf);
-        app(DocumentService::class)->upload($engagement, new UploadedFile($path, 'cold-chain-agreement.pdf', 'application/pdf', null, true), 'Cold-chain transport agreement', Actor::user($owner), $owner->id);
+        app(DocumentService::class)->upload($engagement, new UploadedFile($path, 'cold-chain-agreement.pdf', 'application/pdf', null, true), 'Cold-chain transport agreement', Actor::user($owner), $owner->id, null, true);
         @unlink($path);
 
         $service->postMessage($engagement, $access, 'Thanks for making time. The draft follows our standard terms; the rate card is in schedule 2. @Thandi, tell us what you want changed.');

@@ -65,7 +65,7 @@ class SigningController extends Controller
     {
         $access = $this->access($request, $engagement, 'view');
         $engagement->load('parties');
-        $contract = $engagement->primaryContract();
+        $contract = $access->documents()->last();
         $envelope = $engagement->envelopes()->orderByRaw("case status when 'sent' then 0 when 'draft' then 1 when 'completed' then 2 else 3 end")->latest('id')->first();
         $mine = $this->mySigner($access, $envelope);
 
@@ -104,6 +104,7 @@ class SigningController extends Controller
     {
         $access = $this->access($request, $engagement, 'view');
         $this->envelopeOf($engagement, $envelope);
+        abort_unless($access->canSeeDocument($envelope->contract), 404);
         $ws = new Workspace($engagement->load('parties'), $access);
         $mine = $this->mySigner($access, $envelope);
         $preparing = $access->can('prepare_signing');
@@ -295,7 +296,7 @@ class SigningController extends Controller
         abort_unless($envelope->status === 'completed' && $envelope->finalised_at, 404);
         abort_unless(in_array($kind, ['final', 'certificate', 'evidence'], true), 404);
         if ($kind === 'evidence') {
-            abort_unless($access->can('view_audit') || $access->can('sign'), 403);
+            abort_unless($access->can('view_audit') || $access->participant?->hasCapability('sign'), 403);
         }
 
         $path = match ($kind) {

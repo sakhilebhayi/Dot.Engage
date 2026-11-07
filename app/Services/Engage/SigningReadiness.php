@@ -30,6 +30,8 @@ class SigningReadiness
         $items[] = $this->item('document', 'The agreement is a PDF that can be signed',
             $version !== null && $contract->isPdf(), $version === null ? 'No document yet.' : ($contract->isPdf() ? 'Version '.$version->version_number.' is ready.' : 'Only PDF documents can be signed. Upload a PDF version.'));
 
+        $items[] = $this->item('shared', 'The document has been shared with the other parties', $contract->isShared(), $contract->isShared() ? 'They can read what they will sign.' : 'Share it first: nobody should be asked to sign a document they cannot open.');
+
         $openThreads = DocumentComment::where('contract_id', $contract->id)->whereNull('parent_id')->where('status', 'open')->count();
         $items[] = $this->item('notes', 'Notes are resolved or marked as discussed', $openThreads === 0, $openThreads === 0 ? 'No open notes.' : $openThreads.' open '.str('note')->plural($openThreads).'.');
 

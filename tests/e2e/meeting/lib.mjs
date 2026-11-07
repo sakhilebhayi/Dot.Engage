@@ -51,6 +51,25 @@ export const PC_HOOK = () => {
     Wrapped.prototype = Orig.prototype;
     Object.setPrototypeOf(Wrapped, Orig);
     window.RTCPeerConnection = Wrapped;
+
+    // Remember every capture track and audio context, so the tests can prove that leaving frees them.
+    window.__tracks = [];
+    window.__ctxs = [];
+    const md = navigator.mediaDevices;
+    if (md) {
+        for (const name of ['getUserMedia', 'getDisplayMedia']) {
+            const fn = md[name] && md[name].bind(md);
+            if (!fn) continue;
+            md[name] = async (...a) => { const s = await fn(...a); s.getTracks().forEach((t) => window.__tracks.push(t)); return s; };
+        }
+    }
+    const OrigAC = window.AudioContext;
+    if (OrigAC) {
+        function WrappedAC(...a) { const c = new OrigAC(...a); window.__ctxs.push(c); return c; }
+        WrappedAC.prototype = OrigAC.prototype;
+        Object.setPrototypeOf(WrappedAC, OrigAC);
+        window.AudioContext = WrappedAC;
+    }
 };
 
 /** A canvas-backed getDisplayMedia, used only where headless Chromium cannot capture a screen. */

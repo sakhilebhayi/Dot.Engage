@@ -1,7 +1,6 @@
 @php
     $can = fn ($a) => $access->can($a);
-    $docs = $engagement->contracts()->orderBy('id')->get();
-    $current = $contract && request()->integer('doc') ? ($docs->firstWhere('id', request()->integer('doc')) ?? $contract) : $contract;
+    $current = $contract;
     $viewerConfig = $current ? [
             'stateUrl' => route('documents.state', [$engagement, $current]),
             'version' => request('v'),
@@ -35,6 +34,7 @@
                     @csrf
                     <div class="field"><label for="file">PDF file</label><input class="input" id="file" type="file" name="file" accept="application/pdf" required><span class="hint">Up to {{ config('engage.max_upload_kb') / 1024 }} MB. Password-protected PDFs cannot be signed.</span>@error('file')<span class="err">{{ $message }}</span>@enderror</div>
                     <div class="field"><label for="dtitle">Document name</label><input class="input" id="dtitle" name="title" maxlength="160" value="{{ old('title', $engagement->title) }}"></div>
+                    <label class="check" style="margin-bottom:16px"><input type="checkbox" name="share" value="1"> Share it with the other parties now <span class="hint">(otherwise only your business sees it until you share it)</span></label>
                     <button class="btn" type="submit"><span>Upload</span></button>
                 </form>
             @else
@@ -68,6 +68,11 @@
                 </div>
             @endif
         </div>
+
+        @if (! $current->isShared() && $access->isInternal())
+            <div class="flash" style="align-items:center"><x-icon name="lock" /><div style="flex:1">Only your business can see this document. The other parties cannot open it yet.</div>
+                @if ($can('manage_documents'))<form method="post" action="{{ route('documents.share', [$engagement, $current]) }}">@csrf<button class="btn btn-sm" type="submit"><span>Share with the other parties</span></button></form>@endif</div>
+        @endif
 
         <div id="doc-root" data-config='{{ json_encode($viewerConfig, JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_SLASHES) }}'>
             <p class="empty" aria-live="polite"><span class="spinner" style="display:inline-block;vertical-align:-2px"></span> Opening the agreement…</p>
@@ -107,6 +112,7 @@
                     <div class="sheet-body">
                         <div class="field"><label for="afile">PDF file</label><input class="input" id="afile" type="file" name="file" accept="application/pdf" required></div>
                         <div class="field"><label for="atitle">Document name</label><input class="input" id="atitle" name="title" maxlength="160" placeholder="Schedule 2: rate card"></div>
+                        <label class="check"><input type="checkbox" name="share" value="1" checked> Share it with the other parties now</label>
                     </div>
                     <div class="sheet-foot"><button type="button" class="btn btn-quiet" data-close-dialog><span>Cancel</span></button><button class="btn" type="submit"><span>Add document</span></button></div>
                 </form>

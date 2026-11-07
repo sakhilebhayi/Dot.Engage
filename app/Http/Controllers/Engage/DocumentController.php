@@ -40,9 +40,10 @@ class DocumentController extends Controller
         return $access;
     }
 
-    private function owned(Engagement $engagement, Contract $document): Contract
+    /** The document belongs to this engagement and this viewer may see it (outside parties only see shared ones). */
+    private function owned(Engagement $engagement, Contract $document, EngagementAccess $access): Contract
     {
-        abort_unless($document->engagement_id === $engagement->id, 404);
+        abort_unless($document->engagement_id === $engagement->id && $access->canSeeDocument($document), 404);
 
         return $document;
     }
@@ -66,7 +67,7 @@ class DocumentController extends Controller
 
         try {
             $title = trim($data['title'] ?? '') ?: pathinfo($request->file('file')->getClientOriginalName(), PATHINFO_FILENAME);
-            $contract = $this->documents->upload($engagement, $request->file('file'), $title, $access->actor($request), $request->user()->id);
+            $contract = $this->documents->upload($engagement, $request->file('file'), $title, $access->actor($request), $request->user()->id, null, $request->boolean('share'));
         } catch (InvalidArgumentException $e) {
             return $this->failed($request, $e);
         }
@@ -74,10 +75,19 @@ class DocumentController extends Controller
         return redirect()->route('engagements.show', ['engagement' => $engagement, 'doc' => $contract->id])->with('status', 'Document added.');
     }
 
+    public function share(Request $request, Engagement $engagement, Contract $document): RedirectResponse
+    {
+        $access = $this->access($request, $engagement, 'manage_documents');
+        $this->owned($engagement, $document, $access);
+        $this->documents->share($document, $access->actor($request));
+
+        return redirect()->route('engagements.show', ['engagement' => $engagement, 'doc' => $document->id])->with('status', 'Shared. The other parties can now see this document.');
+    }
+
     public function newVersion(Request $request, Engagement $engagement, Contract $document): RedirectResponse|JsonResponse
     {
         $access = $this->access($request, $engagement, 'manage_documents');
-        $this->owned($engagement, $document);
+        $this->owned($engagement, $document, $access);
         $data = $request->validate([
             'file' => ['required', 'file', 'max:'.config('engage.max_upload_kb')],
             'reason' => ['required', 'string', 'max:500'],
@@ -100,7 +110,7 @@ class DocumentController extends Controller
     public function file(Request $request, Engagement $engagement, Contract $document): Response
     {
         $access = $this->access($request, $engagement, 'view');
-        $this->owned($engagement, $document);
+        $this->owned($engagement, $document, $access);
 
         $version = $request->integer('v')
             ? ContractVersion::where('contract_id', $document->id)->findOrFail($request->integer('v'))
@@ -132,7 +142,7 @@ class DocumentController extends Controller
     public function compare(Request $request, Engagement $engagement, Contract $document)
     {
         $access = $this->access($request, $engagement, 'view');
-        $this->owned($engagement, $document);
+        $this->owned($engagement, $document, $access);
         $versions = ContractVersion::where('contract_id', $document->id)->orderBy('version_number')->get();
         abort_if($versions->count() < 2, 404);
 
@@ -151,7 +161,7 @@ class DocumentController extends Controller
     public function revise(Request $request, Engagement $engagement, Contract $document): JsonResponse
     {
         $access = $this->access($request, $engagement, 'manage_documents');
-        $this->owned($engagement, $document);
+        $this->owned($engagement, $document, $access);
 
         try {
             $version = app(AmendmentSchedule::class)->createRevision($document, $access->actor($request), $request->user()->id);
@@ -167,7 +177,7 @@ class DocumentController extends Controller
     public function state(Request $request, Engagement $engagement, Contract $document): JsonResponse
     {
         $access = $this->access($request, $engagement, 'view');
-        $this->owned($engagement, $document);
+        $this->owned($engagement, $document, $access);
         $ws = new Workspace($engagement->load('parties'), $access);
         $me = $access->participantRecord();
 
@@ -257,7 +267,7 @@ class DocumentController extends Controller
     public function comment(Request $request, Engagement $engagement, Contract $document): JsonResponse
     {
         $access = $this->access($request, $engagement, 'comment');
-        $this->owned($engagement, $document);
+        $this->owned($engagement, $document, $access);
         $data = $request->validate([
             'body' => ['required', 'string', 'max:4000'],
             'page' => ['nullable', 'integer', 'min:1', 'max:5000'],
@@ -274,7 +284,7 @@ class DocumentController extends Controller
     public function reply(Request $request, Engagement $engagement, DocumentComment $comment): JsonResponse
     {
         $access = $this->access($request, $engagement, 'comment');
-        abort_unless($comment->engagement_id === $engagement->id, 404);
+        abort_unless($comment->engagement_id === $engagement->id && $access->canSeeDocument($comment->contract), 404);
         $data = $request->validate(['body' => ['required', 'string', 'max:4000']]);
 
         $r = $this->negotiation->reply($comment, $access, $data['body']);
@@ -285,7 +295,7 @@ class DocumentController extends Controller
     public function commentStatus(Request $request, Engagement $engagement, DocumentComment $comment): JsonResponse
     {
         $access = $this->access($request, $engagement, 'comment');
-        abort_unless($comment->engagement_id === $engagement->id, 404);
+        abort_unless($comment->engagement_id === $engagement->id && $access->canSeeDocument($comment->contract), 404);
         $data = $request->validate(['status' => ['required', 'in:open,discussed,resolved']]);
 
         $this->negotiation->setStatus($comment, $access, $data['status']);
@@ -298,7 +308,7 @@ class DocumentController extends Controller
     public function propose(Request $request, Engagement $engagement, Contract $document): JsonResponse
     {
         $access = $this->access($request, $engagement, 'propose');
-        $this->owned($engagement, $document);
+        $this->owned($engagement, $document, $access);
         $data = $request->validate([
             'type' => ['required', 'in:replace,add,remove'],
             'clause_ref' => ['nullable', 'string', 'max:120'],
@@ -320,7 +330,7 @@ class DocumentController extends Controller
     public function reviewAmendment(Request $request, Engagement $engagement, Amendment $amendment): JsonResponse
     {
         $access = $this->access($request, $engagement, 'review_amendment');
-        abort_unless($amendment->engagement_id === $engagement->id, 404);
+        abort_unless($amendment->engagement_id === $engagement->id && $access->canSeeDocument($amendment->contract), 404);
         $data = $request->validate(['decision' => ['required', 'in:accepted,rejected'], 'note' => ['nullable', 'string', 'max:500']]);
 
         try {
@@ -335,7 +345,7 @@ class DocumentController extends Controller
     public function withdrawAmendment(Request $request, Engagement $engagement, Amendment $amendment): JsonResponse
     {
         $access = $this->access($request, $engagement, 'propose');
-        abort_unless($amendment->engagement_id === $engagement->id, 404);
+        abort_unless($amendment->engagement_id === $engagement->id && $access->canSeeDocument($amendment->contract), 404);
 
         try {
             $this->negotiation->withdraw($amendment, $access);
@@ -351,7 +361,7 @@ class DocumentController extends Controller
     public function requestApproval(Request $request, Engagement $engagement, Contract $document): JsonResponse
     {
         $access = $this->access($request, $engagement, 'request_approval');
-        $this->owned($engagement, $document);
+        $this->owned($engagement, $document, $access);
 
         try {
             $this->negotiation->requestApproval($document, $access);
@@ -365,7 +375,7 @@ class DocumentController extends Controller
     public function decideApproval(Request $request, Engagement $engagement, EngagementApproval $approval): JsonResponse
     {
         $access = $this->access($request, $engagement, 'approve');
-        abort_unless($approval->engagement_id === $engagement->id, 404);
+        abort_unless($approval->engagement_id === $engagement->id && $access->canSeeDocument($approval->version->contract), 404);
         $data = $request->validate(['decision' => ['required', 'in:approved,rejected'], 'note' => ['nullable', 'string', 'max:500']]);
 
         try {
@@ -380,7 +390,7 @@ class DocumentController extends Controller
     public function recordAgreement(Request $request, Engagement $engagement, Contract $document): JsonResponse
     {
         $access = $this->access($request, $engagement, 'request_approval');
-        $this->owned($engagement, $document);
+        $this->owned($engagement, $document, $access);
 
         try {
             $this->negotiation->recordAgreement($document, $access);

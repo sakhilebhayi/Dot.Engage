@@ -27,6 +27,7 @@
                             </div>
                             <div class="page-actions">
                                 @if ($canManage && $p->role->value !== 'owner')
+                                    <button type="button" class="btn btn-quiet btn-sm" data-edit-participant data-action="{{ route('engagements.participant.update', [$engagement, $p]) }}" data-name="{{ $p->name }}" data-role="{{ $p->role->value }}" data-caps="{{ implode(',', $p->capabilities ?? []) }}" data-required="{{ $p->required ? 1 : 0 }}" data-host="{{ $p->party?->is_host ? 1 : 0 }}"><span>Edit</span></button>
                                     @unless($p->user_id)
                                         <form method="post" action="{{ route('engagements.resend', [$engagement, $p]) }}">@csrf<button class="btn btn-quiet btn-sm" type="submit"><span>{{ $p->accepted_at ? 'New link' : 'Resend' }}</span></button></form>
                                     @endunless
@@ -75,6 +76,32 @@
                 <div class="sheet-foot"><button type="button" class="btn btn-quiet" data-close-dialog><span>Cancel</span></button><button class="btn" type="submit"><span>Add and invite</span></button></div>
             </form>
         </dialog>
+        <dialog class="sheet" id="edit-dialog" aria-labelledby="edit-h">
+            <form method="post" id="edit-form" action="">@csrf @method('PATCH')
+                <div class="sheet-head"><h2 id="edit-h">Change role</h2><button type="button" class="iconbtn" data-close-dialog aria-label="Close"><x-icon name="x" /></button></div>
+                <div class="sheet-body">
+                    <p class="muted" id="edit-who" style="margin-bottom:12px"></p>
+                    <div class="field"><label for="e-role">Role</label><select class="select" id="e-role" name="role">@foreach ($roles as $r)<option value="{{ $r->value }}">{{ $r->label() }}</option>@endforeach</select></div>
+                    <fieldset class="field" style="border:0;padding:0;margin:0 0 16px"><legend class="label" style="padding:0;margin-bottom:6px">They also</legend>
+                        <label class="check"><input type="checkbox" name="capabilities[]" value="sign" id="e-sign"> Sign the agreement</label>
+                        <label class="check"><input type="checkbox" name="capabilities[]" value="approve" id="e-approve"> Approve it before signing</label>
+                        <label class="check"><input type="checkbox" name="capabilities[]" value="host" id="e-host"> Host meetings</label></fieldset>
+                    <label class="check"><input type="hidden" name="required" value="0"><input type="checkbox" name="required" value="1" id="e-required"> Their presence is required before signing</label>
+                </div>
+                <div class="sheet-foot"><button type="button" class="btn btn-quiet" data-close-dialog><span>Cancel</span></button><button class="btn" type="submit"><span>Save</span></button></div>
+            </form>
+        </dialog>
+        <script>
+            document.querySelectorAll('[data-edit-participant]').forEach((b) => b.addEventListener('click', () => {
+                const d = b.dataset, caps = (d.caps || '').split(',');
+                document.getElementById('edit-form').action = d.action;
+                document.getElementById('edit-who').textContent = d.name;
+                document.getElementById('e-role').value = d.role;
+                ['sign', 'approve', 'host'].forEach((c) => { document.getElementById('e-' + c).checked = caps.includes(c); });
+                document.getElementById('e-required').checked = d.required === '1';
+                document.getElementById('edit-dialog').showModal();
+            }));
+        </script>
         @if ($errors->has('email'))<script>document.addEventListener('DOMContentLoaded',()=>document.getElementById('invite-dialog')?.showModal())</script>@endif
     @endif
 </x-workspace>

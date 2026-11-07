@@ -29,6 +29,7 @@ class Contract extends Model
         'status',
         'expires_at',
         'locked_at',
+        'shared_at',
     ];
 
     protected function casts(): array
@@ -36,6 +37,7 @@ class Contract extends Model
         return [
             'expires_at' => 'datetime',
             'locked_at' => 'datetime',
+            'shared_at' => 'datetime',
         ];
     }
 
@@ -53,6 +55,11 @@ class Contract extends Model
     public function isLocked(): bool
     {
         return $this->locked_at !== null || $this->status === 'signed';
+    }
+
+    public function isShared(): bool
+    {
+        return $this->shared_at !== null;
     }
 
     public function currentVersionRecord(): ?ContractVersion

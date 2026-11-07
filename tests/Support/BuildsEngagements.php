@@ -20,6 +20,8 @@ use Illuminate\Support\Facades\Storage;
 
 trait BuildsEngagements
 {
+    private bool $storageFaked = false;
+
     protected function makeOwner(): User
     {
         return User::factory()->withPersonalTeam()->create();
@@ -72,15 +74,18 @@ trait BuildsEngagements
     }
 
     /** Upload a real, small PDF as the engagement's first document. */
-    protected function addDocument(Engagement $engagement, string $title = 'Supply agreement'): Contract
+    protected function addDocument(Engagement $engagement, string $title = 'Supply agreement', bool $share = true): Contract
     {
-        Storage::fake('contracts');
-        Storage::fake('signatures');
+        if (! $this->storageFaked) {
+            Storage::fake('contracts');
+            Storage::fake('signatures');
+            $this->storageFaked = true;
+        }
 
         $bytes = Pdf::loadView('pdf.demo-agreement', ['title' => $title, 'host' => 'Host Co', 'other' => 'Other Co'])->setPaper('a4')->output();
         $file = UploadedFile::fake()->createWithContent('agreement.pdf', $bytes);
 
-        return app(DocumentService::class)->upload($engagement, $file, $title, Actor::user($engagement->owner), $engagement->owner->id);
+        return app(DocumentService::class)->upload($engagement, $file, $title, Actor::user($engagement->owner), $engagement->owner->id, null, $share);
     }
 
     /** A small black scribble on a transparent background, as a data URI. */

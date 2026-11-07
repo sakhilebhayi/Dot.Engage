@@ -58,6 +58,9 @@ Route::prefix('e/{engagement}')->name('engagements.')->group(function () {
     Route::get('meetings', [EngagementController::class, 'meetings'])->name('meetings');
     Route::get('activity', [EngagementController::class, 'activity'])->name('activity');
     Route::post('cancel', [EngagementController::class, 'cancel'])->name('cancel');
+    Route::post('decline', [EngagementController::class, 'decline'])->middleware('throttle:10,1,engagement.decline')->name('decline');
+    Route::patch('details', [EngagementController::class, 'update'])->name('update');
+    Route::patch('people/{participant}', [EngagementController::class, 'updateParticipant'])->name('participant.update');
 });
 
 // Documents, notes, proposed changes and approvals. Every handler resolves EngagementAccess itself.
@@ -65,6 +68,7 @@ Route::prefix('e/{engagement}')->group(function () {
     Route::post('documents', [DocumentController::class, 'upload'])->middleware('throttle:20,1,documents.upload')->name('documents.upload');
     Route::get('documents/{document}/file', [DocumentController::class, 'file'])->middleware('throttle:120,1,documents.file')->name('documents.file');
     Route::get('documents/{document}/state', [DocumentController::class, 'state'])->middleware('throttle:240,1,documents.state')->name('documents.state');
+    Route::post('documents/{document}/share', [DocumentController::class, 'share'])->middleware('throttle:20,1,documents.share')->name('documents.share');
     Route::get('documents/{document}/compare', [DocumentController::class, 'compare'])->name('documents.compare');
     Route::post('documents/{document}/revise', [DocumentController::class, 'revise'])->middleware('throttle:10,1,documents.revise')->name('documents.revise');
     Route::post('documents/{document}/versions', [DocumentController::class, 'newVersion'])->middleware('throttle:20,1,documents.version')->name('documents.version');

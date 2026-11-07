@@ -515,8 +515,8 @@ class Room {
         this.refreshBandwidth();
     }
 
-    createPeer(remote) {
-        const peer = new Peer(this.peerCtx, remote);
+    createPeer(remote, { fromOffer = false } = {}) {
+        const peer = new Peer(this.peerCtx, remote, { fromOffer });
         this.peers.set(remote.id, peer);
         this.log('peer created', remote.id, remote.name, peer.polite ? 'polite' : 'impolite');
         this.syncMeters();
@@ -565,7 +565,7 @@ class Room {
             let peer = this.peers.get(s.from);
             if (!peer) {
                 if (s.type !== 'offer') continue;
-                peer = this.createPeer(sender);
+                peer = this.createPeer(sender, { fromOffer: true });
             }
             peer.receive(s.type, payload);
         }

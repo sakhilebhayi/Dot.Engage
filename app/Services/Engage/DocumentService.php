@@ -28,13 +28,13 @@ class DocumentService
     ) {}
 
     /** Add a document (first version) to an engagement. */
-    public function upload(Engagement $engagement, UploadedFile $file, string $title, Actor $actor, int $userId, ?string $description = null): Contract
+    public function upload(Engagement $engagement, UploadedFile $file, string $title, Actor $actor, int $userId, ?string $description = null, bool $share = false): Contract
     {
         $bytes = $this->readUpload($file);
         $facts = $this->inspect($bytes, $file->getClientOriginalName(), $file->getMimeType());
         $path = $this->store($bytes, $facts['extension']);
 
-        $contract = DB::transaction(function () use ($engagement, $title, $description, $path, $facts, $userId, $bytes, $actor) {
+        $contract = DB::transaction(function () use ($engagement, $title, $description, $path, $facts, $userId, $bytes, $actor, $share) {
             $contract = Contract::withoutGlobalScopes()->create([
                 'team_id' => $engagement->team_id,
                 'engagement_id' => $engagement->id,
@@ -49,6 +49,7 @@ class DocumentService
                 'current_version' => 1,
                 'status' => 'pending',
                 'expires_at' => $engagement->expires_at,
+                'shared_at' => $share ? now() : null,
             ]);
 
             ContractVersion::create([
@@ -74,13 +75,15 @@ class DocumentService
         });
 
         $this->states->sync($engagement, $actor);
-        $this->engagements->notifyOthers($engagement, null, 'document_uploaded', 'A document was added: '.$title, route('engagements.show', $engagement), 'Open the agreement');
+        if ($share) {
+            $this->engagements->notifyOthers($engagement, null, 'document_uploaded', 'A document was added: '.$title, route('engagements.show', $engagement), 'Open the agreement');
+        }
 
         return $contract;
     }
 
     /** Start a document from a file already on the contracts disk (a template). The file is copied, never shared. */
-    public function uploadStored(Engagement $engagement, string $path, string $title, Actor $actor, int $userId): Contract
+    public function uploadStored(Engagement $engagement, string $path, string $title, Actor $actor, int $userId, bool $share = false): Contract
     {
         $bytes = (string) Storage::disk(self::DISK)->get($path);
         $file = tmpfile();
@@ -89,7 +92,7 @@ class DocumentService
         $upload = new UploadedFile($meta['uri'], 'template.pdf', 'application/pdf', null, true);
 
         try {
-            return $this->upload($engagement, $upload, $title, $actor, $userId);
+            return $this->upload($engagement, $upload, $title, $actor, $userId, null, $share);
         } finally {
             fclose($file);
         }
@@ -153,6 +156,18 @@ class DocumentService
         $this->engagements->notifyOthers($engagement, null, 'document_revised', 'Version '.$version->version_number.' of '.$contract->title.' is available', route('engagements.show', $engagement), 'Open the agreement');
 
         return $version;
+    }
+
+    /** Show a document to the outside parties. Sharing cannot be undone silently: it is recorded and they are told. */
+    public function share(Contract $contract, Actor $actor): void
+    {
+        if ($contract->isShared()) {
+            return;
+        }
+        $engagement = Engagement::withoutGlobalScopes()->findOrFail($contract->engagement_id);
+        $contract->forceFill(['shared_at' => now()])->save();
+        $this->audit->record($engagement, 'document.shared', $actor, $contract, ['name' => $contract->title]);
+        $this->engagements->notifyOthers($engagement, null, 'document_uploaded', 'A document was shared: '.$contract->title, route('engagements.show', $engagement), 'Open the agreement');
     }
 
     public function assertEditable(Contract $contract, Engagement $engagement): void
