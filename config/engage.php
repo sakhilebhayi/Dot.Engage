@@ -36,6 +36,10 @@ return [
         // RFC 3161 timestamp authority. Off until the owner chooses one; only the document hash is sent.
         'tsa_url' => env('ENGAGE_TSA_URL'),
         'tsa_timeout' => (int) env('ENGAGE_TSA_TIMEOUT', 8),
+        // 32 random bytes, base64. Leave empty to derive the seal key from APP_KEY.
+        'seal_seed' => env('ENGAGE_SEAL_SEED'),
+        // After completion, outside signers keep access to download the signed copy for this many days.
+        'completed_access_days' => (int) env('ENGAGE_COMPLETED_ACCESS_DAYS', 90),
     ],
 
     /*

@@ -13,7 +13,7 @@ class SigningEnvelope extends Model
         'created_by', 'sent_at', 'expires_at', 'reminder_days', 'all_signed_at', 'finalised_at', 'cancelled_at',
         'cancel_reason', 'declined_at', 'final_path', 'final_sha256', 'certificate_path', 'certificate_sha256',
         'stamped', 'evidence', 'evidence_sha256', 'evidence_seal', 'seal_public_key', 'timestamp_token',
-        'timestamp_authority', 'finalise_attempts', 'finalise_error',
+        'timestamp_authority', 'finalising_at', 'signed_body_sha256', 'finalise_attempts', 'finalise_error',
     ];
 
     protected function casts(): array
@@ -25,6 +25,7 @@ class SigningEnvelope extends Model
             'finalised_at' => 'datetime',
             'cancelled_at' => 'datetime',
             'declined_at' => 'datetime',
+            'finalising_at' => 'datetime',
             'stamped' => 'boolean',
         ];
     }

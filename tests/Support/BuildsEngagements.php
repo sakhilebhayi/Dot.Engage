@@ -4,14 +4,19 @@ namespace Tests\Support;
 
 use App\Enums\EngagementKind;
 use App\Enums\ParticipantRole;
+use App\Models\Contract;
 use App\Models\Engagement;
 use App\Models\EngagementParticipant;
 use App\Models\Team;
 use App\Models\User;
 use App\Notifications\EngagementNotice;
+use App\Services\Engage\DocumentService;
 use App\Services\Engage\EngagementService;
 use App\Support\Engage\Actor;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Storage;
 
 trait BuildsEngagements
 {
@@ -64,5 +69,36 @@ trait BuildsEngagements
         $user->switchTeam($team);
 
         return $user->fresh();
+    }
+
+    /** Upload a real, small PDF as the engagement's first document. */
+    protected function addDocument(Engagement $engagement, string $title = 'Supply agreement'): Contract
+    {
+        Storage::fake('contracts');
+        Storage::fake('signatures');
+
+        $bytes = Pdf::loadView('pdf.demo-agreement', ['title' => $title, 'host' => 'Host Co', 'other' => 'Other Co'])->setPaper('a4')->output();
+        $file = UploadedFile::fake()->createWithContent('agreement.pdf', $bytes);
+
+        return app(DocumentService::class)->upload($engagement, $file, $title, Actor::user($engagement->owner), $engagement->owner->id);
+    }
+
+    /** A small black scribble on a transparent background, as a data URI. */
+    protected function signatureDataUri(int $w = 300, int $h = 100): string
+    {
+        $img = imagecreatetruecolor($w, $h);
+        imagesavealpha($img, true);
+        imagealphablending($img, false);
+        imagefill($img, 0, 0, imagecolorallocatealpha($img, 0, 0, 0, 127));
+        imagealphablending($img, true);
+        imagesetthickness($img, 4);
+        $black = imagecolorallocate($img, 10, 10, 10);
+        imageline($img, 10, 80, 100, 20, $black);
+        imageline($img, 100, 20, 150, 80, $black);
+        imageline($img, 150, 80, 280, 30, $black);
+        ob_start();
+        imagepng($img);
+
+        return 'data:image/png;base64,'.base64_encode((string) ob_get_clean());
     }
 }

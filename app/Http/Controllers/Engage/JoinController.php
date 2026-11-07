@@ -3,9 +3,11 @@
 namespace App\Http\Controllers\Engage;
 
 use App\Http\Controllers\Controller;
+use App\Models\Engagement;
 use App\Models\EngagementParticipant;
 use App\Models\User;
 use App\Services\Engage\AuditTrail;
+use App\Services\Engage\EngagementAccess;
 use App\Services\Engage\EngagementService;
 use App\Services\Engage\ParticipantAccess;
 use App\Support\Engage\Actor;
@@ -34,7 +36,18 @@ class JoinController extends Controller
             return response()->view('join.invalid', [], 410);
         }
 
+        if (in_array($request->query('to'), ['sign', 'signing'], true) || preg_match('/^meeting:[A-Za-z0-9]{32}$/', (string) $request->query('to'))) {
+            $request->session()->put('join.to', $request->query('to'));
+        }
+
         $engagement = $participant->engagement()->withoutGlobalScopes()->first();
+
+        // This browser already proved the address a short while ago: no need for another code.
+        $held = (array) $request->session()->get(EngagementAccess::SESSION_KEY, []);
+        if (($held[$engagement->id] ?? null) === $participant->id && $participant->verified_at && $participant->verified_at->gt(now()->subHours((int) config('engage.session_hours')))) {
+            return redirect($this->destination($request->session()->pull('join.to'), $engagement));
+        }
+
         $invitedBy = $participant->invited_by ? User::find($participant->invited_by)?->name : null;
 
         return view('join.show', [
@@ -72,7 +85,7 @@ class JoinController extends Controller
         $result = $this->access->verifyCode($participant, $engagement, $data['code'], $request);
 
         if ($result === 'ok') {
-            return redirect()->route('engagements.show', $engagement);
+            return redirect($this->destination($request->session()->pull('join.to'), $engagement));
         }
 
         $message = match ($result) {
@@ -98,6 +111,15 @@ class JoinController extends Controller
         app(EngagementService::class)->notifyOthers($engagement, $participant, 'invitation_declined', $participant->name.' declined the invitation', route('engagements.people', $engagement));
 
         return redirect()->route('join.show', $token)->with('status', 'You declined. The owner has been told.');
+    }
+
+    private function destination(mixed $to, Engagement $engagement): string
+    {
+        if (is_string($to) && str_starts_with($to, 'meeting:')) {
+            return route('meetings.room', substr($to, 8));
+        }
+
+        return route($to === 'sign' ? 'engagements.sign' : ($to === 'signing' ? 'engagements.signing' : 'engagements.show'), $engagement);
     }
 
     private function mask(string $email): string

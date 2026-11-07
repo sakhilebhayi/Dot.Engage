@@ -12,6 +12,8 @@ final class PdfLexer
 
     private const DELIMITERS = '()<>[]{}/%';
 
+    private const ESCAPES = ['n' => "\n", 'r' => "\r", 't' => "\t", 'b' => "\x08", 'f' => "\x0C"];
+
     private const MAX_DEPTH = 64;
 
     public readonly int $length;
@@ -151,40 +153,25 @@ final class PdfLexer
                     throw new PdfException('Unterminated literal string');
                 }
                 $i++;
-                switch ($e) {
-                    case 'n': $out .= "\n";
-                        break;
-                    case 'r': $out .= "\r";
-                        break;
-                    case 't': $out .= "\t";
-                        break;
-                    case 'b': $out .= "\x08";
-                        break;
-                    case 'f': $out .= "\x0C";
-                        break;
-                    case "\r":
-                        if (($s[$i] ?? '') === "\n") {
-                            $i++;
+                if (isset(self::ESCAPES[$e])) {
+                    $out .= self::ESCAPES[$e];
+                } elseif ($e === "\r") {
+                    if (($s[$i] ?? '') === "\n") {
+                        $i++;
+                    }
+                } elseif ($e >= '0' && $e <= '7') {
+                    $oct = $e;
+                    for ($k = 0; $k < 2; $k++) {
+                        $d = $s[$i] ?? '';
+                        if ($d === '' || $d < '0' || $d > '7') {
+                            break;
                         }
-                        break;
-                    case "\n":
-                        break;
-                    default:
-                        if ($e >= '0' && $e <= '7') {
-                            $oct = $e;
-                            for ($k = 0; $k < 2; $k++) {
-                                $d = $s[$i] ?? '';
-                                if ($d >= '0' && $d <= '7' && $d !== '') {
-                                    $oct .= $d;
-                                    $i++;
-                                } else {
-                                    break;
-                                }
-                            }
-                            $out .= chr(octdec($oct) & 0xFF);
-                        } else {
-                            $out .= $e;
-                        }
+                        $oct .= $d;
+                        $i++;
+                    }
+                    $out .= chr(octdec($oct) & 0xFF);
+                } elseif ($e !== "\n") {
+                    $out .= $e;
                 }
             }
         }

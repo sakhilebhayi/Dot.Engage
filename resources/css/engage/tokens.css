@@ -94,3 +94,4 @@
         --focus: #eceeed;
     }
 }
+@font-face { font-family: 'Caveat'; src: url('/fonts/caveat-500_700-normal.woff2') format('woff2'); font-weight: 500 700; font-style: normal; font-display: swap; }

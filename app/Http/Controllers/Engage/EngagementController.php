@@ -115,7 +115,7 @@ class EngagementController extends Controller
 
     public function show(Request $request, Engagement $engagement)
     {
-        return $this->workspace($request, $engagement, 'agreement', 'engagements.agreement', [
+        return $this->workspace($request, $engagement, 'agreement', $request->boolean('embed') ? 'engagements.agreement-embed' : 'engagements.agreement', [
             'contract' => $engagement->primaryContract(),
         ]);
     }
@@ -208,13 +208,6 @@ class EngagementController extends Controller
     {
         return $this->workspace($request, $engagement, 'meetings', 'engagements.meetings', [
             'meetings' => $engagement->meetings()->orderByRaw("case status when 'live' then 0 when 'scheduled' then 1 else 2 end")->orderByDesc('scheduled_for')->get(),
-        ]);
-    }
-
-    public function signing(Request $request, Engagement $engagement)
-    {
-        return $this->workspace($request, $engagement, 'signing', 'engagements.signing', [
-            'envelope' => $engagement->envelopes()->latest('id')->first(),
         ]);
     }
 

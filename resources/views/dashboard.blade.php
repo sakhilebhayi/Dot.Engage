@@ -6,7 +6,7 @@
         </div>
         <div class="page-actions">
             <a class="btn" href="{{ route('engagements.create') }}"><span>New engagement</span></a>
-            <form method="post" action="{{ route('meetings.instant') }}">@csrf<button class="btn btn-quiet" type="submit"><span>Start a meeting</span></button></form>
+            <a class="btn btn-quiet" href="{{ route('meetings.index') }}"><span>Meetings</span></a>
         </div>
     </div>
 

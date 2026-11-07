@@ -38,6 +38,8 @@ return new class extends Migration
             $table->string('seal_public_key', 128)->nullable();
             $table->text('timestamp_token')->nullable();
             $table->string('timestamp_authority')->nullable();
+            $table->timestamp('finalising_at')->nullable();
+            $table->string('signed_body_sha256', 64)->nullable();
             $table->unsignedTinyInteger('finalise_attempts')->default(0);
             $table->string('finalise_error', 500)->nullable();
             $table->timestamps();
