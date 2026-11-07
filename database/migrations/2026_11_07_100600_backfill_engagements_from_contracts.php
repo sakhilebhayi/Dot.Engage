@@ -1,6 +1,8 @@
 <?php
 
+use App\Models\Engagement;
 use App\Services\Engage\AuditTrail;
+use App\Services\Engage\EngagementStateMachine;
 use App\Support\Engage\Actor;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Support\Facades\DB;
@@ -112,11 +114,11 @@ return new class extends Migration
         // Work the live state out from what was imported (an unsigned contract with a pending signer is "invitation sent", not a draft).
         foreach ($created as $id) {
             try {
-                $engagement = \App\Models\Engagement::withoutGlobalScopes()->find($id);
+                $engagement = Engagement::withoutGlobalScopes()->find($id);
                 if ($engagement && $engagement->isOpen()) {
-                    app(\App\Services\Engage\EngagementStateMachine::class)->sync($engagement, Actor::system('migration'));
+                    app(EngagementStateMachine::class)->sync($engagement, Actor::system('migration'));
                 }
-            } catch (\Throwable $e) {
+            } catch (Throwable $e) {
                 report($e); // the state is recomputed the next time anything happens in the engagement
             }
         }
