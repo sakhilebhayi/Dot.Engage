@@ -1,17 +1,17 @@
 @props(['id' => null, 'maxWidth' => null])
+@php($mid = $id ?? md5($attributes->wire('model')))
 
-<x-modal :id="$id" :maxWidth="$maxWidth" {{ $attributes }}>
-    <div class="px-6 py-4">
-        <div class="text-lg font-medium text-gray-900">
-            {{ $title }}
-        </div>
-
-        <div class="mt-4 text-sm text-gray-600">
-            {{ $content }}
-        </div>
+<x-modal :id="$mid" :maxWidth="$maxWidth" {{ $attributes }}>
+    <div class="sheet-head">
+        <h2 class="dlg-title" id="{{ $mid }}-title">{{ $title }}</h2>
+        <button type="button" class="iconbtn dlg-close" x-on:click="show = false" aria-label="Close"><x-icon name="x" /></button>
     </div>
 
-    <div class="flex flex-row justify-end px-6 py-4 bg-gray-100 text-end">
+    <div class="sheet-body">
+        {{ $content }}
+    </div>
+
+    <div class="sheet-foot">
         {{ $footer }}
     </div>
 </x-modal>

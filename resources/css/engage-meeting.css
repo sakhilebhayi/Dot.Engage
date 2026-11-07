@@ -49,7 +49,8 @@ body[data-state='live'] .room-back:hover { color: var(--stage-ink); }
 .net { display: inline-flex; align-items: center; gap: 7px; white-space: nowrap; font-size: var(--t-sm); }
 .net[data-q='good'] .icon { color: var(--ok); }
 .net[data-q='fair'] .icon, .net[data-q='poor'] .icon { color: var(--warn); }
-.net[data-q='poor'] > span:last-child { font-weight: 600; }
+.net .net-word { font-weight: 500; }
+.net[data-q='poor'] .net-word { font-weight: 700; }
 
 #room-root { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; position: relative; overflow: auto; }
 body[data-state='live'] #room-root { overflow: hidden; }
@@ -146,10 +147,10 @@ body[data-state='live'] #room-root { overflow: hidden; }
 
 .grid[data-mode='focus'] {
     display: grid; align-content: stretch; justify-content: stretch; grid-template-columns: minmax(0, 1fr) clamp(150px, 19vw, 240px);
-    grid-template-rows: repeat(var(--strip, 1), minmax(0, 1fr));
+    grid-template-rows: repeat(var(--strip, 1), auto) minmax(0, 1fr); overflow-y: auto;
 }
-.grid[data-mode='focus'] .tile.is-focus { grid-column: 1; grid-row: 1 / span var(--strip, 1); width: auto; height: auto; min-height: 0; }
-.grid[data-mode='focus'] .tile:not(.is-focus) { grid-column: 2; width: auto; height: auto; aspect-ratio: 16 / 9; align-self: start; max-height: 100%; }
+.grid[data-mode='focus'] .tile.is-focus { grid-column: 1; grid-row: 1 / -1; width: auto; height: auto; min-height: 0; }
+.grid[data-mode='focus'] .tile:not(.is-focus) { grid-column: 2; width: auto; height: auto; aspect-ratio: 16 / 9; }
 
 .tile {
     position: relative; flex: none; overflow: hidden; background: var(--stage-tile); border: 1px solid var(--stage-line); border-radius: var(--r);
@@ -200,8 +201,8 @@ body[data-state='live'] #room-root { overflow: hidden; }
 .tile[data-state='connecting'] .tile-ini, .tile[data-state='lost'] .tile-ini, .tile[data-state='dead'] .tile-ini { display: flex; }
 
 @media (max-width: 760px), (max-aspect-ratio: 1 / 1) {
-    .grid[data-mode='focus'] { grid-template-columns: repeat(var(--strip, 1), minmax(0, 1fr)); grid-template-rows: minmax(0, 1fr) clamp(88px, 16dvh, 120px); }
-    .grid[data-mode='focus'] .tile.is-focus { grid-column: 1 / span var(--strip, 1); grid-row: 1; }
+    .grid[data-mode='focus'] { grid-template-columns: repeat(var(--strip, 1), minmax(0, 1fr)); grid-template-rows: minmax(0, 1fr) clamp(88px, 16dvh, 120px); overflow: hidden; }
+    .grid[data-mode='focus'] .tile.is-focus { grid-column: 1 / -1; grid-row: 1; }
     .grid[data-mode='focus'] .tile:not(.is-focus) { grid-column: auto; grid-row: 2; aspect-ratio: auto; height: 100%; align-self: stretch; }
     .grid[data-mode='focus'] .tile:not(.is-focus) .tile-label { font-size: 11px; padding: 3px 6px; }
     .grid[data-mode='focus'] .tile:not(.is-focus) .tile-net { display: none; }
@@ -236,6 +237,7 @@ body[data-state='live'] #room-root { overflow: hidden; }
 .person .ini { margin-top: 1px; }
 .person-name { font-weight: 600; font-size: var(--t-sm); word-break: break-word; }
 .person-name .tag { margin-left: 4px; font-weight: 500; }
+.person-name .muted { margin-left: 4px; font-weight: 400; }
 .person-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; margin-top: 3px; font-size: var(--t-xs); color: var(--muted); }
 .person-meta .state { font-size: var(--t-xs); color: var(--ink-2); }
 .person-flag { display: inline-grid; color: var(--ink-2); }
@@ -254,7 +256,8 @@ body[data-state='live'] #room-root { overflow: hidden; }
     .room-meta { gap: 10px; }
     .net > span:last-child { display: none; }
     .net { gap: 0; }
-    body[data-state='live'] .net > span:last-child { display: inline; max-width: 9ch; overflow: hidden; text-overflow: ellipsis; }
+    body[data-state='live'] .net > span:last-child { display: inline; }
+    .net-rest { display: none; }
     .side { position: absolute; inset: 0; width: auto; z-index: 20; border-left: 0; }
     .btn-sm, .person-actions .btn, .banner .btn { min-height: var(--touch); }
     .ctl-menu .menu-panel { position: fixed; left: 12px; right: 12px; bottom: 88px; transform: none; width: auto; }

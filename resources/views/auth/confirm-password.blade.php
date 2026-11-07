@@ -1,27 +1,18 @@
-<x-guest-layout>
-    <x-authentication-card>
-        <x-slot name="logo">
-            <x-authentication-card-logo />
-        </x-slot>
-
-        <div class="mb-4 text-sm text-[var(--ink-soft)]">
-            {{ __('This is a secure area of the application. Please confirm your password before continuing.') }}
-        </div>
-
-        <x-validation-errors class="mb-4" />
+<x-guest-layout title="Confirm your password">
+    <x-authentication-card title="Confirm your password" lede="This part of Dot.Engage is protected. Enter your password to continue.">
+        <x-validation-errors />
 
         <form method="POST" action="{{ route('password.confirm') }}">
             @csrf
 
-            <div>
+            <div class="field">
                 <x-label for="password" value="{{ __('Password') }}" />
-                <x-input id="password" class="block mt-1 w-full" type="password" name="password" required autocomplete="current-password" autofocus />
+                <x-input id="password" type="password" name="password" required autocomplete="current-password" autofocus />
             </div>
 
-            <div class="flex justify-end mt-4">
-                <x-button class="ms-4">
-                    {{ __('Confirm') }}
-                </x-button>
+            <div class="door-actions">
+                <span></span>
+                <x-button>{{ __('Confirm') }}</x-button>
             </div>
         </form>
     </x-authentication-card>

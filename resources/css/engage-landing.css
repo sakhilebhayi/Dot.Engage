@@ -1,0 +1,62 @@
+@import './engage/tokens.css';
+@import './engage/base.css';
+@import './engage/shell.css';
+@import './engage/components.css';
+@import './engage/workspace.css';
+
+/* Public front page and the signing explainer: Persuade and Read modes of The Margin. */
+.lp { overflow-x: clip; }
+.lp-hero { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); gap: clamp(28px, 5vw, 80px); align-items: center; padding: clamp(36px, 7vw, 96px) 0 clamp(40px, 6vw, 80px); border-bottom: 1px solid var(--line-strong); }
+.lp-hero h1 { font-size: clamp(38px, 5.6vw, 76px); line-height: .98; letter-spacing: -.03em; font-weight: 650; }
+.lp-hero .sub { margin-top: 22px; font-size: var(--t-md); color: var(--ink-2); max-width: 44ch; }
+.lp-cta { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 30px; }
+.lp-cta .btn { min-height: 46px; padding: 0 22px; font-size: var(--t-base); }
+
+/* The margin, drawn: a sheet with a clause, a highlight and two notes on leader lines */
+.fig-margin { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) 190px; gap: 22px; }
+.fig-sheet { background: #fff; color: #15181b; border: 1px solid var(--line-strong); padding: clamp(20px, 3vw, 38px); position: relative; }
+.fig-sheet .t { font: 600 11px/1.2 var(--font-ui); letter-spacing: .02em; margin-bottom: 14px; color: #15181b; }
+.fig-sheet p { font: 400 13.5px/1.7 var(--font-clause); margin: 0 0 10px; }
+.fig-sheet .hl-demo { background: color-mix(in srgb, var(--pen-blue) 14%, transparent); outline: 1.5px solid var(--pen-blue); outline-offset: 1px; position: relative; }
+.fig-sheet .hl-demo::before { content: '1'; position: absolute; left: -17px; top: -10px; width: 19px; height: 19px; border-radius: 50%; background: var(--pen-blue); color: #fff; font: 500 10px/19px var(--font-fig); text-align: center; }
+.fig-sheet .ins { background: color-mix(in srgb, var(--ok) 13%, transparent); }
+.fig-sheet .del { background: var(--wax-wash); text-decoration: line-through; text-decoration-color: var(--wax); }
+.fig-note { position: relative; background: var(--paper); border: 1px solid var(--line-strong); padding: 10px 12px; font-size: 12.5px; line-height: 1.45; }
+.fig-note::before { content: ''; position: absolute; left: -22px; top: 15px; width: 22px; border-top: 1.5px solid var(--pen); }
+.fig-note b { display: flex; gap: 7px; align-items: center; font-size: 12px; margin-bottom: 4px; color: var(--pen); }
+.fig-note .tag { margin-top: 6px; }
+.fig-notes { display: grid; gap: 14px; align-content: start; padding-top: 70px; }
+.fig-label { position: absolute; left: 0; bottom: -26px; font-size: var(--t-xs); color: var(--muted); }
+
+.lp-sec { padding: clamp(40px, 6vw, 84px) 0; border-bottom: 1px solid var(--line); display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr); gap: clamp(24px, 5vw, 80px); }
+.lp-sec h2 { font-size: clamp(26px, 3.2vw, 40px); line-height: 1.05; letter-spacing: -.02em; max-width: 14ch; }
+.lp-sec .lead { margin-top: 14px; color: var(--ink-2); max-width: 40ch; }
+.lp-steps { counter-reset: s; display: grid; }
+.lp-steps li { display: grid; grid-template-columns: 120px 1fr; gap: 18px; padding: 16px 0; border-bottom: 1px solid var(--line); }
+.lp-steps li:first-child { padding-top: 0; }
+.lp-steps b { font-size: var(--t-md); }
+.lp-steps span { color: var(--ink-2); }
+.lp-facts { display: grid; gap: 0; }
+.lp-facts div { display: grid; grid-template-columns: 170px 1fr; gap: 18px; padding: 14px 0; border-bottom: 1px solid var(--line); }
+.lp-facts dt { font-weight: 600; }
+.lp-facts dd { margin: 0; color: var(--ink-2); }
+.lp-seal { display: flex; gap: 26px; align-items: center; }
+.lp-seal .seal { width: 140px; height: 140px; }
+.seal-wait .seal-press { animation-play-state: paused; opacity: 0; }
+.seal-wait.is-in .seal-press { animation-play-state: running; }
+.lp-foot { padding: 34px 0 10px; display: flex; gap: 22px; flex-wrap: wrap; color: var(--muted); font-size: var(--t-sm); }
+.lp-foot a { color: inherit; }
+@media (max-width: 900px) {
+    .lp-hero, .lp-sec { grid-template-columns: 1fr; }
+    .fig-margin { grid-template-columns: 1fr; }
+    .fig-notes { padding-top: 0; }
+    .fig-note::before { display: none; }
+    .lp-steps li, .lp-facts div { grid-template-columns: 1fr; gap: 4px; }
+}
+
+/* Reading pages (how signing works) */
+.read { max-width: 70ch; }
+.read h2 { margin: 40px 0 10px; font-size: var(--t-lg); }
+.read p, .read li { font-family: var(--font-clause); font-size: 17px; line-height: 1.7; margin-bottom: 14px; }
+.read ul { list-style: disc; padding-left: 22px; }
+.read .note { border-top: 1px solid var(--line-strong); border-bottom: 1px solid var(--line-strong); padding: 14px 0; font-family: var(--font-ui); font-size: var(--t-sm); color: var(--ink-2); }

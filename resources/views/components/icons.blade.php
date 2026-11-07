@@ -35,5 +35,12 @@
         <symbol id="i-signal" viewBox="0 0 24 24"><path d="M5 19v-3M10 19v-7M15 19V9M20 19V5"/></symbol>
         <symbol id="i-hand" viewBox="0 0 24 24"><path d="M8 12V6.500a1.500 1.500 0 0 1 3 0V11M11 11V4.500a1.500 1.500 0 0 1 3 0V11M14 11V6a1.500 1.500 0 0 1 3 0v8c0 4-2.500 6.500-6 6.500S6 18 5.500 15l-1-3.500a1.500 1.500 0 0 1 2.800-.7L8 12"/></symbol>
         <symbol id="i-seal" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.500"/><circle cx="12" cy="12" r="5.500"/><path d="M9.800 12.200l1.600 1.600 2.900-3.200"/></symbol>
+        <symbol id="i-clip" viewBox="0 0 24 24"><path d="M19 11.500l-7 7a4.500 4.500 0 0 1-6.400-6.400l8-8a3 3 0 0 1 4.300 4.300l-8 8a1.500 1.500 0 0 1-2.100-2.100l7-7"/></symbol>
+        <symbol id="i-send" viewBox="0 0 24 24"><path d="M4 12l16-7-6 15-3-6.500z"/><path d="M11 13.500L20 5"/></symbol>
+        <symbol id="i-back" viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></symbol>
+        <symbol id="i-monitor" viewBox="0 0 24 24"><rect x="3" y="4.500" width="18" height="12" rx="1"/><path d="M8 20h8M12 16.500V20"/></symbol>
+        <symbol id="i-phone" viewBox="0 0 24 24"><rect x="7" y="3" width="10" height="18" rx="1.500"/><path d="M11 18h2"/></symbol>
+        <symbol id="i-copy" viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="12" rx="1"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"/></symbol>
+        <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.500"/><path d="M12 11v5.500M12 7.800v.1"/></symbol>
     </defs>
 </svg>

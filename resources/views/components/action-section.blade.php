@@ -1,12 +1,11 @@
-<div {{ $attributes->merge(['class' => 'md:grid md:grid-cols-3 md:gap-6']) }}>
-    <x-section-title>
+@php($sid = 'sec-'.substr(md5(trim(strip_tags((string) $title))), 0, 8))
+<section {{ $attributes->class(['sect']) }} aria-labelledby="{{ $sid }}">
+    <x-section-title :sid="$sid">
         <x-slot name="title">{{ $title }}</x-slot>
         <x-slot name="description">{{ $description }}</x-slot>
     </x-section-title>
 
-    <div class="mt-5 md:mt-0 md:col-span-2">
-        <div class="px-4 py-5 sm:p-6 bg-white shadow sm:rounded-lg">
-            {{ $content }}
-        </div>
+    <div class="sect-body is-wide">
+        {{ $content }}
     </div>
-</div>
+</section>

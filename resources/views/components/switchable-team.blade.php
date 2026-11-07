@@ -1,21 +1,15 @@
-@props(['team', 'component' => 'dropdown-link'])
+@props(['team', 'component' => null])
+@php($current = Auth::user()->isCurrentTeam($team))
 
-<form method="POST" action="{{ route('current-team.update') }}" x-data>
+<form method="POST" action="{{ route('current-team.update') }}" class="swt">
     @method('PUT')
     @csrf
 
-    <!-- Hidden Team ID -->
     <input type="hidden" name="team_id" value="{{ $team->id }}">
 
-    <x-dynamic-component :component="$component" href="#" x-on:click.prevent="$root.submit();">
-        <div class="flex items-center">
-            @if (Auth::user()->isCurrentTeam($team))
-                <svg class="me-2 size-5 text-green-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-            @endif
-
-            <div class="truncate">{{ $team->name }}</div>
-        </div>
-    </x-dynamic-component>
+    <button type="submit" class="swt-btn" @if ($current) aria-current="true" @endif>
+        <span class="swt-mark" aria-hidden="true">@if ($current)<x-icon name="check" />@endif</span>
+        <span class="swt-name">{{ $team->name }}</span>
+        @if ($current)<span class="sr-only">(current business)</span>@endif
+    </button>
 </form>

@@ -1002,10 +1002,13 @@ class Room {
         this.ownQuality = this.net === 'reconnecting' ? this.ownQuality : q;
         const net = this.el.net;
         net.dataset.q = q || '';
-        const text = this.net === 'reconnecting' ? 'Offline, reconnecting' : q ? `${QUALITY_WORD[q]} connection` : 'Measuring connection';
-        const label = net.querySelector('span:last-child');
-        if (label.textContent !== text) label.textContent = text;
-        net.title = `Your connection: ${text.toLowerCase()}`;
+        const word = this.net === 'reconnecting' ? 'Offline' : q ? QUALITY_WORD[q] : 'Measuring';
+        const rest = this.net === 'reconnecting' ? ', reconnecting' : q ? ' connection' : ' connection';
+        const wordEl = net.querySelector('.net-word');
+        const restEl = net.querySelector('.net-rest');
+        if (wordEl.textContent !== word) wordEl.textContent = word;
+        if (restEl.textContent !== rest) restEl.textContent = rest;
+        net.title = `Your connection: ${word.toLowerCase()}${rest}`;
     }
 
     // ── Rendering the rest ───────────────────────────────────────────────────

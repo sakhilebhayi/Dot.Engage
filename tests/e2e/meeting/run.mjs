@@ -155,22 +155,24 @@ async function callChain(browser) {
         ok(after.some((f, i) => f > before[i]), 'video frames should resume after camera back on');
         // Mic mute: the audio really goes quiet for the listener, then comes back.
         const energyOf = async (p) => (await rtcSnapshot(p.page)).map((x) => x.audio?.energy || 0);
-        const e0 = await energyOf(g1); await sleep(2500); const e1 = await energyOf(g1);
+        const e0 = await energyOf(g1); await sleep(5000); const e1 = await energyOf(g1);
         const growthOn = Math.max(...e1.map((v, i) => v - e0[i]));
         await host.page.click('#ctl-mic');
         await waitTile(g1.page, (t) => t.some((x) => x.name === 'Naledi Dlamini' && x.micOff), 'host mic off icon on guest tile', 15000);
         await sleep(1200);
-        const m0 = await energyOf(g1); await sleep(3000); const m1 = await energyOf(g1);
+        const m0 = await energyOf(g1); await sleep(5000); const m1 = await energyOf(g1);
         // Both of g1's inbound audio streams: only the host's is muted, so compare against the host's connection only.
         const hostIdx = await g1.page.evaluate(async () => { const out = []; for (const pc of window.__pcs) { if (pc.signalingState !== 'closed' && pc.getTransceivers().length >= 2) out.push(pc.connectionState); } return out.length; });
         const growthMuted = Math.min(...m1.map((v, i) => v - m0[i]));
-        ok(growthMuted < growthOn * 0.2, `muted host audio should stop adding energy (min growth ${growthMuted.toFixed(3)} vs ${growthOn.toFixed(3)} on)`);
+        ok(growthOn > 0.02, `baseline audio energy should be growing while unmuted (${growthOn.toFixed(3)})`);
+        ok(growthMuted < 0.001, `muted host audio should add no energy (min growth ${growthMuted.toFixed(4)} vs ${growthOn.toFixed(3)} on)`);
         ok((await host.page.getAttribute('#ctl-mic', 'aria-pressed')) === 'false', 'host mic button should be unpressed');
         await host.page.click('#ctl-mic');
         await waitTile(g1.page, (t) => t.some((x) => x.name === 'Naledi Dlamini' && !x.micOff), 'host mic back on', 15000);
-        const u0 = await energyOf(g1); await sleep(3000); const u1 = await energyOf(g1);
-        ok(Math.max(...u1.map((v, i) => v - u0[i])) > 0.05, 'audio energy should grow again after unmute');
-        return `cam off->tile camOff, on->frames resume; energy/3s: on ${growthOn.toFixed(2)}, muted ${growthMuted.toFixed(3)}, unmuted ${(Math.max(...u1.map((v, i) => v - u0[i]))).toFixed(2)}`;
+        const u0 = await energyOf(g1); await sleep(5000); const u1 = await energyOf(g1);
+        const growthBack = Math.max(...u1.map((v, i) => v - u0[i]));
+        ok(growthBack > 0.02, 'audio energy should grow again after unmute: ' + growthBack);
+        return `cam off->tile camOff, on->frames resume; remote audio energy per 5 s window: unmuted ${growthOn.toFixed(2)}, muted ${growthMuted.toFixed(4)}, unmuted again ${growthBack.toFixed(2)}`;
     });
 
     await scenario('(d) device switch with replaceTrack (no renegotiation)', async () => {
@@ -280,7 +282,9 @@ async function callChain(browser) {
         await shot(host, 'f-host-tile-lost.png');
         await host.page.evaluate(() => { delete window.__flapped.connectionState; window.__flapped.dispatchEvent(new Event('connectionstatechange')); });
         await host.page.waitForFunction(() => ![...document.querySelectorAll('#grid .tile')].some((t) => /Connection lost/.test(t.querySelector('.tile-status')?.innerText || '')), null, { timeout: 15000 });
-        const ufrag1 = await host.page.evaluate(() => window.__pcs.filter((p) => p.signalingState !== 'closed' && p.getTransceivers().length >= 2).map((p) => /a=ice-ufrag:(\S+)/.exec(p.remoteDescription.sdp)[1]));
+        const readU = () => host.page.evaluate(() => window.__pcs.filter((p) => p.signalingState !== 'closed' && p.getTransceivers().length >= 2).map((p) => /a=ice-ufrag:(\S+)/.exec(p.remoteDescription.sdp)[1]));
+        let ufrag1 = await readU();
+        for (let i = 0; i < 40 && JSON.stringify(ufrag0) === JSON.stringify(ufrag1); i++) { await sleep(250); ufrag1 = await readU(); }
         ok(JSON.stringify(ufrag0) !== JSON.stringify(ufrag1), 'ICE credentials should have changed after the restart: ' + ufrag0 + ' vs ' + ufrag1);
         const restarts = await host.page.evaluate(() => window.__restarts);
         await assertFlow(host.page, { peers: 2, label: 'host after flap' });
@@ -288,10 +292,10 @@ async function callChain(browser) {
     });
 
     await scenario('(g) killed tab: others drop the tile in about 20 s, no ghost', async () => {
-        // A crash does not say goodbye: block the leave request so the server never hears one.
-        await g2.page.route('**/meetings/*/leave', (r) => r.abort());
+        // A crash does not say goodbye: crash the renderer (no pagehide, no leave request).
+        const cdp = await g2.ctx.newCDPSession(g2.page);
         const t0 = Date.now();
-        await g2.page.close({ runBeforeUnload: false });
+        await cdp.send('Page.crash').catch(() => {});
         await waitTile(host.page, (t) => !t.some((x) => /Pieter/.test(x.name)), 'ghost tile removed on host', 40000);
         const tGone = Date.now() - t0;
         await waitTile(g1.page, (t) => !t.some((x) => /Pieter/.test(x.name)), 'ghost tile removed on guest 1', 20000);

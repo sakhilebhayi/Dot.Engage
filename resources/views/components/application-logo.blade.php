@@ -1,1 +1,1 @@
-<img src="{{ asset('images/dot_engage.png') }}" alt="dot.engage" {{ $attributes->merge(['class' => 'h-16 w-auto']) }}>
+<span {{ $attributes->class(['wordmark']) }}><x-mark /> <span>Dot.<span class="sub">Engage</span></span></span>

@@ -1,3 +1,1 @@
-<a href="/">
-    <img src="{{ asset('images/logo-light.png') }}" alt="Dot.Engage" class="h-14 sm:h-[4.5rem] w-auto">
-</a>
+<a class="wordmark" href="/" aria-label="Dot.Engage"><x-mark /> <span>Dot.<span class="sub">Engage</span></span></a>

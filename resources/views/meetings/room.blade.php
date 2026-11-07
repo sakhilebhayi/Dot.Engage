@@ -12,6 +12,9 @@
 <body class="room" data-state="lobby">
     <a class="skip" href="#stage">Skip to the call</a>
     <x-icons />
+    <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs>
+        <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 7h8M17 7h3M4 17h3M12 17h8"/><circle cx="14.500" cy="7" r="2.200"/><circle cx="9.500" cy="17" r="2.200"/></symbol>
+    </defs></svg>
 
     <header class="room-bar">
         <a class="room-back" href="{{ $access->isInternal() ? route('engagements.meetings', $engagement) : route('engagements.show', $engagement) }}">
@@ -23,7 +26,7 @@
         </div>
         <div class="room-meta">
             <span id="room-clock" class="fig" aria-label="Time in the meeting">00:00</span>
-            <span id="room-net" class="net" data-q="" title="Your connection"><x-icon name="signal" size="sm" /><span>Connection</span></span>
+            <span id="room-net" class="net" data-q="" title="Your connection"><x-icon name="signal" size="sm" /><span><b class="net-word">Connection</b><span class="net-rest"></span></span></span>
             <button type="button" class="iconbtn" data-theme-toggle aria-label="Switch light and dark" title="Switch light and dark"><x-icon name="eye" /></button>
         </div>
     </header>
@@ -85,7 +88,7 @@
             <button type="button" id="ctl-mic" class="ctl" aria-pressed="true" aria-label="Mute microphone"><x-icon name="mic" /></button>
             <button type="button" id="ctl-cam" class="ctl" aria-pressed="true" aria-label="Turn camera off"><x-icon name="cam" /></button>
             <button type="button" id="ctl-share" class="ctl" aria-pressed="false" aria-label="Share your screen"><x-icon name="screen" /></button>
-            <details class="ctl-menu" id="ctl-devices"><summary class="ctl" aria-label="Devices"><x-icon name="signal" /></summary><div class="menu-panel" id="devices-panel"></div></details>
+            <details class="ctl-menu" id="ctl-devices"><summary class="ctl" aria-label="Devices" title="Camera, microphone and speaker"><x-icon name="sliders" /></summary><div class="menu-panel" id="devices-panel"></div></details>
             <button type="button" id="ctl-people" class="ctl" aria-pressed="false" aria-label="People and documents"><x-icon name="people" /></button>
             @if ($config['isHost'])
                 <button type="button" id="ctl-lock" class="ctl" aria-pressed="false" aria-label="Lock the meeting"><x-icon name="lock" /></button>
