@@ -1,5 +1,7 @@
 <div>
-    @php($unread = $notifications->whereNull('read_at')->count())
+    @php
+        $unread = $notifications->whereNull('read_at')->count();
+    @endphp
     <section aria-labelledby="h-latest">
         <div class="section-head">
             <h2 id="h-latest">Latest <span class="n">{{ $notifications->count() }}</span></h2>

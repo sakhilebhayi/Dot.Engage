@@ -94,6 +94,7 @@ body[data-state='live'] #room-root { overflow: hidden; }
 .notice .notice-body { display: grid; gap: 14px; }
 .notice .page-actions { margin-top: 6px; }
 .waiting .btn, .notice .btn { min-height: 44px; }
+.waiting > .btn { justify-self: start; }
 
 /* ── Buttons on the call controls ───────────────────────────────────────── */
 .ctl {

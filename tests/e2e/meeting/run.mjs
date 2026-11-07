@@ -58,8 +58,8 @@ async function waitConnected(page, n, timeout = 40000) {
     throw new Error(`timeout waiting for ${n} connected peers, have ${await connectedPeers(page)}`);
 }
 
-function noErrors(people, label) {
-    const bad = people.flatMap((p) => p.errors.map((e) => `${p.name}: ${e}`)).filter((e) => !/status of 4(09|29|03)|Failed to load resource: net::ERR_INTERNET_DISCONNECTED/.test(e));
+function noErrors(people, label, induced = /Failed to load resource: net::ERR_INTERNET_DISCONNECTED/) {
+    const bad = people.flatMap((p) => p.errors.map((e) => `${p.name}: ${e}`)).filter((e) => !induced.test(e));
     ok(bad.length === 0, `${label} console/page errors: ${bad.slice(0, 3).join(' | ')}`);
 }
 
@@ -638,7 +638,68 @@ async function misc(browser) {
         await host.page.click('#grid .tile[data-key^="p"] .tile-hit');
         return 'screenshots taken; spotlight toggles focus layout';
     });
-    noErrors([host, g1], 'misc');
+
+    await scenario('(r) hostile network: 429, garbage and 500 responses on the poll', async () => {
+        const { page } = host;
+        const seen = [];
+        let mode = 'throttle';
+        let n = 0;
+        await page.route('**/meetings/*/poll*', async (route) => {
+            seen.push({ t: Date.now(), mode });
+            if (mode === 'throttle' && n++ < 3) return route.fulfill({ status: 429, headers: { 'Retry-After': '2', 'content-type': 'application/json' }, body: '{"message":"Too many"}' });
+            if (mode === 'garbage' && n++ < 3) return route.fulfill({ status: 200, headers: { 'content-type': 'text/html' }, body: '<html>proxy error</html>' });
+            if (mode === 'fivehundred' && n++ < 4) return route.fulfill({ status: 500, body: 'boom' });
+            return route.continue();
+        });
+        const tiles0 = (await tiles(page)).length;
+        await page.waitForFunction(() => window.__engageRoom && true);
+        await sleep(16000);
+        const throttled = seen.filter((s) => s.mode === 'throttle');
+        const gaps = throttled.slice(1, 4).map((s, i) => s.t - throttled[i].t);
+        ok(gaps.length >= 2 && gaps.every((g) => g >= 4500), 'after a 429 the next poll should wait 5 s or more: gaps ' + gaps);
+        const statusAfter429 = await text(page, '#room-status');
+        ok(statusAfter429 === 'Live', '429 alone should not say Reconnecting: ' + statusAfter429);
+        mode = 'garbage'; n = 0;
+        await sleep(9000);
+        ok((await tiles(page)).length === tiles0, 'garbage poll answers must not wipe the call (tiles ' + tiles0 + ' -> ' + (await tiles(page)).length + ')');
+        mode = 'fivehundred'; n = 0;
+        let sawReconnecting = false;
+        for (let i = 0; i < 40 && !sawReconnecting; i++) { await sleep(500); sawReconnecting = (await text(page, '#room-status')) === 'Reconnecting'; }
+        ok(sawReconnecting, '5xx answers should show Reconnecting');
+        await page.waitForFunction(() => document.getElementById('room-status').textContent === 'Live', null, { timeout: 40000 });
+        await page.unroute('**/meetings/*/poll*');
+        ok((await tiles(page)).length === tiles0, 'tiles intact after recovery');
+        return `429: next polls ${gaps.map((g) => (g / 1000).toFixed(1) + ' s').join(', ')} apart, status stayed Live; garbage 200 ignored (call intact); 500s -> Reconnecting -> Live again`;
+    });
+
+    await scenario('(q) expired session (419) says reload', async () => {
+        await g1.page.evaluate(() => { document.querySelector('meta[name="csrf-token"]').content = 'expired-token'; });
+        await g1.page.click('#ctl-mic');
+        await waitPhase(g1, 'ended', 20000);
+        const heading = await text(g1.page, '#notice-h');
+        const body = await text(g1.page, '#notice-text');
+        ok(/session expired/i.test(heading) && /reload/i.test(body), 'expired notice: ' + heading + ' / ' + body);
+        const reload = await g1.page.$('#notice-actions button');
+        ok(!!reload, 'a Reload button should be offered');
+        return `"${heading}" / "${body.slice(0, 60)}..." with a Reload button`;
+    });
+
+    await scenario('(p) second window displaces the first (409), first window stops and says so', async () => {
+        const p2 = await host.ctx.newPage();
+        p2.on('console', (m) => { if (m.type() === 'error') host.errors.push('p2 ' + m.text()); });
+        await p2.goto(`/meetings/${key}`);
+        await p2.waitForSelector('#btn-join:not([disabled])', { timeout: 30000 });
+        await p2.click('#btn-join');
+        await p2.waitForFunction(() => document.body.dataset.state === 'live', null, { timeout: 20000 });
+        await waitPhase(host, 'ended', 20000);
+        const heading = await text(host.page, '#notice-h');
+        ok(/another window/i.test(heading), 'first window should say so: ' + heading);
+        const freed = await host.page.evaluate(() => ({ pcs: window.__pcs.filter((p) => p.signalingState !== 'closed').length, tracks: window.__tracks.filter((t) => t.readyState === 'live').length }));
+        ok(freed.pcs === 0 && freed.tracks === 0, 'first window should release everything: ' + JSON.stringify(freed));
+        await p2.close();
+        return `first window: "${heading}", all connections and tracks released (${JSON.stringify(freed)}); second window is the live one`;
+    });
+    noErrors([host, g1], 'misc', /status of (409|419|429|500|502)|ERR_INTERNET_DISCONNECTED/);
 }
 
 const browser = await launch();

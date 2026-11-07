@@ -19,7 +19,7 @@ const POLL_WAITING_MS = 2000;
 const BUSY_AFTER_CHANGE_MS = 20000;
 const STATS_MS = 2000;
 const REPORT_MS = 5000;
-const LOST_TILE_GRACE_MS = 4000;
+const LOST_TILE_GRACE_MS = 1500;
 const SPEAKING_RMS = 0.012;
 const SPEAKING_HOLD_MS = 450;
 
@@ -342,6 +342,7 @@ class Room {
         const started = performance.now();
         try {
             const data = await this.api.get(`${this.urls.poll}?since=${this.since}`);
+            if (!data || !data.me || !Array.isArray(data.roster)) throw new ApiError(502, 'The server sent something unexpected.');
             this.latency = performance.now() - started;
             this.pollFailures = 0;
             if (this.net === 'reconnecting') this.setNet('ok');
@@ -360,9 +361,9 @@ class Room {
         this.log('poll failed', e);
         if (!(e instanceof ApiError)) { this.pollFailures += 1; return; }
         if (e.displaced) { this.displaced(); return; }
-        if (e.status === 419 || e.status === 401) { this.finish('expired'); return; }
+        if (e.status === 419 || e.status === 401 || e.status === 403) { this.finish('expired'); return; }
         if (e.notEntered) { this.reenter(); return; }
-        if (e.status === 403 || e.status === 404) { this.finish('refused', e.status === 404 ? 'This meeting is no longer available.' : e.message); return; }
+        if (e.status === 404) { this.finish('refused', 'This meeting is no longer available.'); return; }
         if (e.status === 429) {
             this.pollDelayOverride = Math.max(5000, (e.retryAfter || 0) * 1000);
             return;
@@ -1158,7 +1159,7 @@ class Room {
             locked: { title: 'The meeting is locked', text: 'The host has locked this meeting, so nobody new can come in. Ask the host to unlock it.' },
             full: { title: 'The meeting is full', text: `${detail || 'This meeting is full.'} Try again when someone leaves.` },
             refused: { title: 'You cannot join this meeting', text: detail || 'Something stopped you joining.' },
-            expired: { title: 'Your session expired', text: 'Your session expired, reload this page to continue.' },
+            expired: { title: 'Your session expired', text: 'Your session expired, reload this page to continue. If it keeps happening, open your invitation link again.' },
         }[kind];
         let actions = [back];
         if (kind === 'full' || kind === 'locked') {
