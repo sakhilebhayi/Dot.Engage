@@ -344,6 +344,20 @@ jobs:
             echo "== docroot build/ did not exist; linked to $APPDIR/public/build"
           fi
 
+          # ---- static files that live in public/ but are served from the docroot
+          # Fonts, the PDF reader's font tables, logos and icons are not part of public/build. While the docroot is
+          # the folder above the app (not <app>/public) Apache serves ITS copies, which git never refreshes: a new font
+          # or reader file would 404 for days. Mirror them. Skipped once the document root is <app>/public.
+          if [ -n "${APP_REAL:-}" ] && [ "${CURRENT_DOCROOT:-}" != "$APP_REAL/public" ] && [ ! -f "$DEPLOY_PATH/.docroot-is-public" ]; then
+            for D in fonts images; do
+              if [ -d "public/$D" ] && [ ! -L "$DOCROOT/$D" ]; then mkdir -p "$DOCROOT/$D" && rsync -a public/$D/ "$DOCROOT/$D/" && echo "== docroot $D/ mirrored"; fi
+            done
+            if [ -d public/vendor/pdfjs ] && [ ! -L "$DOCROOT/vendor" ]; then mkdir -p "$DOCROOT/vendor/pdfjs" && rsync -a --delete public/vendor/pdfjs/ "$DOCROOT/vendor/pdfjs/" && echo "== docroot vendor/pdfjs/ mirrored"; fi
+            for F in favicon.ico favicon-16x16.png favicon-32x32.png apple-touch-icon.png robots.txt; do
+              if [ -f "public/$F" ] && [ ! -L "$DOCROOT/$F" ]; then cp -f "public/$F" "$DOCROOT/$F"; fi
+            done
+          fi
+
           # ---- database
           echo "== Pending migrations:"
           $PHP artisan migrate:status --pending 2>&1 | tail -25 || true
@@ -488,7 +502,7 @@ jobs:
           set -uo pipefail
           WORK="$(mktemp -d)"
           FAILED=0
-          for PAGE in "/" "/login" "/up"; do
+          for PAGE in "/" "/login" "/up" "/how-signing-works" "/verify" "/fonts/public-sans-100_900-normal.woff2" "/vendor/pdfjs/standard_fonts/LiberationSans-Regular.ttf"; do
             CODE=$(curl -s --max-time 30 -o /dev/null -w '%{http_code}' "$SITE_URL$PAGE" || true)
             if [ "$CODE" = "200" ]; then echo "200 $SITE_URL$PAGE"; else echo "::error::$SITE_URL$PAGE answered ${CODE:-no response} (expected 200)"; FAILED=1; fi
           done

@@ -1,74 +1,66 @@
 <x-action-section>
     <x-slot name="title">
-        {{ __('Two Factor Authentication') }}
+        {{ __('Two-step sign-in') }}
     </x-slot>
 
     <x-slot name="description">
-        {{ __('Add additional security to your account using two factor authentication.') }}
+        {{ __('Ask for a code from your phone each time you sign in, on top of your password.') }}
     </x-slot>
 
     <x-slot name="content">
-        <h3 class="text-lg font-medium text-gray-900">
+        <p class="sect-state">
             @if ($this->enabled)
                 @if ($showingConfirmation)
-                    {{ __('Finish enabling two factor authentication.') }}
+                    {{ __('Finish turning on two-step sign-in.') }}
                 @else
-                    {{ __('You have enabled two factor authentication.') }}
+                    {{ __('Two-step sign-in is on.') }}
                 @endif
             @else
-                {{ __('You have not enabled two factor authentication.') }}
+                {{ __('Two-step sign-in is off.') }}
             @endif
-        </h3>
+        </p>
 
-        <div class="mt-3 max-w-xl text-sm text-gray-600">
-            <p>
-                {{ __('When two factor authentication is enabled, you will be prompted for a secure, random token during authentication. You may retrieve this token from your phone\'s Google Authenticator application.') }}
-            </p>
-        </div>
+        <p class="prose-sm">
+            {{ __('When it is on, signing in asks for a code from an authenticator app on your phone. Use any authenticator app you already trust.') }}
+        </p>
 
         @if ($this->enabled)
             @if ($showingQrCode)
-                <div class="mt-4 max-w-xl text-sm text-gray-600">
-                    <p class="font-semibold">
-                        @if ($showingConfirmation)
-                            {{ __('To finish enabling two factor authentication, scan the following QR code using your phone\'s authenticator application or enter the setup key and provide the generated OTP code.') }}
-                        @else
-                            {{ __('Two factor authentication is now enabled. Scan the following QR code using your phone\'s authenticator application or enter the setup key.') }}
-                        @endif
-                    </p>
-                </div>
+                <p class="prose-sm" style="margin-top:16px">
+                    @if ($showingConfirmation)
+                        {{ __('To finish, scan this QR code with your authenticator app, or type in the setup key, then enter the code the app shows.') }}
+                    @else
+                        {{ __('Scan this QR code with your authenticator app, or type in the setup key.') }}
+                    @endif
+                </p>
 
-                <div class="mt-4 p-2 inline-block bg-white">
+                <div class="qr">
                     {!! $this->user->twoFactorQrCodeSvg() !!}
                 </div>
 
-                <div class="mt-4 max-w-xl text-sm text-gray-600">
-                    <p class="font-semibold">
-                        {{ __('Setup Key') }}: {{ decrypt($this->user->two_factor_secret) }}
-                    </p>
-                </div>
+                <p class="setup-key">
+                    {{ __('Setup key') }}: <span class="fig">{{ decrypt($this->user->two_factor_secret) }}</span>
+                </p>
 
                 @if ($showingConfirmation)
-                    <div class="mt-4">
-                        <x-label for="code" value="{{ __('Code') }}" />
+                    <div class="field" style="margin-top:16px;max-width:260px">
+                        <x-label for="code" value="{{ __('Code from the app') }}" />
 
-                        <x-input id="code" type="text" name="code" class="block mt-1 w-1/2" inputmode="numeric" autofocus autocomplete="one-time-code"
+                        <x-input id="code" type="text" name="code" inputmode="numeric" autofocus autocomplete="one-time-code"
                             wire:model="code"
                             wire:keydown.enter="confirmTwoFactorAuthentication" />
 
-                        <x-input-error for="code" class="mt-2" />
+                        <x-input-error for="code" />
                     </div>
                 @endif
             @endif
 
             @if ($showingRecoveryCodes)
-                <div class="mt-4 max-w-xl text-sm text-gray-600">
-                    <p class="font-semibold">
-                        {{ __('Store these recovery codes in a secure password manager. They can be used to recover access to your account if your two factor authentication device is lost.') }}
-                    </p>
-                </div>
+                <p class="prose-sm" style="margin-top:16px">
+                    {{ __('Keep these recovery codes in a password manager. Each one signs you in once if you lose your phone.') }}
+                </p>
 
-                <div class="grid gap-1 max-w-xl mt-4 px-4 py-4 font-mono text-sm bg-gray-100 rounded-lg">
+                <div class="codes">
                     @foreach (json_decode(decrypt($this->user->two_factor_recovery_codes), true) as $code)
                         <div>{{ $code }}</div>
                     @endforeach
@@ -76,30 +68,30 @@
             @endif
         @endif
 
-        <div class="mt-5">
+        <div class="page-actions" style="margin-top:18px">
             @if (! $this->enabled)
                 <x-confirms-password wire:then="enableTwoFactorAuthentication">
                     <x-button type="button" wire:loading.attr="disabled">
-                        {{ __('Enable') }}
+                        {{ __('Turn on') }}
                     </x-button>
                 </x-confirms-password>
             @else
                 @if ($showingRecoveryCodes)
                     <x-confirms-password wire:then="regenerateRecoveryCodes">
-                        <x-secondary-button class="me-3">
-                            {{ __('Regenerate Recovery Codes') }}
+                        <x-secondary-button>
+                            {{ __('Make new recovery codes') }}
                         </x-secondary-button>
                     </x-confirms-password>
                 @elseif ($showingConfirmation)
                     <x-confirms-password wire:then="confirmTwoFactorAuthentication">
-                        <x-button type="button" class="me-3" wire:loading.attr="disabled">
+                        <x-button type="button" wire:loading.attr="disabled">
                             {{ __('Confirm') }}
                         </x-button>
                     </x-confirms-password>
                 @else
                     <x-confirms-password wire:then="showRecoveryCodes">
-                        <x-secondary-button class="me-3">
-                            {{ __('Show Recovery Codes') }}
+                        <x-secondary-button>
+                            {{ __('Show recovery codes') }}
                         </x-secondary-button>
                     </x-confirms-password>
                 @endif
@@ -113,11 +105,10 @@
                 @else
                     <x-confirms-password wire:then="disableTwoFactorAuthentication">
                         <x-danger-button wire:loading.attr="disabled">
-                            {{ __('Disable') }}
+                            {{ __('Turn off') }}
                         </x-danger-button>
                     </x-confirms-password>
                 @endif
-
             @endif
         </div>
     </x-slot>
