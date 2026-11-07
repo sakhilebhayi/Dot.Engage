@@ -93,13 +93,13 @@
                 </ul>
             </section>
         @endif
-    </main>
 
-    <footer class="foot">
-        <span>&copy; {{ date('Y') }} Dot.Engage</span>
-        @if (Route::has('contact'))
-            <a href="{{ route('contact') }}">Contact support</a>
-        @endif
-    </footer>
+        <footer class="foot">
+            <span>&copy; {{ date('Y') }} Dot.Engage</span>
+            @if (Route::has('contact'))
+                <a href="{{ route('contact') }}">Contact support</a>
+            @endif
+        </footer>
+    </main>
 </body>
 </html>

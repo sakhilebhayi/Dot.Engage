@@ -36,7 +36,7 @@
 .ws-main .tabs { margin-bottom: 26px; }
 
 @media (max-width: 1060px) {
-    .ws { grid-template-columns: 1fr; gap: 18px; }
+    .ws { grid-template-columns: minmax(0, 1fr); gap: 18px; }
     .rail { position: static; }
     .rail ol { display: flex; border-left: 0; margin: 0; counter-reset: none; overflow-x: auto; gap: 0; border-top: 1px solid var(--line-strong); }
     .stage { padding: 12px 18px 12px 0; min-width: 118px; }
@@ -233,3 +233,20 @@ body.embed { background: var(--paper); }
 .embed-main { padding: 14px 16px 40px; }
 .embed .docbar, .embed .doctools { margin-bottom: 8px; }
 @media (max-width: 1060px) { .pedit-grid { grid-template-columns: 1fr; } .pside { position: static; } }
+
+.flash > div { min-width: 0; overflow-wrap: anywhere; }
+@media (max-width: 640px) {
+    .docstrip .page-actions { margin-left: 0; width: 100%; }
+    .docbar .page-actions { width: 100%; }
+    .docbar .meta { gap: 8px 12px; }
+    .versions select { max-width: 150px; }
+    .ws-title { gap: 8px 12px; }
+    .ws-title .menu { margin-left: 0 !important; }
+    .rows > li { grid-template-columns: 1fr; gap: 6px; }
+    .rows > li .row-end { text-align: left; }
+    .page-head h1 { font-size: 26px; }
+}
+@media (max-width: 640px) {
+    .flash { flex-wrap: wrap; }
+    .flash form, .flash .btn { margin-left: 0; }
+}

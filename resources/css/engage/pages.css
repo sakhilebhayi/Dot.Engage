@@ -56,7 +56,7 @@ p.err { margin: 0; }
 
 /* ---------- Account and business sections: ruled, not boxed ---------- */
 .sect { margin-top: 44px; }
-.sect:first-child { margin-top: 0; }
+.page-head + .sect, .page-head + div > .sect:first-child { margin-top: 0; }
 .sect-desc { color: var(--muted); font-size: var(--t-sm); max-width: 62ch; margin-top: 10px; }
 .sect-body { margin-top: 18px; max-width: 560px; }
 .sect-body > p { font-size: var(--t-sm); color: var(--ink-2); max-width: 62ch; }
@@ -255,7 +255,8 @@ a.nt-msg:hover { text-decoration: underline; text-underline-offset: 3px; }
 
 /* ---------- Error pages ---------- */
 .errbody { min-height: 100dvh; display: flex; flex-direction: column; }
-.errpage { flex: 1; width: 100%; padding-top: clamp(32px, 9vw, 96px); }
+.errpage { flex: 1; width: 100%; padding-top: clamp(32px, 9vw, 96px); padding-bottom: 32px; }
+.errpage .foot { margin-top: 72px; }
 .errcode { font: 500 clamp(64px, 14vw, 132px)/1 var(--font-fig); color: var(--muted); letter-spacing: -.02em; margin-bottom: 16px; }
 .errpage h1 { margin-bottom: 14px; }
 .errpage .lede { color: var(--ink-2); font-size: var(--t-md); max-width: 54ch; line-height: 1.55; }
@@ -266,7 +267,6 @@ a.nt-msg:hover { text-decoration: underline; text-underline-offset: 3px; }
 .eco { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 0 28px; }
 .eco a { display: flex; align-items: center; min-height: 44px; border-bottom: 1px solid var(--line); text-decoration: none; font-weight: 500; font-size: var(--t-sm); }
 .eco a:hover { text-decoration: underline; text-underline-offset: 3px; }
-.errbody .foot { max-width: 880px; width: 100%; margin: 0 auto; padding: 18px var(--gutter) 32px; }
 
 /* ---------- Reading pages: terms, privacy, cookies ---------- */
 .read-wrap { max-width: 980px; margin: 0 auto; padding: clamp(20px, 5vw, 56px) var(--gutter) 24px; }
