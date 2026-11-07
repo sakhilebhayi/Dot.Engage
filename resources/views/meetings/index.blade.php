@@ -8,7 +8,7 @@
         <form class="docbar" style="margin-bottom:26px" method="post" id="start-form" action="" onsubmit="this.action = this.querySelector('select').value">
             @csrf
             <label for="eng" class="label">Start a meeting about</label>
-            <select class="select" id="eng" style="width:auto;max-width:420px">@foreach ($engagements as $e)<option value="{{ route('meetings.store', $e) }}">{{ $e->title }} · {{ $e->reference }}</option>@endforeach</select>
+            <select class="select" id="eng" style="width:auto;max-width:100%;min-width:0">@foreach ($engagements as $e)<option value="{{ route('meetings.store', $e) }}">{{ $e->title }} · {{ $e->reference }}</option>@endforeach</select>
             <button class="btn btn-sm" type="submit"><span>Start now</span></button>
         </form>
     @endif

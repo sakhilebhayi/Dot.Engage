@@ -92,7 +92,7 @@ p.err { margin: 0; }
     padding: 12px 0; min-height: 52px; background: transparent; border: 0; border-bottom: 1px solid var(--line);
 }
 .rolepick button:hover .rp-name { text-decoration: underline; text-underline-offset: 3px; }
-.rolepick .box { width: 14px; height: 14px; margin-top: 3px; border: 1.5px solid var(--line-strong); display: grid; place-items: center; color: var(--paper); }
+.rolepick .box { width: 16px; height: 16px; margin-top: 2px; border: 1.5px solid var(--line-strong); border-radius: 50%; display: grid; place-items: center; color: var(--paper); }
 .rolepick .box .icon { width: 10px; height: 10px; stroke-width: 3; }
 .rolepick [aria-pressed='true'] .box { background: var(--ink); border-color: var(--ink); }
 .rp-name { font-weight: 600; font-size: var(--t-sm); display: block; }
@@ -114,7 +114,10 @@ p.err { margin: 0; }
 }
 .dlg-title { font-size: var(--t-md); }
 .dlg-panel .sheet-body { font-size: var(--t-sm); color: var(--ink-2); }
+.dlg-panel .sheet-head { align-items: center; padding-top: 12px; padding-bottom: 12px; }
 .dlg-panel .sheet-body .field { margin: 14px 0 0; }
+.dlg-panel .sheet-body .field-first { margin-top: 0; }
+.dlg-panel .sheet-body .checkline { margin-top: 12px; }
 .dlg-panel .sheet-body .field label { color: var(--ink); }
 .dlg-close { flex: none; }
 @media (max-width: 640px) {
@@ -264,7 +267,7 @@ a.nt-msg:hover { text-decoration: underline; text-underline-offset: 3px; }
 .errpage .page-actions .btn { min-height: 42px; }
 .eco-block { margin-top: 64px; }
 .eco-block h2 { font-size: var(--t-base); }
-.eco { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 0 28px; }
+.eco { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 0 28px; }
 .eco a { display: flex; align-items: center; min-height: 44px; border-bottom: 1px solid var(--line); text-decoration: none; font-weight: 500; font-size: var(--t-sm); }
 .eco a:hover { text-decoration: underline; text-underline-offset: 3px; }
 

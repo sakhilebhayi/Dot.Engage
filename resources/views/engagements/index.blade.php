@@ -7,7 +7,7 @@
         <div class="page-actions"><a class="btn" href="{{ route('engagements.create') }}"><span>New engagement</span></a></div>
     </div>
 
-    <div class="tabs" role="tablist" style="margin-bottom:8px">
+    <div class="tabs" style="margin-bottom:8px">
         @foreach (['open' => 'Open', 'closed' => 'Closed', 'all' => 'All'] as $key => $label)
             <a href="{{ route('engagements.index', array_filter(['show' => $key, 'q' => $q])) }}" @if ($filter === $key) aria-current="page" @endif>{{ $label }}</a>
         @endforeach

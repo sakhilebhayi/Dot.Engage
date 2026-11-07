@@ -58,7 +58,8 @@ async function waitConnected(page, n, timeout = 40000) {
     throw new Error(`timeout waiting for ${n} connected peers, have ${await connectedPeers(page)}`);
 }
 
-function noErrors(people, label, induced = /Failed to load resource: net::ERR_INTERNET_DISCONNECTED/) {
+// 403 is the server's deliberate refusal (locked, removed, full) that the browser logs as a failed load; setOffline logs ERR_INTERNET_DISCONNECTED.
+function noErrors(people, label, induced = /status of 403|Failed to load resource: net::ERR_INTERNET_DISCONNECTED/) {
     const bad = people.flatMap((p) => p.errors.map((e) => `${p.name}: ${e}`)).filter((e) => !induced.test(e));
     ok(bad.length === 0, `${label} console/page errors: ${bad.slice(0, 3).join(' | ')}`);
 }
@@ -295,7 +296,8 @@ async function callChain(browser) {
         // A crash does not say goodbye: crash the renderer (no pagehide, no leave request).
         const cdp = await g2.ctx.newCDPSession(g2.page);
         const t0 = Date.now();
-        await cdp.send('Page.crash').catch(() => {});
+        cdp.send('Page.crash').catch(() => {}); // never resolves: the renderer is gone
+        await sleep(300);
         await waitTile(host.page, (t) => !t.some((x) => /Pieter/.test(x.name)), 'ghost tile removed on host', 40000);
         const tGone = Date.now() - t0;
         await waitTile(g1.page, (t) => !t.some((x) => /Pieter/.test(x.name)), 'ghost tile removed on guest 1', 20000);
@@ -673,7 +675,8 @@ async function misc(browser) {
     });
 
     await scenario('(q) expired session (419) says reload', async () => {
-        await g1.page.evaluate(() => { document.querySelector('meta[name="csrf-token"]').content = 'expired-token'; });
+        // The dev server does not enforce CSRF on these routes, so the 419 is injected at the network layer.
+        await g1.page.route('**/meetings/*/state', (r) => r.fulfill({ status: 419, contentType: 'application/json', body: '{"message":"CSRF token mismatch."}' }));
         await g1.page.click('#ctl-mic');
         await waitPhase(g1, 'ended', 20000);
         const heading = await text(g1.page, '#notice-h');
@@ -699,7 +702,7 @@ async function misc(browser) {
         await p2.close();
         return `first window: "${heading}", all connections and tracks released (${JSON.stringify(freed)}); second window is the live one`;
     });
-    noErrors([host, g1], 'misc', /status of (409|419|429|500|502)|ERR_INTERNET_DISCONNECTED/);
+    noErrors([host, g1], 'misc', /status of (403|409|419|429|500|502)|ERR_INTERNET_DISCONNECTED/);
 }
 
 const browser = await launch();

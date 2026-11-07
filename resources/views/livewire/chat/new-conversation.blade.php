@@ -9,7 +9,7 @@
             </div>
 
             <div class="sheet-body">
-                <div class="field">
+                <div class="field field-first">
                     <label for="livewire-chat-new-conversation-name">Name <span class="muted" style="font-weight:400">(optional for groups)</span></label>
                     <input id="livewire-chat-new-conversation-name" class="input" wire:model="name" type="text">
                 </div>

@@ -6,6 +6,7 @@ use App\Http\Controllers\Engage\LegacyController;
 use App\Http\Controllers\Engage\TemplateController;
 use App\Http\Controllers\GuardianHealthController;
 use App\Http\Controllers\SchedulerProbeController;
+use App\Models\Conversation;
 use App\Http\Middleware\AuthenticateGuardian;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
 use Illuminate\Session\Middleware\StartSession;

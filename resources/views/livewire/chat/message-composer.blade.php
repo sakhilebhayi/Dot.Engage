@@ -1,4 +1,4 @@
-<div class="cmp">
+<div class="cmp" x-data>
     <div class="cmp-field">
         @if($attachments)
             <div class="cmp-chips">
@@ -20,11 +20,11 @@
                 <input wire:model="attachments" type="file" multiple accept=".pdf,.doc,.docx,.png,.jpg,.jpeg">
             </label>
             <label for="livewire-chat-message-composer-body" class="sr-only">Message</label>
-            <input id="livewire-chat-message-composer-body" class="cmp-input" wire:model="body" wire:keydown.enter.prevent="send"
+            <input id="livewire-chat-message-composer-body" class="cmp-input" wire:model="body" x-on:keydown.enter.prevent="$wire.send().then(() => $wire.$parent.$refresh())"
                    type="text" placeholder="Write a message" autocomplete="off">
         </div>
     </div>
-    <button type="button" wire:click="send" aria-label="{{ __('Send message') }}" class="btn cmp-send" wire:loading.attr="disabled">
+    <button type="button" x-on:click="$wire.send().then(() => $wire.$parent.$refresh())" aria-label="{{ __('Send message') }}" class="btn cmp-send" wire:loading.attr="disabled">
         <x-icon name="send" />
     </button>
 </div>

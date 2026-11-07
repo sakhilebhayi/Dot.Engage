@@ -27,7 +27,7 @@ hr { border: 0; border-top: 1px solid var(--line); margin: 0; }
 ::selection { background: var(--ink); color: var(--paper); }
 :focus { outline: none; }
 :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; border-radius: 2px; }
-.mono, .fig { font-family: var(--font-fig); font-feature-settings: 'zero' 1; letter-spacing: 0; }
+.mono, .fig { font-family: var(--font-fig); font-feature-settings: 'zero' 1; letter-spacing: 0; overflow-wrap: anywhere; }
 .clause { font-family: var(--font-clause); line-height: 1.6; }
 .muted { color: var(--muted); }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
