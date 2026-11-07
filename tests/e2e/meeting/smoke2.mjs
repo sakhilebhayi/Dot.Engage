@@ -22,6 +22,7 @@ try {
   console.log('tiles host', JSON.stringify(await tiles(host.page)));
   console.log('tiles guest', JSON.stringify(await tiles(g1.page)));
   console.log(JSON.stringify(await rtcSnapshot(host.page)));
+  console.log('peers', JSON.stringify(await host.page.evaluate(() => [...window.__engageRoom.peers.values()].map(p => ({ id: p.id, status: p.status, gen: p.gen, rebuilds: p.rebuilds, media: p.media.getTracks().map(t=>t.kind), screen: p.screen.getTracks().map(t=>t.kind), tx: p.pc.getTransceivers().map(t => [t.mid, t.direction, t.currentDirection, t.receiver.track.kind, t === p.audioTx, t === p.videoTx]) })))));
   console.log('video els', JSON.stringify(await host.page.evaluate(() => [...document.querySelectorAll('#grid video')].map(v => ({ paused: v.paused, rs: v.readyState, muted: v.muted, tracks: v.srcObject ? v.srcObject.getTracks().map(t => t.kind + ':' + t.readyState + ':' + t.muted + ':' + t.enabled) : null })))));
   console.log(await assertFlow(host.page, { peers: 1, label: 'host' }));
   console.log(await assertFlow(g1.page, { peers: 1, label: 'guest' }));

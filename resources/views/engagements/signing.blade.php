@@ -58,6 +58,18 @@
             @endforeach
         </ul>
 
+    @elseif ($contract->status === 'signed' && ! $envelope)
+        @php($legacy = \App\Models\ContractSignature::where('contract_id', $contract->id)->orderBy('signed_at')->get())
+        @php($signedCopy = $contract->versions()->where('kind', 'signed')->latest('version_number')->first())
+        <div class="section-head" style="margin-top:0"><h2>Signed before evidence records <span class="n">{{ $legacy->count() }}</span></h2></div>
+        <p class="muted" style="margin:10px 0 0;max-width:64ch">This agreement was signed in the earlier Dot.Engage. It has no certificate of completion, platform seal or document fingerprint, so it cannot be checked the way new agreements can. The signatures recorded at the time are listed below.</p>
+        <ul class="sstatus">
+            @foreach ($legacy as $sig)
+                <li><span class="ini ini-sm">{{ strtoupper(mb_substr($sig->signerName(), 0, 1)) }}</span><div><b>{{ $sig->signerName() }}</b><div class="row-sub">{{ $sig->signer_email ?? $sig->user?->email }}@if($sig->ip_address) · <span class="fig">{{ $sig->ip_address }}</span>@endif</div></div><time class="fig muted" data-local datetime="{{ $sig->signed_at->toIso8601String() }}">{{ $sig->signed_at->format('j M Y H:i') }}</time></li>
+            @endforeach
+        </ul>
+        @if ($signedCopy)<p style="margin-top:18px"><a class="btn" href="{{ route('documents.file', [$e, $contract, 'v' => $signedCopy->id, 'download' => 1]) }}"><span>Download the signed copy</span></a></p>@endif
+
     @elseif ($finalising)
         <div class="empty"><b><span class="spinner" style="display:inline-block;vertical-align:-2px"></span> Every signature is in. Preparing the signed copy.</b>
             The signatures are being drawn onto the agreement and the evidence record is being sealed. This takes a moment and retries by itself if it is interrupted.
