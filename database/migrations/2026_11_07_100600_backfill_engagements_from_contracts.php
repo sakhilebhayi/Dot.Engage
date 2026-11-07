@@ -22,9 +22,10 @@ return new class extends Migration
 
         $audit = app(AuditTrail::class);
         $seq = [];
+        $created = [];
 
         foreach ($contracts as $c) {
-            DB::transaction(function () use ($c, $audit, &$seq) {
+            DB::transaction(function () use ($c, $audit, &$seq, &$created) {
                 $year = (int) date('Y', strtotime($c->created_at ?? 'now'));
                 $seq[$year] ??= (int) DB::table('engagements')->where('reference', 'like', 'ENG-'.$year.'-%')->count();
                 $seq[$year]++;
@@ -103,7 +104,21 @@ return new class extends Migration
                 DB::table('contracts')->where('id', $c->id)->update(['engagement_id' => $engagementId, 'current_version' => $current, 'locked_at' => $signed ? now() : null, 'shared_at' => $c->created_at]);
 
                 $audit->record($engagementId, 'engagement.created', Actor::system('migration'), null, ['reference' => $reference, 'migrated_from_contract' => $c->id, 'title' => $c->title]);
+
+                $created[] = $engagementId;
             });
+        }
+
+        // Work the live state out from what was imported (an unsigned contract with a pending signer is "invitation sent", not a draft).
+        foreach ($created as $id) {
+            try {
+                $engagement = \App\Models\Engagement::withoutGlobalScopes()->find($id);
+                if ($engagement && $engagement->isOpen()) {
+                    app(\App\Services\Engage\EngagementStateMachine::class)->sync($engagement, Actor::system('migration'));
+                }
+            } catch (\Throwable $e) {
+                report($e); // the state is recomputed the next time anything happens in the engagement
+            }
         }
     }
 
