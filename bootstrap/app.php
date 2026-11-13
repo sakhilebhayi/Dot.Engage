@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\EnsureCompanyHoldsPlatform;
 use App\Http\Middleware\EnsurePlatformOperator;
 use App\Http\Middleware\SecurityHeaders;
 use App\Services\Guardian\ErrorCounter;
@@ -18,6 +19,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
             'operator' => EnsurePlatformOperator::class,
+            'entitled' => EnsureCompanyHoldsPlatform::class,
         ]);
 
         // Last in the global stack so it sees every response, including 404s and error pages.

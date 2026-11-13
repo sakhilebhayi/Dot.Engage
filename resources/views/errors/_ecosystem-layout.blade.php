@@ -31,8 +31,11 @@
         // all platforms) rather than a fixed subset: add a platform to the registry once and it shows up here.
         // Self-exclusion uses this literal name rather than config('app.name'), since not every platform's
         // .env reliably has APP_NAME set correctly.
+        // A page that sets `quiet` (the company does not hold the platform) offers one way forward only: no list of
+        // other platforms, and no button back to a desk that would only show the same page again.
+        $quiet = (bool) ($quiet ?? false);
         $currentPlatformName = 'Dot.Engage';
-        $discover = collect(config('ecosystem.platforms', []))
+        $discover = $quiet ? [] : collect(config('ecosystem.platforms', []))
             ->reject(fn ($p) => ($p['name'] ?? null) === $currentPlatformName)
             ->reject(fn ($p) => ($p['active'] ?? true) === false)
             ->reject(fn ($p, $k) => ($p['internal'] ?? false) === true || in_array($k, ['memory', 'brain', 'dopemine'], true))
@@ -64,7 +67,11 @@
             </a>
             <div class="topbar-end">
                 @auth
-                    <a class="btn btn-sm" href="{{ route('dashboard') }}"><span>Desk</span></a>
+                    @if ($quiet)
+                        <form method="POST" action="{{ route('logout') }}">@csrf<button type="submit" class="btn btn-quiet btn-sm"><span>Sign out</span></button></form>
+                    @else
+                        <a class="btn btn-sm" href="{{ route('dashboard') }}"><span>Desk</span></a>
+                    @endif
                 @else
                     @if (Route::has('login'))
                         <a class="btn btn-quiet btn-sm" href="{{ route('login') }}"><span>Sign in</span></a>
@@ -82,6 +89,8 @@
         <div class="page-actions">
             @yield('actions')
         </div>
+
+        @yield('after')
 
         @if (! empty($discover))
             <section class="eco-block" aria-labelledby="eco-h">

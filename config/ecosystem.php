@@ -79,6 +79,11 @@ return [
         'secret' => env('INFODOT_SERVICE_SECRET'),
         'timeout' => (int) env('INFODOT_REDEEM_TIMEOUT', 5),
         'provision' => (bool) env('INFODOT_PROVISION_USERS', true),
+
+        // R-50: while a person is signed in, ask InfoDot (cached per company) whether the company still holds this
+        // platform, and at sign-in admit only the companies InfoDot marks as entitled. Only a clear "no" refuses;
+        // an outage or a wrong secret never locks anyone out. Set false to switch both checks off.
+        'entitlement_check' => (bool) env('ENGAGE_ENTITLEMENT_CHECK', true),
     ],
 
 ];

@@ -264,6 +264,15 @@ a.nt-msg:hover { text-decoration: underline; text-underline-offset: 3px; }
 .errpage h1 { margin-bottom: 14px; }
 .errpage .lede { color: var(--ink-2); font-size: var(--t-md); max-width: 54ch; line-height: 1.55; }
 .errpage .page-actions { margin-top: 26px; }
+/* The company does not hold the platform: the person's other businesses, as a ruled list (no cards). */
+.switch-block { margin-top: 56px; max-width: 54ch; }
+.switch-list { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
+.switch-list li { border-bottom: 1px solid var(--line); }
+.switch-list form { margin: 0; }
+.switch-row { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; width: 100%; min-height: 48px; padding: 12px 2px; background: none; border: 0; color: var(--ink); font: inherit; text-align: left; cursor: pointer; }
+.switch-row > span:first-child { min-width: 0; overflow-wrap: anywhere; }
+.switch-go { color: var(--muted); font-size: var(--t-sm); text-decoration: underline; text-underline-offset: 3px; }
+.switch-row:hover .switch-go, .switch-row:focus-visible .switch-go { color: var(--ink); }
 .errpage .page-actions .btn { min-height: 42px; }
 .eco-block { margin-top: 64px; }
 .eco-block h2 { font-size: var(--t-base); }
