@@ -1,15 +1,84 @@
 <x-app-layout title="Desk">
-    <div class="page-head">
-        <div>
-            <h1>Desk</h1>
-            <p class="lede">{{ $team->name }}. What needs you, what is coming up, and where each agreement stands.</p>
+    @php
+        // Nothing at all to show: no engagement of this business, nothing waiting on this person, no meeting booked.
+        $blank = ! $latest && $waiting->isEmpty() && $upcoming->isEmpty();
+        $stageNow = $latest?->state->stage();
+        $allDone = $latest?->state === \App\Enums\EngagementState::Completed;
+    @endphp
+
+    <div @class(['land', 'is-alone' => $blank])>
+        <div class="land-top">
+            <span class="land-logo">
+                <img class="logo-on-light" src="{{ asset('images/logo.png') }}" alt="Dot.Engage" width="104" height="104">
+                <img class="logo-on-dark" src="{{ asset('images/logo-light.png') }}" alt="Dot.Engage" width="104" height="104">
+            </span>
+            <nav class="land-eco" aria-label="Dot ecosystem">
+                <a href="{{ $infodot['home'] }}">InfoDot</a>
+                <a href="{{ $infodot['platforms'] }}">Platforms</a>
+            </nav>
         </div>
-        <div class="page-actions">
-            <a class="btn" href="{{ route('engagements.create') }}"><span>New engagement</span></a>
-            <a class="btn btn-quiet" href="{{ route('meetings.index') }}"><span>Meetings</span></a>
+
+        <div class="land-main">
+            <div class="land-say">
+                <h1>Every agreement, from first talk to signature.</h1>
+                <p class="land-welcome">Welcome to Dot.Engage, <b>{{ $firstName }}</b>. You are at the desk of <b>{{ $team->name }}</b>.</p>
+                <p class="land-lede">Invite the other party, talk the document through, agree the changes and sign. What was said stays beside the clause it concerns.</p>
+                <div class="land-act">
+                    <a class="btn btn-lead" href="{{ $primary['url'] }}" data-primary-action><span>{{ $primary['label'] }}</span></a>
+                    @if ($canStart)<a href="{{ route('engagements.index') }}">All engagements</a>@endif
+                    <a href="{{ route('meetings.index') }}">Meetings</a>
+                    <a href="{{ route('agreements.index') }}">Agreements</a>
+                </div>
+            </div>
+
+            <section class="land-sheet" aria-labelledby="h-latest">
+                @if ($latest)
+                    <h2 class="sr-only" id="h-latest">Most recently changed engagement</h2>
+                    <div class="ls-top">
+                        <span class="fig">{{ $latest->reference }}</span>
+                        <x-state :state="$latest->state" />
+                    </div>
+                    <p class="ls-title"><a href="{{ route('engagements.show', $latest) }}">{{ $latest->title }}</a></p>
+                    @if ($latest->parties->isNotEmpty())
+                        <div class="parties" aria-label="Parties">
+                            @foreach ($latest->parties as $party)
+                                @if (! $loop->first)<span class="sep" aria-hidden="true">with</span>@endif
+                                <span class="p pen pen-{{ ($loop->index % 4) + 1 }}"><span class="ini ini-sm">{{ strtoupper(mb_substr($party->name, 0, 1)) }}</span> <span class="by">{{ $party->name }}</span></span>
+                            @endforeach
+                        </div>
+                    @endif
+                    @if ($stageNow !== null)
+                        <ol class="ls-rail" aria-label="Progress">
+                            @foreach ($stages as $i => $name)
+                                @php($status = $allDone || $i < $stageNow ? 'done' : ($i === $stageNow ? 'now' : 'later'))
+                                <li class="is-{{ $status }}" @if ($status === 'now') aria-current="step" @endif>{{ $name }}</li>
+                            @endforeach
+                        </ol>
+                    @endif
+                    <p class="ls-next">{{ $latest->state->nextStep() }}</p>
+                    <p class="ls-foot">
+                        <span>Last changed <time data-local datetime="{{ $latest->updated_at?->toIso8601String() }}">{{ $latest->updated_at?->format('j M H:i') }}</time></span>
+                        <a href="{{ route('engagements.show', $latest) }}">Open the workspace</a>
+                    </p>
+                @else
+                    <h2 class="ls-title" id="h-latest">No engagements yet.</h2>
+                    <p class="ls-next">
+                        @if ($canStart)
+                            An engagement is one business conversation about one agreement. Name it and the other party, then add the document and the people. It moves through these six stages.
+                        @else
+                            {{ $team->name }} has not started an engagement. An administrator or editor of the business starts one, and it then shows here with its stage.
+                        @endif
+                    </p>
+                    <ol class="ls-rail" aria-label="The six stages">
+                        @foreach ($stages as $name)<li class="is-later">{{ $name }}</li>@endforeach
+                    </ol>
+                    @if ($blank)<p class="ls-foot"><span>Nothing is waiting on you and no meeting is booked.</span></p>@endif
+                @endif
+            </section>
         </div>
     </div>
 
+    @unless ($blank)
     <section aria-labelledby="h-waiting">
         <div class="section-head"><h2 id="h-waiting">Waiting for you <span class="n">{{ $waiting->count() }}</span></h2></div>
         @if ($waiting->isNotEmpty())
@@ -117,4 +186,5 @@
             @endif
         </section>
     </div>
+    @endunless
 </x-app-layout>

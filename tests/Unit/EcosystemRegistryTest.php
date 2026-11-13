@@ -31,6 +31,16 @@ class EcosystemRegistryTest extends TestCase
         $this->assertSame(count($urls), count(array_unique($urls)));
     }
 
+    public function test_the_registry_lists_only_current_platforms(): void
+    {
+        $current = [
+            'agents', 'analytics', 'auction', 'central', 'charts', 'design', 'docs', 'dopemine', 'ehail', 'emall', 'engage', 'files', 'finance',
+            'forms', 'hr', 'memory', 'mines', 'notify', 'press', 'projects', 'pulse', 'sheet', 'tasks', 'tutor', 'infodot',
+        ];
+
+        $this->assertSame([], array_values(array_diff(array_keys($this->platforms()), $current)));
+    }
+
     public function test_only_platforms_with_a_deployed_application_are_active(): void
     {
         $active = array_keys(array_filter($this->platforms(), fn (array $platform) => $platform['active']));
