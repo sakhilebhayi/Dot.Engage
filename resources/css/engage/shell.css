@@ -49,8 +49,9 @@ img.logo-on-dark { display: none; }
 
 /* Host token mapping for the shared Dot UI. The pill itself is not mapped (it is the same cream pill in every platform);
    the dropdown surfaces, the compact filter and the switcher button/focus follow Engage's own tokens, in light and dark.
-   The package defaults are all under :where() (zero specificity), so this mapping wins in either theme wherever it is set. */
-body {
+   The package defaults are all under :where() (zero specificity) and the filter tokens fall back to these surface tokens
+   where they are used, so a plain :root mapping is enough in either theme. */
+:root {
     --dsr-panel: var(--paper);
     --dsr-hover: var(--paper-sunk);
     --dsr-rule: var(--line);
@@ -59,14 +60,7 @@ body {
     --dsr-text-2: var(--ink-2);
     --dsr-text-3: var(--muted);
     --dsr-radius-panel: var(--r);
-    /* the package derives these from the tokens above on :root, so they are restated here to follow the body values */
     --dsr-filter-radius: var(--r);
-    --dsr-filter-bg: var(--paper);
-    --dsr-filter-ink: var(--ink);
-    --dsr-filter-placeholder: var(--muted);
-    --dsr-filter-border: var(--line-strong);
-    --dsr-filter-border-hover: var(--muted);
-    --dsr-filter-border-focus: var(--ink);
 }
 .topbar .dsw {
     --dsw-btn-ink: var(--ink-2);
