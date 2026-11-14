@@ -16,7 +16,7 @@
     <a class="skip" href="#main">Skip to content</a>
     <x-icons />
     <header class="topbar"><div class="topbar-in">
-        <span class="wordmark"><x-mark /> <span>Dot.<span class="sub">Engage</span></span></span>
+        <span class="wordmark" aria-label="Dot.Engage"><x-logo /></span>
         <div class="topbar-end"><button type="button" class="iconbtn" data-theme-toggle aria-label="Switch light and dark"><x-icon name="eye" /></button></div>
     </div></header>
     <main id="main" class="frame frame-narrow">

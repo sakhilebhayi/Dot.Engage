@@ -18,7 +18,7 @@
     <a class="skip" href="#main">Skip to content</a>
     <x-icons />
     <header class="topbar"><div class="topbar-in">
-        <a class="wordmark" href="{{ url('/') }}" aria-label="Dot.Engage"><x-mark /> <span>Dot.<span class="sub">Engage</span></span></a>
+        <a class="wordmark" href="{{ url('/') }}" aria-label="Dot.Engage"><x-logo /></a>
         <nav class="nav" aria-label="Main"><a href="{{ route('legal.signatures') }}">How signing works</a><a href="{{ route('verify.show') }}">Check a signed agreement</a></nav>
         <div class="topbar-end">
             @auth<a class="btn btn-sm" href="{{ route('dashboard') }}"><span>Open your desk</span></a>

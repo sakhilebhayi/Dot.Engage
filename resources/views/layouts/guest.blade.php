@@ -21,7 +21,7 @@
 
     <header class="topbar">
         <div class="topbar-in">
-            <a class="wordmark" href="/" aria-label="Dot.Engage, home"><x-mark /> <span>Dot.<span class="sub">Engage</span></span></a>
+            <a class="wordmark" href="/" aria-label="Dot.Engage, home"><x-logo /></a>
             <div class="topbar-end">
                 <button type="button" class="iconbtn" data-theme-toggle aria-label="Switch light and dark"><x-icon name="eye" /></button>
             </div>

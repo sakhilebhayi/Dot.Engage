@@ -10,8 +10,18 @@
 }
 .wordmark { display: inline-flex; align-items: center; gap: 9px; font-weight: 650; letter-spacing: -.015em; text-decoration: none; font-size: 16px; }
 .wordmark:hover { text-decoration: none; }
-.wordmark svg { width: 24px; height: 24px; }
-.wordmark .sub { font-weight: 400; color: var(--muted); }
+/* The original logo, untouched: only its size and the light or dark file are chosen here. The artwork is a square that
+   carries its own wordmark, so it replaces the old drawn mark and the typed name together. */
+.brand-logo { display: inline-flex; align-items: center; flex: none; }
+.brand-logo img { display: block; width: auto; height: 46px; max-width: none; object-fit: contain; }
+.wordmark .brand-logo { margin: 0 0 0 -4px; }
+img.logo-on-dark { display: none; }
+:root[data-theme='dark'] img.logo-on-light { display: none; }
+:root[data-theme='dark'] img.logo-on-dark { display: block; }
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme='light']) img.logo-on-light { display: none; }
+    :root:not([data-theme='light']) img.logo-on-dark { display: block; }
+}
 .nav { display: flex; gap: 2px; margin-left: 8px; }
 .nav a {
     position: relative; display: inline-flex; align-items: center; height: 52px; padding: 0 12px;

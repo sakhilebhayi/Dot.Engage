@@ -5,13 +5,7 @@
 .land-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: clamp(18px, 3vw, 36px); }
 .land-logo { display: block; flex: none; }
 .land-logo img { width: 104px; height: 104px; object-fit: contain; }
-.logo-on-dark { display: none; }
-:root[data-theme='dark'] .logo-on-light { display: none; }
-:root[data-theme='dark'] .logo-on-dark { display: block; }
-@media (prefers-color-scheme: dark) {
-    :root:not([data-theme='light']) .logo-on-light { display: none; }
-    :root:not([data-theme='light']) .logo-on-dark { display: block; }
-}
+/* The light/dark logo file choice lives in shell.css, shared by every layout. */
 .land-eco { display: flex; gap: 4px 22px; flex-wrap: wrap; justify-content: flex-end; font-size: var(--t-sm); color: var(--ink-2); }
 .land-eco a { display: inline-flex; align-items: center; min-height: 44px; }
 

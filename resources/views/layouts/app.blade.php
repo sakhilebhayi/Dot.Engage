@@ -32,7 +32,7 @@
     <header class="topbar">
         <div class="topbar-in">
             <a class="wordmark" href="{{ route('dashboard') }}" aria-label="Dot.Engage, desk">
-                <x-mark /> <span>Dot.<span class="sub">Engage</span></span>
+                <x-logo />
             </a>
             <nav class="nav" aria-label="Main">
                 @foreach ($nav as [$key, $label, $href, $active])

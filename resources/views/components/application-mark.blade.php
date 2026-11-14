@@ -1,1 +1,1 @@
-<x-mark {{ $attributes }} />
+<x-logo {{ $attributes }} />
