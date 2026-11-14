@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Events\MessageSent;
+use App\Http\Middleware\EnsureCompanyHoldsPlatform;
 use App\Listeners\SendMessageNotification;
 use App\Models\Contract;
 use App\Models\ContractTemplate;
@@ -19,6 +20,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\RateLimiter;
+use Livewire\Livewire;
 
 class AppServiceProvider extends AuthServiceProvider
 {
@@ -56,6 +58,9 @@ class AppServiceProvider extends AuthServiceProvider
      */
     public function boot(): void
     {
+        // R-50: a Livewire component on a signed-in page keeps asking the same entitlement question on its updates.
+        Livewire::addPersistentMiddleware([EnsureCompanyHoldsPlatform::class]);
+
         // /up answered 200 whenever PHP booted, even with the database down. The framework dispatches DiagnosingHealth
         // before it renders the page: a failing query turns the answer into a 500 (the exception text is never shown).
         Event::listen(DiagnosingHealth::class, fn () => DB::select('select 1'));

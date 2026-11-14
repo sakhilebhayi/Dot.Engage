@@ -1,0 +1,61 @@
+/* The landing at the top of the desk: who arrived, what this product is for, one action, and the most recent engagement
+   as a sheet. Tokens and components of The Margin only; nothing here introduces a new colour or face. */
+.land { padding-bottom: 36px; border-bottom: 1px solid var(--line-strong); margin-bottom: 28px; }
+.land.is-alone { border-bottom: 0; margin-bottom: 0; padding-bottom: 0; }
+.land-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: clamp(18px, 3vw, 36px); }
+.land-logo { display: block; flex: none; }
+.land-logo img { width: 104px; height: 104px; object-fit: contain; }
+.logo-on-dark { display: none; }
+:root[data-theme='dark'] .logo-on-light { display: none; }
+:root[data-theme='dark'] .logo-on-dark { display: block; }
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme='light']) .logo-on-light { display: none; }
+    :root:not([data-theme='light']) .logo-on-dark { display: block; }
+}
+.land-eco { display: flex; gap: 4px 22px; flex-wrap: wrap; justify-content: flex-end; font-size: var(--t-sm); color: var(--ink-2); }
+.land-eco a { display: inline-flex; align-items: center; min-height: 44px; }
+
+.land-main { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 480px); gap: clamp(28px, 6vw, 96px); align-items: end; }
+.land-say { min-width: 0; }
+.land-say h1 { font-size: clamp(32px, 4.3vw, 54px); line-height: 1.04; letter-spacing: -.025em; max-width: 17ch; overflow-wrap: break-word; }
+.land-welcome { margin-top: 22px; font-size: var(--t-md); color: var(--ink); max-width: 52ch; }
+.land-welcome b { font-weight: 650; overflow-wrap: anywhere; }
+.land-lede { margin-top: 8px; color: var(--muted); max-width: 58ch; }
+.land-act { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 22px; margin-top: 28px; font-size: var(--t-sm); }
+.land-act a:not(.btn) { display: inline-flex; align-items: center; min-height: 44px; color: var(--ink-2); }
+.btn-lead { min-height: 48px; padding: 0 26px; font-size: var(--t-base); margin-right: 6px; }
+
+/* A sheet: paper is reserved for things that really are documents, and this is the engagement as it stands. */
+.land-sheet { min-width: 0; background: var(--paper); border: 1px solid var(--line-strong); box-shadow: 0 1px 0 var(--line); padding: clamp(18px, 3vw, 28px); }
+.ls-top { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; font-size: var(--t-sm); color: var(--muted); }
+.ls-title { margin: 14px 0 12px; font: 400 var(--t-lg)/1.3 var(--font-clause); letter-spacing: 0; color: var(--ink); overflow-wrap: anywhere; text-wrap: balance; }
+h2.ls-title { margin-top: 0; }
+.ls-title a { text-decoration: none; }
+.ls-title a:hover { text-decoration: underline; text-decoration-thickness: 1px; }
+.ls-rail { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 0 6px; margin-top: 20px; }
+.ls-rail li { padding-top: 8px; box-shadow: inset 0 2px 0 var(--line-strong); font-size: var(--t-xs); font-weight: 500; color: var(--faint); overflow-wrap: anywhere; }
+.ls-rail .is-done { box-shadow: inset 0 2px 0 var(--ink-2); color: var(--ink-2); }
+.ls-rail .is-now { box-shadow: inset 0 4px 0 var(--ink); color: var(--ink); font-weight: 700; }
+.ls-next { margin-top: 16px; font-size: var(--t-sm); color: var(--ink-2); max-width: 52ch; }
+.ls-foot { display: flex; justify-content: space-between; align-items: center; gap: 6px 16px; flex-wrap: wrap; margin-top: 18px; padding-top: 12px; border-top: 1px solid var(--line); font-size: var(--t-sm); color: var(--muted); }
+.ls-foot a { color: var(--ink); font-weight: 600; display: inline-flex; align-items: center; min-height: 32px; }
+
+/* One authored moment: the headline block and its action are pressed onto the desk. The resting state is the default, so
+   the page is whole without it, and it is never hidden: only its position moves. */
+@media (prefers-reduced-motion: no-preference) {
+    .land-say { animation: land-settle 220ms var(--ease); }
+    @keyframes land-settle { from { transform: translateY(-8px); } 70% { transform: translateY(1.5px); } }
+}
+
+@media (max-width: 960px) {
+    .land-main { grid-template-columns: minmax(0, 1fr); align-items: start; }
+}
+@media (max-width: 640px) {
+    .land { padding-bottom: 28px; }
+    .land-logo img { width: 84px; height: 84px; }
+    .land-say h1 { font-size: 32px; }
+    .land-act { gap: 4px 22px; }
+    .land-act .btn-lead { width: 100%; margin: 0 0 6px; }
+    .ls-rail { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px 8px; }
+    .ls-foot a { min-height: 44px; }
+}

@@ -79,7 +79,7 @@ run itself fails (logged, not fatal to the other manager's scan). Scheduled `->w
 Press's own cadence — dependency advisories don't need daily polling.
 
 **Deviation from Press:** the schedule adds `->withoutOverlapping()`, which Press's own line lacks.
-This session's own newly-built scan commands (Billing, Central, Design, Sheet) have consistently
+This session's own newly-built scan commands (Central, Design, Sheet) have consistently
 paired a scheduled scan with `->withoutOverlapping()` as cheap, no-downside safety — a slow
 `composer audit`/`npm audit` run that's still in flight when the next weekly tick fires shouldn't
 be allowed to start a second overlapping process. It doesn't change any behavior in the normal

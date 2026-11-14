@@ -86,3 +86,13 @@ the seal and press motion, not from decoration.
 ## Copy
 
 Plain, specific, no filler verbs. Say what happened and what to do. No em or en dashes in visible text.
+
+## The desk landing
+
+The top of the desk is where a person arrives from InfoDot. It carries the original logo (the PNG in `public/images`, the
+light variant on the night desk; the seal mark stays in the bar), the headline, a welcome from the person's first name and
+the business name, and exactly one solid-ink action marked `data-primary-action`: start an engagement, or see the
+engagements for a viewer who may not start one. Beside it the most recently changed engagement is shown as a sheet:
+reference, title in Literata, parties in their pens, the six stages, the next step. With no engagements the sheet says so
+and shows the six stages empty; the page prints no count that is not a count of records. The links back to InfoDot and its
+Platforms page sit top right of the landing. One motion: the headline block settles onto the desk, position only.

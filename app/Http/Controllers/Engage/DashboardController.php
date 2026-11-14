@@ -5,13 +5,16 @@ namespace App\Http\Controllers\Engage;
 use App\Enums\EngagementState;
 use App\Http\Controllers\Controller;
 use App\Models\Amendment;
+use App\Models\Contract;
 use App\Models\Engagement;
 use App\Models\EngagementApproval;
 use App\Models\EngagementParticipant;
 use App\Models\Meeting;
 use App\Models\SigningEnvelope;
 use App\Models\SigningSigner;
+use App\Services\Engage\Workspace;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class DashboardController extends Controller
 {
@@ -64,8 +67,21 @@ class DashboardController extends Controller
         $outstandingChanges = Amendment::where('status', 'proposed')
             ->whereIn('engagement_id', Engagement::where('team_id', $team->id)->pluck('id'))->count();
 
+        // The landing: who arrived, the one thing to do next, and the most recent engagement shown as it stands.
+        $canStart = $user->can('create', Contract::class);
+        $latest = Engagement::with('parties')->where('team_id', $team->id)->orderByDesc('updated_at')->orderByDesc('id')->first();
+        $infodot = rtrim((string) config('ecosystem.platforms.infodot.url', 'https://infodot.co.za'), '/');
+
         return view('dashboard', [
             'team' => $team,
+            'firstName' => Str::of($user->name)->trim()->before(' ')->value(),
+            'canStart' => $canStart,
+            'primary' => $canStart
+                ? ['label' => 'Start an engagement', 'url' => route('engagements.create')]
+                : ['label' => 'See the engagements', 'url' => route('engagements.index')],
+            'latest' => $latest,
+            'stages' => Workspace::STAGES,
+            'infodot' => ['home' => $infodot.'/home', 'platforms' => $infodot.'/platforms'],
             'waiting' => $waiting->sortBy('since')->values(),
             'active' => (clone $open)->orderByDesc('updated_at')->limit(10)->get(),
             'activeCount' => (clone $open)->count(),

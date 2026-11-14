@@ -25,6 +25,11 @@ use Illuminate\Support\Facades\Route;
 Route::bind('engagement', fn (string $reference) => Engagement::withoutGlobalScopes()->where('reference', $reference)->firstOrFail());
 Route::bind('document', fn (string $id) => Contract::withoutGlobalScopes()->findOrFail($id));
 
+// R-50: `entitled` (the signed-in area) asks InfoDot whether the person's current company still holds Dot.Engage.
+// `entitled:workspace` (the engagement and meeting routes below, which outside parties also use) asks only about a
+// signed-in member of the business that owns the engagement; an invited guest, a signer or a meeting guest is never
+// asked about, so their links keep working. The join, verify and legal routes carry neither.
+
 // Invitation links for people without an account: no sign-in, no content until the emailed code is entered.
 Route::prefix('join')->name('join.')->group(function () {
     Route::get('{token}', [JoinController::class, 'show'])->name('show');
@@ -37,7 +42,7 @@ Route::get('/verify/{reference?}', [VerifyController::class, 'show'])->where('re
 Route::post('/verify', [VerifyController::class, 'check'])->middleware('throttle:20,1,verify.check')->name('verify.check');
 Route::get('/how-signing-works', [LegalController::class, 'signatures'])->name('legal.signatures');
 
-Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified'])->group(function () {
+Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified', 'entitled'])->group(function () {
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
     Route::get('/agreements', [AgreementController::class, 'index'])->name('agreements.index');
     Route::get('/meetings', [MeetingController::class, 'index'])->name('meetings.index');
@@ -47,7 +52,7 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
 });
 
 // The workspace: open to signed-in team members and to verified outside participants.
-Route::prefix('e/{engagement}')->name('engagements.')->group(function () {
+Route::prefix('e/{engagement}')->middleware('entitled:workspace')->name('engagements.')->group(function () {
     Route::get('/', [EngagementController::class, 'show'])->name('show');
     Route::get('discussion', [EngagementController::class, 'discussion'])->name('discussion');
     Route::post('discussion', [EngagementController::class, 'post'])->middleware('throttle:60,1,post')->name('post');
@@ -64,7 +69,7 @@ Route::prefix('e/{engagement}')->name('engagements.')->group(function () {
 });
 
 // Documents, notes, proposed changes and approvals. Every handler resolves EngagementAccess itself.
-Route::prefix('e/{engagement}')->group(function () {
+Route::prefix('e/{engagement}')->middleware('entitled:workspace')->group(function () {
     Route::post('documents', [DocumentController::class, 'upload'])->middleware('throttle:20,1,documents.upload')->name('documents.upload');
     Route::get('documents/{document}/file', [DocumentController::class, 'file'])->middleware('throttle:120,1,documents.file')->name('documents.file');
     Route::get('documents/{document}/state', [DocumentController::class, 'state'])->middleware('throttle:240,1,documents.state')->name('documents.state');
@@ -84,7 +89,7 @@ Route::prefix('e/{engagement}')->group(function () {
 });
 
 // Signing: preparing a request, signing it, and collecting the finished agreement.
-Route::prefix('e/{engagement}')->group(function () {
+Route::prefix('e/{engagement}')->middleware('entitled:workspace')->group(function () {
     Route::get('signing', [SigningController::class, 'tab'])->name('engagements.signing');
     Route::get('sign', [SigningController::class, 'page'])->name('engagements.sign');
     Route::post('sign', [SigningController::class, 'submit'])->middleware('throttle:20,1,signing.submit')->name('signing.submit');
@@ -100,8 +105,8 @@ Route::prefix('e/{engagement}')->group(function () {
 });
 
 // Meetings. The room and its JSON API are open to signed-in members and verified outside participants alike.
-Route::post('/e/{engagement}/meetings', [MeetingController::class, 'store'])->middleware('throttle:20,1,meetings.store')->name('meetings.store');
-Route::prefix('meetings/{roomKey}')->group(function () {
+Route::post('/e/{engagement}/meetings', [MeetingController::class, 'store'])->middleware(['entitled:workspace', 'throttle:20,1,meetings.store'])->name('meetings.store');
+Route::prefix('meetings/{roomKey}')->middleware('entitled:workspace')->group(function () {
     Route::get('/', [MeetingController::class, 'room'])->name('meetings.room');
     Route::post('cancel', [MeetingController::class, 'cancel'])->name('meetings.cancel');
     Route::post('enter', [MeetingController::class, 'enter'])->middleware('throttle:meeting-enter')->name('meetings.enter');
