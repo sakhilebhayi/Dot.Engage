@@ -12,10 +12,6 @@
                 <img class="logo-on-light" src="{{ asset('images/logo.png') }}" alt="Dot.Engage" width="104" height="104">
                 <img class="logo-on-dark" src="{{ asset('images/logo-light.png') }}" alt="Dot.Engage" width="104" height="104">
             </span>
-            <nav class="land-eco" aria-label="Dot ecosystem">
-                <a href="{{ $infodot['home'] }}">InfoDot</a>
-                <a href="{{ $infodot['platforms'] }}">Platforms</a>
-            </nav>
         </div>
 
         <div class="land-main">

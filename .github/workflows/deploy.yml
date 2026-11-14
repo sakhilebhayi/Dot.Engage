@@ -345,11 +345,11 @@ jobs:
           fi
 
           # ---- static files that live in public/ but are served from the docroot
-          # Fonts, the PDF reader's font tables, logos and icons are not part of public/build. While the docroot is
+          # Fonts, the shared Dot UI (public/dot-ui), the PDF reader's font tables, logos and icons are not part of public/build. While the docroot is
           # the folder above the app (not <app>/public) Apache serves ITS copies, which git never refreshes: a new font
           # or reader file would 404 for days. Mirror them. Skipped once the document root is <app>/public.
           if [ -n "${APP_REAL:-}" ] && [ "${CURRENT_DOCROOT:-}" != "$APP_REAL/public" ] && [ ! -f "$DEPLOY_PATH/.docroot-is-public" ]; then
-            for D in fonts images; do
+            for D in fonts images dot-ui; do
               if [ -d "public/$D" ] && [ ! -L "$DOCROOT/$D" ]; then mkdir -p "$DOCROOT/$D" && rsync -a public/$D/ "$DOCROOT/$D/" && echo "== docroot $D/ mirrored"; fi
             done
             if [ -d public/vendor/pdfjs ] && [ ! -L "$DOCROOT/vendor" ]; then mkdir -p "$DOCROOT/vendor/pdfjs" && rsync -a --delete public/vendor/pdfjs/ "$DOCROOT/vendor/pdfjs/" && echo "== docroot vendor/pdfjs/ mirrored"; fi

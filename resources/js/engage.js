@@ -60,7 +60,8 @@ document.addEventListener('click', (event) => {
 // A form that is submitting shows it, and cannot be submitted twice.
 document.addEventListener('submit', (event) => {
     const form = event.target;
-    if (!(form instanceof HTMLFormElement) || form.hasAttribute('data-no-busy')) {
+    if (!(form instanceof HTMLFormElement) || form.hasAttribute('data-no-busy') || form.closest('[data-dsr]')) {
+        // The header search (shared Dot UI, <x-dot.search>) is a plain GET that never shows a busy state.
         return;
     }
     if (form.dataset.submitting === '1') {

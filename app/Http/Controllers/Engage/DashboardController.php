@@ -70,7 +70,6 @@ class DashboardController extends Controller
         // The landing: who arrived, the one thing to do next, and the most recent engagement shown as it stands.
         $canStart = $user->can('create', Contract::class);
         $latest = Engagement::with('parties')->where('team_id', $team->id)->orderByDesc('updated_at')->orderByDesc('id')->first();
-        $infodot = rtrim((string) config('ecosystem.platforms.infodot.url', 'https://infodot.co.za'), '/');
 
         return view('dashboard', [
             'team' => $team,
@@ -81,7 +80,6 @@ class DashboardController extends Controller
                 : ['label' => 'See the engagements', 'url' => route('engagements.index')],
             'latest' => $latest,
             'stages' => Workspace::STAGES,
-            'infodot' => ['home' => $infodot.'/home', 'platforms' => $infodot.'/platforms'],
             'waiting' => $waiting->sortBy('since')->values(),
             'active' => (clone $open)->orderByDesc('updated_at')->limit(10)->get(),
             'activeCount' => (clone $open)->count(),

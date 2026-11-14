@@ -21,6 +21,12 @@
     <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('favicon-16x16.png') }}">
     <link rel="apple-touch-icon" href="{{ asset('apple-touch-icon.png') }}">
     <link rel="preload" href="/fonts/public-sans-100_900-normal.woff2" as="font" type="font/woff2" crossorigin>
+    {{-- Shared Dot UI (search pill, platform switcher), served from this site's own public/dot-ui. Loaded before the app CSS so the host mapping block in shell.css wins. --}}
+    <link rel="stylesheet" href="{{ asset('dot-ui/css/dot-fonts.css') }}">
+    <link rel="stylesheet" href="{{ asset('dot-ui/css/dot-tokens.css') }}">
+    <link rel="stylesheet" href="{{ asset('dot-ui/css/dot-search.css') }}">
+    <link rel="stylesheet" href="{{ asset('dot-ui/css/dot-switcher-fonts.css') }}">
+    <link rel="stylesheet" href="{{ asset('dot-ui/css/dot-switcher.css') }}">
     @vite(['resources/css/engage.css', 'resources/css/signed-in.css', 'resources/js/app.js', 'resources/js/engage.js'])
     @livewireStyles
     @stack('head')
@@ -39,12 +45,14 @@
                     <a href="{{ $href }}" @if ($active) aria-current="page" @endif>{{ $label }}</a>
                 @endforeach
             </nav>
+            @auth
+                <div class="topbar-search">
+                    <x-dot.search name="q" :value="request('q')" placeholder="Find an engagement" label="Find an engagement" :action="route('engagements.index')" />
+                </div>
+            @endauth
             <div class="topbar-end">
                 @auth
-                    <form class="search" action="{{ route('engagements.index') }}" method="get" role="search" data-no-busy>
-                        <x-icon name="search" size="sm" />
-                        <input type="search" name="q" value="{{ request('q') }}" placeholder="Find an engagement" aria-label="Find an engagement">
-                    </form>
+                    <x-dot.switcher platform="engage" :company="$user->currentTeam?->infodot_team_uuid" :company-name="$user->currentTeam?->name" logos="/dot-ui/img/platforms" />
                     <a class="iconbtn" href="{{ route('notifications.index') }}" aria-label="Notifications{{ $unread ? ', '.$unread.' unread' : '' }}">
                         <x-icon name="bell" />
                         @if ($unread)<span class="count">{{ $unread > 99 ? '99+' : $unread }}</span>@endif
@@ -102,6 +110,7 @@
     </main>
 
     @stack('modals')
+    <script src="{{ asset('dot-ui/js/dot-switcher.js') }}" defer></script>
     @livewireScripts
     @stack('scripts')
 </body>

@@ -110,19 +110,18 @@ class LandingExperienceTest extends TestCase
         $response->assertSee('src="'.asset('images/logo-light.png').'" alt="Dot.Engage"', false);
     }
 
-    public function test_the_way_back_to_infodot_comes_from_the_ecosystem_config(): void
+    public function test_the_way_back_to_infodot_is_the_header_switcher_not_a_second_nav_on_the_landing(): void
     {
         $owner = $this->owner();
 
-        $this->actingAs($owner)->get('/dashboard')
-            ->assertSee('<a href="https://infodot.co.za/home">InfoDot</a>', false)
-            ->assertSee('<a href="https://infodot.co.za/platforms">Platforms</a>', false);
+        $html = $this->actingAs($owner)->get('/dashboard')->assertOk()->getContent();
+        $this->assertStringNotContainsString('land-eco', $html, 'the interim two-link nav is replaced by the switcher');
+        $this->assertStringContainsString('data-dsw', $html);
+        $this->assertStringContainsString('href="https://infodot.co.za/platforms"', $html, 'InfoDot stays reachable from the switcher');
 
         config(['ecosystem.platforms.infodot.url' => 'https://infodot.test/']);
 
-        $this->actingAs($owner)->get('/dashboard')
-            ->assertSee('<a href="https://infodot.test/home">InfoDot</a>', false)
-            ->assertSee('<a href="https://infodot.test/platforms">Platforms</a>', false);
+        $this->actingAs($owner)->get('/dashboard')->assertSee('href="https://infodot.test/platforms"', false);
     }
 
     public function test_a_new_member_with_nothing_sees_a_plain_empty_state_and_no_numbers(): void
