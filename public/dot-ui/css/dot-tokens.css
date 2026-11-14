@@ -6,8 +6,13 @@
  *    pill is cream on a dark bar in light and dark). A host should NOT remap them: the look must be identical everywhere.
  *  - SURFACE tokens (dropdown panel, rules, hover, ink, compact filter): a host maps these onto its own tokens in one
  *    small block, see docs/SEARCH.md. The values here are InfoDot's own, so the package works with zero host tokens.
+ *
+ * Every selector here is wrapped in :where(), which has ZERO specificity. A host's plain `:root { --dsr-panel: ... }`
+ * (specificity 0,1,0) therefore beats the defaults in every scheme, light or dark, whichever file loads first. Without
+ * it the dark block `:root[data-theme='dark']` (0,2,0) would outrank the host's mapping. The defaults still follow
+ * source order among themselves (dark after light), so the package works with zero host tokens.
  */
-:root {
+:where(:root) {
     /* PILL (fixed) */
     --dsr-font: 'Archivo', system-ui, -apple-system, 'Segoe UI', sans-serif;
     --dsr-h: 44px;
@@ -15,6 +20,8 @@
     --dsr-radius: 999px;
     --dsr-pad-l: 22px;
     --dsr-pad-r: 104px;
+    /* with no hint (.dsr--nohint): room for the circle only, 34px + its 5px edge + 13px of air */
+    --dsr-pad-r-nohint: calc(var(--dsr-btn-size) + 18px);
     --dsr-pill-bg: #f6f4ee;
     --dsr-pill-bg-focus: #fff;
     --dsr-pill-ink: #1b2124;
@@ -56,7 +63,7 @@
 }
 
 @media (prefers-color-scheme: dark) {
-    :root:not([data-theme='light']):not(.light) {
+    :where(:root:not([data-theme='light']):not(.light)) {
         --dsr-panel: #191f22;
         --dsr-hover: #20272a;
         --dsr-rule: #2b3438;
@@ -67,8 +74,7 @@
     }
 }
 
-:root[data-theme='dark'],
-:root.dark {
+:where(:root[data-theme='dark'], :root.dark) {
     --dsr-panel: #191f22;
     --dsr-hover: #20272a;
     --dsr-rule: #2b3438;

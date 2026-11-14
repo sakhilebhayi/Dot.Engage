@@ -110,6 +110,8 @@ class DotUiHeaderTest extends TestCase
 
         $this->assertStringNotContainsString('dsr-kbd', $html, 'no Ctrl K hint: Engage has no such shortcut');
         $this->assertStringNotContainsString('data-dsr-shortcut', $html);
+        $this->assertStringContainsString('dsr dsr--nohint', $html, 'no hint: the pill reserves only its circle, not the 104px for a hint');
+        $this->assertStringContainsString('id="dsr-q"', $html, 'the input id is derived from its name, the same on every render');
     }
 
     public function test_a_guest_sees_no_search_and_no_switcher(): void

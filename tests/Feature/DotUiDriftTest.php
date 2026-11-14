@@ -58,7 +58,7 @@ class DotUiDriftTest extends TestCase
         $listed = array_keys($manifest['files']);
         $extra = [];
 
-        foreach (['resources/views/components/dot', 'public/dot-ui', 'dot-ui/src'] as $folder) {
+        foreach (['resources/views/components/dot', 'resources/js/dot-ui', 'public/dot-ui', 'dot-ui/src'] as $folder) {
             $base = $this->root().'/'.$folder;
             if (! is_dir($base)) {
                 continue;
@@ -69,6 +69,9 @@ class DotUiDriftTest extends TestCase
                     continue;
                 }
                 $relative = ltrim(str_replace('\\', '/', substr($file->getPathname(), strlen($this->root()))), '/');
+                if (str_contains($relative, '/.compiled/')) {
+                    continue; // the Vue tests compile the components here; it is gitignored
+                }
                 if (! in_array($relative, $listed, true)) {
                     $extra[] = $relative;
                 }

@@ -42,14 +42,14 @@ img.logo-on-dark { display: none; }
     background: var(--ink); color: var(--paper); border-radius: 8px; font: 500 10px/16px var(--font-fig); text-align: center;
 }
 /* Header search: the shared Dot UI pill (<x-dot.search>, dot-ui/css/dot-search.css), identical to InfoDot's by design.
-   Only its slot is sized here. The pill needs room for its 104px right padding, so it is wider than the old 220px box. */
+   Only its slot is sized here. With no hint the pill reserves just its circle on the right (.dsr--nohint). */
 .topbar-search { margin-left: auto; width: clamp(260px, 30vw, 400px); }
 .topbar-search .dsr { margin: 0; }
 .topbar-search + .topbar-end { margin-left: 0; }
 
 /* Host token mapping for the shared Dot UI. The pill itself is not mapped (it is the same cream pill in every platform);
    the dropdown surfaces, the compact filter and the switcher button/focus follow Engage's own tokens, in light and dark.
-   Set on body, not :root, so they beat the package's own dark-scheme values on :root whatever the specificity. */
+   The package defaults are all under :where() (zero specificity), so this mapping wins in either theme wherever it is set. */
 body {
     --dsr-panel: var(--paper);
     --dsr-hover: var(--paper-sunk);

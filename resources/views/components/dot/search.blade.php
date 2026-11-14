@@ -10,8 +10,12 @@
     method       form method (default get)
     label        visually hidden label and submit-button name (default "Search")
     wire         optional Livewire property: renders wire:model.live.debounce.400ms="<wire>" on the input
-    hint         optional shortcut hint shown inside the pill, e.g. "Ctrl K" (default: none)
-    id           optional input id (default: generated)
+    hint         optional shortcut hint shown inside the pill, e.g. "Ctrl K" (default: none). With no hint the root gets
+                 .dsr--nohint, which reserves only the circle's width on the right instead of 104px
+    id           optional input id. Default: "dsr-<name>", the same on every render (snapshots, Livewire morphs). Pass
+                 an id when two searches with the same name share a page.
+    form-attributes  optional attributes for the <form> (array or attribute bag): wire:submit.prevent, data-*, id, class...
+                 Merged over role="search", method and action; the host's values win.
   Slot
     results      the host's dropdown markup, rendered inside .dsr-panel
   Other attributes are merged onto the <input>.
@@ -26,9 +30,12 @@
     'wire' => null,
     'hint' => null,
     'id' => null,
+    'formAttributes' => [],
 ])
 @php
-    $inputId = $id ?? $attributes->get('id') ?? 'dsr-'.\Illuminate\Support\Str::random(6);
+    $inputId = $id ?? $attributes->get('id') ?? 'dsr-'.(trim((string) preg_replace('/[^A-Za-z0-9_-]+/', '-', (string) $name), '-') ?: 'search');
+    $formBag = $formAttributes instanceof \Illuminate\View\ComponentAttributeBag ? $formAttributes : new \Illuminate\View\ComponentAttributeBag((array) $formAttributes);
+    $formDefaults = ['role' => 'search', 'method' => $method] + ($action ? ['action' => $action] : []);
     $listId = $inputId.'-list';
     $hasResults = isset($results) && ! $results->isEmpty();
     $inputAttrs = [
@@ -43,9 +50,9 @@
         $inputAttrs += ['role' => 'combobox', 'aria-autocomplete' => 'list', 'aria-controls' => $listId, 'aria-expanded' => 'false'];
     }
 @endphp
-<div class="dsr" data-dsr @if($hint) data-dsr-shortcut @endif>
+<div @class(['dsr', 'dsr--nohint' => ! $hint]) data-dsr @if($hint) data-dsr-shortcut @endif>
     <label for="{{ $inputId }}" class="dsr-sr">{{ $label }}</label>
-    <form role="search" method="{{ $method }}" @if($action) action="{{ $action }}" @endif>
+    <form {{ $formBag->merge($formDefaults) }}>
         <input
             {{ $attributes->except(['id'])->merge($inputAttrs)->class(['dsr-input']) }}
             @if($wire) wire:model.live.debounce.400ms="{{ $wire }}" @endif

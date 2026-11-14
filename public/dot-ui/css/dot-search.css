@@ -92,6 +92,12 @@
     box-shadow: var(--dsr-shadow);
 }
 
+/* no hint: the 104px reserved for "Ctrl K" and the circle shrinks to what the circle needs. Set by the components when
+   `hint` is empty; the default look (with a hint) is untouched. The circle is 44px on touch and small screens. */
+.dsr.dsr--nohint .dsr-input {
+    padding-right: var(--dsr-pad-r-nohint);
+}
+
 /* the arrow button: a dark circle holding the gold forward arrow from the logo (img/arrow-mask.png) */
 .dsr .dsr-go {
     position: absolute;
@@ -164,6 +170,10 @@
     .dsr .dsr-input {
         height: 44px;
         min-height: 44px;
+    }
+
+    .dsr.dsr--nohint .dsr-input {
+        padding-right: calc(44px + 18px);
     }
 }
 
@@ -373,12 +383,14 @@
     opacity: 1;
 }
 
-.dsr-filter:hover {
+/* The doubled class lifts these to (0,3,0), above a host's global `input:focus` or `input[type=search]:focus`
+   (0,2,1), so the filter keeps its own border and no ring in every host. The computed values are unchanged. */
+.dsr-filter.dsr-filter:hover {
     border-color: var(--dsr-filter-border-hover);
 }
 
-.dsr-filter:focus,
-.dsr-filter:focus-visible {
+.dsr-filter.dsr-filter:focus,
+.dsr-filter.dsr-filter:focus-visible {
     outline: none;
     border-color: var(--dsr-filter-border-focus);
     box-shadow: none;

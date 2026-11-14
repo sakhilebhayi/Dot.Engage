@@ -13,6 +13,9 @@
     logos        public URL path the packaged img/platforms/*.png are served from (default /img/platforms)
     model        optional prebuilt view model (tests, static previews); skips the InfoDot read
     id           the panel's id (default dsw-panel; change it only if a page holds two switchers)
+    notice       override of the visible degraded line, e.g. "Could not check your platforms from here" (a platform that
+                 structurally cannot ask InfoDot). Default: the model's "Could not check your platforms just now"
+    notice-detail  override of the sentence after it. Default: "These open through InfoDot, which checks what your company has."
 
   Needs css/dot-switcher.css and, for open/close/filter/"Opening...", js/dot-switcher.js (no inline script, no inline style attributes).
   The nearest positioned ancestor (the header) is where the panel hangs from.
@@ -25,6 +28,8 @@
     'logos' => '/img/platforms',
     'model' => null,
     'id' => 'dsw-panel',
+    'notice' => null,
+    'noticeDetail' => null,
 ])
 @php
     if ($model === null) {
@@ -76,7 +81,7 @@
             </div>
 
             @if ($state === 'degraded')
-                <p class="dsw-notice" role="status"><strong>{{ $model['notice'] }}.</strong> <span>These open through InfoDot, which checks what your company has.</span></p>
+                <p class="dsw-notice" role="status"><strong>{{ $notice ?: $model['notice'] }}.</strong> <span>{{ $noticeDetail ?: 'These open through InfoDot, which checks what your company has.' }}</span></p>
             @endif
 
             @if ($state === 'personal')

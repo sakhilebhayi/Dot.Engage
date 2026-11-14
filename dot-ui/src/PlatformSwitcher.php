@@ -41,72 +41,21 @@ final class PlatformSwitcher
 
     public const FAILURE_SECONDS = 60;
 
-    public const NOTICE = 'Could not check your platforms just now';
+    /** `entitlement()` answers, the three a platform's own access check works with. */
+    public const HELD = 'held';
 
-    public const PERSONAL_MESSAGE = 'You are in your personal workspace, which has no company platforms to switch between. Switch to a company in InfoDot to see what it has.';
+    public const NOT_HELD = 'not_held';
 
-    /** The free core every company holds. Used only when InfoDot cannot be asked, and only to route via InfoDot. */
-    public const CORE = ['infodot', 'files', 'docs', 'tasks', 'finance'];
+    public const UNKNOWN = 'unknown';
 
-    /** Platforms with their own sign-in and no InfoDot receiver: opened by a plain link, nothing is handed over. */
-    public const PLAIN = ['mines', 'charts'];
-
-    /** Bridge services people never open. Dropped if an answer ever lists them. */
-    public const INTERNAL = ['memory', 'dopemine', 'brain', 'assets'];
-
-    /** Names for the degraded list only (the live answer carries its own names). */
-    private const CORE_NAMES = [
-        'infodot' => 'InfoDot',
-        'files' => 'Dot.Files',
-        'docs' => 'Dot.docs',
-        'tasks' => 'Dot.Tasks',
-        'finance' => 'Dot.Finance',
-    ];
+    /** The key the answer is cached under unless a host changes it. `{platform}` and `{company}` are replaced. */
+    public const DEFAULT_CACHE_KEY = 'infodot:platforms:{platform}:{company}';
 
     /**
-     * Display grouping, from InfoDot's catalogue: each platform under its FIRST category, then the plate InfoDot
-     * stencils for it. Presentation only, never access. A key not listed goes under "More platforms".
-     *
-     * @var array<string, array{0: string, 1: string, 2: string}> category => [code, tone, name]
+     * The category, plain, core and naming data live in ONE file, `data/categories.json` (one level above `src/`), read
+     * here and turned into the generated `static/dot-switcher-data.js` for static hosts. Tests fail when they drift.
      */
-    private const CATEGORIES = [
-        'business_management' => ['BSNS', 'people', 'Business Management'],
-        'finance_administration' => ['FINA', 'files', 'Finance and Administration'],
-        'productivity_collaboration' => ['WORK', 'knowledge', 'Productivity and Collaboration'],
-        'sales_commerce' => ['SALE', 'platforms', 'Sales and Commerce'],
-        'marketing_design' => ['MRKT', 'documents', 'Marketing and Design'],
-        'data_intelligence' => ['DATA', 'analytics', 'Data and Intelligence'],
-        'human_resources' => ['CREW', 'people', 'Human Resources'],
-        'learning_development' => ['LEARN', 'documents', 'Learning and Development'],
-        'operations_industry' => ['OPER', 'files', 'Operations and Industry'],
-        'automation_ai' => ['AUTO', 'analytics', 'Automation and AI'],
-    ];
-
-    private const PRIMARY_CATEGORY = [
-        'infodot' => 'business_management',
-        'engage' => 'business_management',
-        'projects' => 'business_management',
-        'files' => 'productivity_collaboration',
-        'docs' => 'productivity_collaboration',
-        'tasks' => 'productivity_collaboration',
-        'forms' => 'productivity_collaboration',
-        'press' => 'productivity_collaboration',
-        'sheet' => 'productivity_collaboration',
-        'finance' => 'finance_administration',
-        'agents' => 'automation_ai',
-        'notify' => 'automation_ai',
-        'analytics' => 'data_intelligence',
-        'charts' => 'data_intelligence',
-        'auction' => 'sales_commerce',
-        'emall' => 'sales_commerce',
-        'pulse' => 'sales_commerce',
-        'central' => 'operations_industry',
-        'ehail' => 'operations_industry',
-        'mines' => 'operations_industry',
-        'design' => 'marketing_design',
-        'hr' => 'human_resources',
-        'tutor' => 'learning_development',
-    ];
+    private static ?array $data = null;
 
     private readonly string $infodot;
 
@@ -117,6 +66,9 @@ final class PlatformSwitcher
      * @param  string  $infodotUrl  InfoDot's base URL (config `ecosystem.platforms.infodot.url`).
      * @param  string|null  $secret  This platform's service secret (config `ecosystem.infodot.secret`).
      * @param  string|null  $companiesUrl  Where the read goes, `{companies_url}/{uuid}/platforms`. Blank: `{infodot}/api/ecosystem/companies`.
+     * @param  string|\Closure|null  $cacheKey  Where the answer is cached. A string with `{platform}` and `{company}`
+     *                                          placeholders, or `fn (string $platform, string $company): string`.
+     *                                          Default `infodot:platforms:{platform}:{company}`. See "Sharing the answer" in docs/SWITCHER.md.
      */
     public function __construct(
         private readonly string $platform,
@@ -128,6 +80,7 @@ final class PlatformSwitcher
         private readonly ?string $companiesUrl = null,
         private readonly int $timeout = 3,
         private readonly int $connectTimeout = 2,
+        private readonly string|\Closure|null $cacheKey = null,
     ) {
         $this->infodot = rtrim($infodotUrl, '/');
         $this->http = $http ?? new Http();
@@ -156,6 +109,7 @@ final class PlatformSwitcher
             log: app()->bound(LoggerInterface::class) ? app(LoggerInterface::class) : null,
             companiesUrl: $companies !== '' ? $companies : ($redeem !== '' ? self::beforeLast($redeem, '/').'/companies' : null),
             timeout: max(1, (int) $config('ecosystem.infodot.switcher_timeout', 3)),
+            cacheKey: is_string($key = $config('ecosystem.infodot.switcher_cache_key')) && $key !== '' ? $key : null,
         );
     }
 
@@ -186,6 +140,61 @@ final class PlatformSwitcher
         }
 
         return $this->ready($company, $answer['rows']);
+    }
+
+    /**
+     * The cached answer about a company, as the view model reads it: `ok` (InfoDot gave a usable answer), `personal`,
+     * and `rows` (`key`, `name`, `entitled`, `plain`, `status`). It asks InfoDot at most once per cache window, and a
+     * failure is `ok: false` and is kept 60 seconds. Null/invalid company: `ok: false`, nothing asked.
+     *
+     * @return array{ok: bool, personal: bool, rows: list<array{key: string, name: string, entitled: bool, plain: bool, status: ?string}>}
+     */
+    public function answerFor(?string $company): array
+    {
+        $company = $this->cleanUuid($company);
+
+        if ($this->platform === '' || $company === null) {
+            return ['ok' => false, 'personal' => false, 'rows' => []];
+        }
+
+        return $this->answer($company);
+    }
+
+    /**
+     * What this platform's own access check needs, from the SAME cached answer the switcher uses (one InfoDot read,
+     * one cache entry). Three answers, never two, as in the platforms' entitlement clients:
+     *
+     *   held      the answer lists this platform for the company and says `entitled: true`.
+     *   not_held  it lists this platform and says `entitled: false` (`status` carries InfoDot's wording key).
+     *   unknown   anything else: no answer, a failed read, a personal workspace, this platform's row missing. The
+     *             caller decides what that means; a fail-open check carries on, exactly as before.
+     *
+     * The switcher itself stays fail-closed for display (an unusable answer is the degraded state); only the caller of
+     * this method decides what "unknown" lets through.
+     *
+     * @return array{state: string, status: ?string}
+     */
+    public function entitlement(?string $company): array
+    {
+        $answer = $this->answerFor($company);
+
+        if ($answer['ok'] !== true || $answer['personal'] === true) {
+            return ['state' => self::UNKNOWN, 'status' => null];
+        }
+
+        foreach ($answer['rows'] as $row) {
+            if (($row['key'] ?? null) === $this->platform) {
+                return ['state' => $row['entitled'] ? self::HELD : self::NOT_HELD, 'status' => $row['status'] ?? null];
+            }
+        }
+
+        return ['state' => self::UNKNOWN, 'status' => null];
+    }
+
+    /** The cache key for a company, after the host's template or callback. */
+    public function cacheKeyFor(string $company): string
+    {
+        return $this->cacheKey($company);
     }
 
     /** Where a person sees and manages what their company has. */
@@ -284,6 +293,7 @@ final class PlatformSwitcher
                 'name' => mb_substr(trim($row['name']), 0, 60),
                 'entitled' => $row['entitled'],
                 'plain' => ($row['status'] ?? null) === 'managed_in_platform',
+                'status' => is_string($row['status'] ?? null) ? $row['status'] : null,
             ];
         }
 
@@ -320,7 +330,7 @@ final class PlatformSwitcher
         $seen = [];
 
         foreach ($rows as $row) {
-            if (in_array($row['key'], self::INTERNAL, true) || isset($seen[$row['key']])) {
+            if (in_array($row['key'], self::internal(), true) || isset($seen[$row['key']])) {
                 continue;
             }
             $seen[$row['key']] = true;
@@ -335,8 +345,8 @@ final class PlatformSwitcher
         }
 
         // This platform missing from the answer is not a reason to hide where the person is.
-        if (! isset($seen[$this->platform]) && ! in_array($this->platform, self::INTERNAL, true)) {
-            array_unshift($tiles, $this->tile($this->platform, self::CORE_NAMES[$this->platform] ?? $this->platform, $company, true, false));
+        if (! isset($seen[$this->platform]) && ! in_array($this->platform, self::internal(), true)) {
+            array_unshift($tiles, $this->tile($this->platform, self::nameFor($this->platform), $company, true, false));
         }
 
         return $this->model(self::STATE_OK, $company, $tiles, $more, null, null);
@@ -346,16 +356,21 @@ final class PlatformSwitcher
     {
         $tiles = [];
 
-        foreach (self::CORE as $key) {
-            $tiles[] = $this->tile($key, self::CORE_NAMES[$key], $company, $key === $this->platform, false);
+        foreach (self::core() as $key) {
+            $tiles[] = $this->tile($key, self::nameFor($key), $company, $key === $this->platform, false);
         }
 
-        return $this->model(self::STATE_DEGRADED, $company, $tiles, [], self::NOTICE, null);
+        // A platform outside the core set still says where the person is: it is marked here too, as in the static renderer.
+        if ($this->platform !== '' && ! in_array($this->platform, self::core(), true) && ! in_array($this->platform, self::internal(), true)) {
+            $tiles[] = $this->tile($this->platform, self::nameFor($this->platform), $company, true, false);
+        }
+
+        return $this->model(self::STATE_DEGRADED, $company, $tiles, [], self::notice(), null);
     }
 
     private function personal(?string $company): array
     {
-        return $this->model(self::STATE_PERSONAL, $company, [], [], null, self::PERSONAL_MESSAGE);
+        return $this->model(self::STATE_PERSONAL, $company, [], [], null, self::personalMessage());
     }
 
     /**
@@ -363,7 +378,7 @@ final class PlatformSwitcher
      */
     private function tile(string $key, string $name, ?string $company, bool $current, bool $plainFromAnswer): array
     {
-        $plain = in_array($key, self::PLAIN, true) || $plainFromAnswer;
+        $plain = in_array($key, self::plain(), true) || $plainFromAnswer;
         $home = $key === 'infodot';
 
         // A tile for the current platform is a marker, not a link. InfoDot's own tile goes to its home, no handoff.
@@ -393,16 +408,19 @@ final class PlatformSwitcher
     {
         $groups = [];
 
+        $data = self::data();
+
         foreach ($tiles as $tile) {
-            $category = self::PRIMARY_CATEGORY[$tile['key']] ?? null;
-            [$code, $tone, $name] = $category !== null ? self::CATEGORIES[$category] : ['MORE', 'platforms', 'More platforms'];
-            $groups[$category ?? 'more'] ??= ['code' => $code, 'tone' => $tone, 'name' => $name, 'tiles' => []];
+            $category = $data['primary_category'][$tile['key']] ?? null;
+            $meta = $category !== null ? ($data['categories'][$category] ?? null) : null;
+            $category = $meta !== null ? $category : null;
+            $groups[$category ?? 'more'] ??= ['code' => $meta['code'] ?? 'MORE', 'tone' => $meta['tone'] ?? 'platforms', 'name' => $meta['name'] ?? 'More platforms', 'tiles' => []];
             $groups[$category ?? 'more']['tiles'][] = $tile;
         }
 
         // InfoDot's own order: the catalogue categories as listed, anything unplaced last.
         $ordered = [];
-        foreach ([...array_keys(self::CATEGORIES), 'more'] as $category) {
+        foreach ([...array_keys($data['categories']), 'more'] as $category) {
             if (isset($groups[$category])) {
                 $ordered[] = $groups[$category];
             }
@@ -422,11 +440,85 @@ final class PlatformSwitcher
         ];
     }
 
+    // ------------------------------------------------------------------------------------------------- the data
+
+    /**
+     * @return array{core: list<string>, plain: list<string>, internal: list<string>, notice: string, personal_message: string,
+     *               names: array<string, string>, categories: array<string, array{code: string, tone: string, name: string}>,
+     *               primary_category: array<string, string>}
+     */
+    public static function data(): array
+    {
+        if (self::$data === null) {
+            $json = @file_get_contents(dirname(__DIR__).'/data/categories.json');
+            $data = is_string($json) ? json_decode($json, true) : null;
+            $data = is_array($data) ? $data : [];
+
+            self::$data = [
+                'core' => array_values(array_filter((array) ($data['core'] ?? []), 'is_string')),
+                'plain' => array_values(array_filter((array) ($data['plain'] ?? []), 'is_string')),
+                'internal' => array_values(array_filter((array) ($data['internal'] ?? []), 'is_string')),
+                'notice' => is_string($data['notice'] ?? null) ? $data['notice'] : 'Could not check your platforms just now',
+                'personal_message' => is_string($data['personal_message'] ?? null) ? $data['personal_message'] : 'You are in your personal workspace.',
+                'names' => (array) ($data['names'] ?? []),
+                'categories' => (array) ($data['categories'] ?? []),
+                'primary_category' => (array) ($data['primary_category'] ?? []),
+            ];
+        }
+
+        return self::$data;
+    }
+
+    /** The free core every company holds. Used only when InfoDot cannot be asked, and only to route via InfoDot. */
+    public static function core(): array
+    {
+        return self::data()['core'];
+    }
+
+    /** Platforms with their own sign-in and no InfoDot receiver: opened by a plain link, nothing is handed over. */
+    public static function plain(): array
+    {
+        return self::data()['plain'];
+    }
+
+    /** Bridge services people never open. Dropped if an answer ever lists them. */
+    public static function internal(): array
+    {
+        return self::data()['internal'];
+    }
+
+    /** The visible "could not check" line of the degraded state. */
+    public static function notice(): string
+    {
+        return self::data()['notice'];
+    }
+
+    public static function personalMessage(): string
+    {
+        return self::data()['personal_message'];
+    }
+
+    /** The display name for a platform key (the live answer carries its own; this serves the degraded list). */
+    public static function nameFor(string $key): string
+    {
+        return self::data()['names'][$key] ?? $key;
+    }
+
     // ---------------------------------------------------------------------------------------------------- helpers
 
     private function cacheKey(string $company): string
     {
-        return 'infodot:platforms:'.$this->platform.':'.$company;
+        if ($this->cacheKey instanceof \Closure) {
+            $key = ($this->cacheKey)($this->platform, $company);
+
+            if (is_string($key) && $key !== '') {
+                return $key;
+            }
+        }
+
+        $template = is_string($this->cacheKey) && $this->cacheKey !== '' ? $this->cacheKey : self::DEFAULT_CACHE_KEY;
+
+        return strtr($template, ['{platform}' => $this->platform, '{company}' => $company]);
     }
 
     private function cleanUuid(?string $value): ?string

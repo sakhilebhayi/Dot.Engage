@@ -26,6 +26,17 @@ final class SwitcherView
      */
     public static function render(array $model, array $props = []): string
     {
+        return self::component('switcher', $props + ['model' => $model]);
+    }
+
+    /**
+     * Renders any anonymous component of blade/ (`search`, `filter-search`, `switcher`) with plain props. Slots are
+     * passed as `Illuminate\View\ComponentSlot` values. Used by the markup tests and the static demo build.
+     *
+     * @param  array<string, mixed>  $props  Component props; `attributes` may be a ComponentAttributeBag or an array.
+     */
+    public static function component(string $view, array $props = []): string
+    {
         $files = new Filesystem();
         $cache = sys_get_temp_dir().'/dot-ui-blade-'.md5(__DIR__);
         $files->ensureDirectoryExists($cache);
@@ -36,6 +47,9 @@ final class SwitcherView
         $resolver->register('blade', fn () => new CompilerEngine($compiler, $files));
         $factory = new Factory($resolver, new FileViewFinder($files, [dirname(__DIR__).'/blade']), new Dispatcher($container));
 
-        return $factory->make('switcher', $props + ['model' => $model, 'attributes' => new ComponentAttributeBag()])->render();
+        $attributes = $props['attributes'] ?? [];
+        $props['attributes'] = $attributes instanceof ComponentAttributeBag ? $attributes : new ComponentAttributeBag($attributes);
+
+        return $factory->make($view, $props)->render();
     }
 }
