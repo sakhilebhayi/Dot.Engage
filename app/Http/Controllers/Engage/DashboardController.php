@@ -12,6 +12,7 @@ use App\Models\EngagementParticipant;
 use App\Models\Meeting;
 use App\Models\SigningEnvelope;
 use App\Models\SigningSigner;
+use App\Services\Engage\EngagementAccess;
 use App\Services\Engage\Workspace;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -71,7 +72,30 @@ class DashboardController extends Controller
         $canStart = $user->can('create', Contract::class);
         $latest = Engagement::with('parties')->where('team_id', $team->id)->orderByDesc('updated_at')->orderByDesc('id')->first();
 
+        $active = (clone $open)->with('parties')->orderByDesc('updated_at')->limit(10)->get();
+        $completed = Engagement::with('parties')->where('team_id', $team->id)->where('state', 'completed')->orderByDesc('completed_at')->limit(5)->get();
+        $closed = Engagement::where('team_id', $team->id)->whereIn('state', ['declined', 'cancelled', 'expired'])->orderByDesc('updated_at')->limit(5)->get();
+        $waiting = $waiting->sortBy('since')->values();
+
+        // The engagement shown on the sheet. ?e=<reference> may only pick one of the rows already loaded for this business;
+        // anything else (another business, a made-up reference) falls back to the default: the first thing waiting, else the latest.
+        $loaded = $active->concat($completed)->concat($closed)->when($latest, fn ($c) => $c->push($latest))->unique('id');
+        $requested = $request->query('e');
+        $selected = is_string($requested) ? $loaded->firstWhere('reference', $requested) : null;
+        $selected ??= $waiting->map(fn ($w) => $w['engagement'])->first(fn ($e) => (int) $e->team_id === (int) $team->id);
+        $selected ??= $latest;
+        $selected?->loadMissing('parties');
+
+        $workspace = null;
+        if ($selected && ($access = EngagementAccess::forUser($selected, $user, $request))) {
+            $workspace = new Workspace($selected, $access);
+        }
+
         return view('dashboard', [
+            'headline' => $this->headline($waiting->count(), ! $latest && $waiting->isEmpty() && $upcoming->isEmpty()),
+            'selected' => $selected,
+            'sheetStages' => $workspace?->stages() ?? [],
+            'sheetAction' => $workspace?->nextAction(),
             'team' => $team,
             'firstName' => Str::of($user->name)->trim()->before(' ')->value(),
             'canStart' => $canStart,
@@ -80,14 +104,28 @@ class DashboardController extends Controller
                 : ['label' => 'See the engagements', 'url' => route('engagements.index')],
             'latest' => $latest,
             'stages' => Workspace::STAGES,
-            'waiting' => $waiting->sortBy('since')->values(),
-            'active' => (clone $open)->orderByDesc('updated_at')->limit(10)->get(),
+            'waiting' => $waiting,
+            'active' => $active,
             'activeCount' => (clone $open)->count(),
             'upcoming' => $upcoming,
             'awaitingSignature' => $awaitingSignature,
             'outstandingChanges' => $outstandingChanges,
-            'completed' => Engagement::where('team_id', $team->id)->where('state', 'completed')->orderByDesc('completed_at')->limit(5)->get(),
-            'closed' => Engagement::where('team_id', $team->id)->whereIn('state', ['declined', 'cancelled', 'expired'])->orderByDesc('updated_at')->limit(5)->get(),
+            'completed' => $completed,
+            'closed' => $closed,
         ]);
+    }
+
+    /** The state of the desk in one sentence, built from the count of what waits for this person. */
+    private function headline(int $waiting, bool $blank): string
+    {
+        if ($blank) {
+            return 'No engagements yet.';
+        }
+        if ($waiting === 0) {
+            return 'You are clear.';
+        }
+        $words = [1 => 'One', 2 => 'Two', 3 => 'Three', 4 => 'Four', 5 => 'Five', 6 => 'Six', 7 => 'Seven', 8 => 'Eight', 9 => 'Nine'];
+
+        return $waiting === 1 ? 'One thing waits for you.' : ($words[$waiting] ?? $waiting).' things wait for you.';
     }
 }

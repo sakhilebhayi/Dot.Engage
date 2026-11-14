@@ -1,55 +1,153 @@
-/* The landing at the top of the desk: who arrived, what this product is for, one action, and the most recent engagement
-   as a sheet. Tokens and components of The Margin only; nothing here introduces a new colour or face. */
-.land { padding-bottom: 36px; border-bottom: 1px solid var(--line-strong); margin-bottom: 28px; }
-.land.is-alone { border-bottom: 0; margin-bottom: 0; padding-bottom: 0; }
-.land-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: clamp(18px, 3vw, 36px); }
-.land-logo { display: block; flex: none; }
-.land-logo img { width: 104px; height: 104px; object-fit: contain; }
-/* The light/dark logo file choice lives in shell.css, shared by every layout. */
-.land-eco { display: flex; gap: 4px 22px; flex-wrap: wrap; justify-content: flex-end; font-size: var(--t-sm); color: var(--ink-2); }
-.land-eco a { display: inline-flex; align-items: center; min-height: 44px; }
+/* The desk (R-51): arrival band, what waits, the ledger of open engagements and the one sheet beside it.
+   Tokens and components of The Margin only. Plain .desk-* rules (Engage compiles Tailwind 4 with source(none)). */
+.desk { --d-hover: color-mix(in srgb, var(--ink) 5%, transparent); --d-row: 52px; --d-in: 380ms; }
 
-.land-main { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 480px); gap: clamp(28px, 6vw, 96px); align-items: end; }
-.land-say { min-width: 0; }
-.land-say h1 { font-size: clamp(32px, 4.3vw, 54px); line-height: 1.04; letter-spacing: -.025em; max-width: 17ch; overflow-wrap: break-word; }
-.land-welcome { margin-top: 22px; font-size: var(--t-md); color: var(--ink); max-width: 52ch; }
-.land-welcome b { font-weight: 650; overflow-wrap: anywhere; }
-.land-lede { margin-top: 8px; color: var(--muted); max-width: 58ch; }
-.land-act { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 22px; margin-top: 28px; font-size: var(--t-sm); }
-.land-act a:not(.btn) { display: inline-flex; align-items: center; min-height: 44px; color: var(--ink-2); }
-.btn-lead { min-height: 48px; padding: 0 26px; font-size: var(--t-base); margin-right: 6px; }
+/* Arrival: the headline states the state of the desk, one action, and the band's bottom edge is the stage rail. */
+.desk-arrive { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 16px 32px; align-items: end; padding-bottom: 24px; }
+.desk-arrive h1 { font-size: var(--t-xl); line-height: 1.15; letter-spacing: -.015em; max-width: 30ch; overflow-wrap: break-word; }
+.desk-welcome { margin-top: 8px; color: var(--muted); max-width: 64ch; }
+.desk-welcome b { color: var(--ink); font-weight: 650; overflow-wrap: anywhere; }
+.desk-arrive-act { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 8px 24px; font-size: var(--t-sm); }
+.desk-arrive-act a:not(.btn) { display: inline-flex; align-items: center; min-height: 44px; color: var(--ink-2); }
+.btn-lead { min-height: 44px; padding: 0 24px; font-size: var(--t-base); }
+.desk-line { position: absolute; left: 0; right: 0; bottom: 0; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 6px; height: 4px; align-items: end; }
+.desk-line i { display: block; height: 2px; background: var(--line-strong); transform-origin: left center; }
+.desk-line i.d { background: var(--ink-2); }
+.desk-line i.n { background: var(--ink); height: 4px; }
 
-/* A sheet: paper is reserved for things that really are documents, and this is the engagement as it stands. */
-.land-sheet { min-width: 0; background: var(--paper); border: 1px solid var(--line-strong); box-shadow: 0 1px 0 var(--line); padding: clamp(18px, 3vw, 28px); }
-.ls-top { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; font-size: var(--t-sm); color: var(--muted); }
-.ls-title { margin: 14px 0 12px; font: 400 var(--t-lg)/1.3 var(--font-clause); letter-spacing: 0; color: var(--ink); overflow-wrap: anywhere; text-wrap: balance; }
-h2.ls-title { margin-top: 0; }
-.ls-title a { text-decoration: none; }
-.ls-title a:hover { text-decoration: underline; text-decoration-thickness: 1px; }
-.ls-rail { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 0 6px; margin-top: 20px; }
-.ls-rail li { padding-top: 8px; box-shadow: inset 0 2px 0 var(--line-strong); font-size: var(--t-xs); font-weight: 500; color: var(--faint); overflow-wrap: anywhere; }
-.ls-rail .is-done { box-shadow: inset 0 2px 0 var(--ink-2); color: var(--ink-2); }
-.ls-rail .is-now { box-shadow: inset 0 4px 0 var(--ink); color: var(--ink); font-weight: 700; }
-.ls-next { margin-top: 16px; font-size: var(--t-sm); color: var(--ink-2); max-width: 52ch; }
-.ls-foot { display: flex; justify-content: space-between; align-items: center; gap: 6px 16px; flex-wrap: wrap; margin-top: 18px; padding-top: 12px; border-top: 1px solid var(--line); font-size: var(--t-sm); color: var(--muted); }
-.ls-foot a { color: var(--ink); font-weight: 600; display: inline-flex; align-items: center; min-height: 32px; }
+.desk-grid { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: 0 48px; margin-top: 24px; align-items: start; }
+.desk-left, .desk-side { min-width: 0; }
+.desk-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; min-height: 32px; padding-bottom: 8px; border-bottom: 1px solid var(--line-strong); }
+.desk-head h2 { font-size: var(--t-md); }
+.desk-head .n { font: 400 var(--t-sm) var(--font-fig); color: var(--muted); margin-left: 8px; }
+.desk-head a { font-size: var(--t-sm); color: var(--ink-2); display: inline-flex; align-items: center; min-height: 32px; }
+.desk-block + .desk-block { margin-top: 32px; }
 
-/* One authored moment: the headline block and its action are pressed onto the desk. The resting state is the default, so
-   the page is whole without it, and it is never hidden: only its position moves. */
+.desk-rows > li { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) auto 168px; gap: 16px; align-items: center; min-height: var(--d-row); padding: 8px 0; border-bottom: 1px solid var(--line); transition: background var(--d-fast) var(--ease); }
+.desk-rows > li:hover { background: var(--d-hover); }
+.desk-rows .t { font-weight: 600; }
+.desk-rows .t a { text-decoration: none; }
+.desk-rows .t a::after { content: ''; position: absolute; inset: 0; }
+.desk-rows .s { color: var(--muted); font-size: var(--t-sm); margin-top: 1px; overflow-wrap: anywhere; }
+.desk-rows .e { text-align: right; font-size: var(--t-sm); color: var(--muted); }
+.desk-rows .state.is-live::before { animation: none; } /* nothing animates at rest: the words "Live now" carry the state */
+.desk-empty { padding: 24px 0; color: var(--muted); max-width: 56ch; }
+.desk-empty b { display: block; color: var(--ink); font-size: var(--t-md); margin-bottom: 4px; }
+.desk-lower .desk-rows > li { grid-template-columns: minmax(0, 1fr) auto; }
+
+/* The ledger: a real table, the whole row is the link. */
+.desk-ledger { width: 100%; border-collapse: collapse; }
+.desk-ledger th { text-align: left; font-weight: 600; font-size: var(--t-xs); color: var(--muted); height: 32px; border-bottom: 1px solid var(--line-strong); padding: 0 12px 0 0; white-space: nowrap; }
+.desk-ledger th button { border: 0; background: none; padding: 0; font: inherit; font-weight: 600; color: inherit; cursor: pointer; min-height: 32px; }
+.desk-ledger th button:hover { color: var(--ink); }
+.desk-ledger th[aria-sort='ascending'] button, .desk-ledger th[aria-sort='descending'] button { color: var(--ink); text-decoration: underline; text-underline-offset: 4px; text-decoration-thickness: 2px; }
+.desk-ledger td { position: relative; height: var(--d-row); padding: 8px 12px 8px 0; border-bottom: 1px solid var(--line); vertical-align: middle; font-size: var(--t-sm); }
+.desk-ledger tbody tr { transition: background var(--d-fast) var(--ease); }
+.desk-ledger tbody tr:hover { background: var(--d-hover); }
+.desk-ledger tr[aria-current='true'] { background: var(--paper); box-shadow: inset 0 1px 0 var(--ink), inset 0 -1px 0 var(--ink); }
+.desk-ledger tr[aria-current='true'] td:first-child { padding-left: 12px; }
+.desk-ledger .eng a { display: block; font-weight: 600; font-size: var(--t-base); text-decoration: none; overflow-wrap: anywhere; }
+.desk-ledger .eng a::after { content: ''; position: absolute; inset: 0; }
+.desk-ledger .pty { color: var(--ink-2); max-width: 22ch; overflow-wrap: anywhere; }
+.desk-ledger .upd { text-align: right; white-space: nowrap; color: var(--muted); padding-right: 12px; }
+.desk-ledger th.upd { text-align: right; }
+.stage-rail { display: grid; grid-auto-flow: column; justify-content: start; gap: 3px; margin: 0 0 4px; height: 8px; align-items: center; }
+.stage-rail i { width: 12px; height: 4px; background: var(--line-strong); }
+.stage-rail i.d { background: var(--ink-2); }
+.stage-rail i.n { background: var(--ink); height: 8px; margin-top: -2px; }
+.stage-name { font-weight: 600; display: block; }
+.stage-sub { display: block; color: var(--muted); font-size: var(--t-xs); margin-top: 2px; font-weight: 400; }
+
+/* The one sheet: paper is reserved for things that are documents, and this is the engagement as it stands. */
+.desk-sheet { min-width: 0; background: var(--paper); border: 1px solid var(--line-strong); box-shadow: 0 1px 0 var(--line); padding: 24px; }
+.desk-side { position: sticky; top: 68px; scroll-margin-top: 68px; }
+.desk-sheet-top { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; font-size: var(--t-sm); color: var(--muted); }
+.desk-sheet-title { margin: 12px 0; font: 400 var(--t-lg)/1.3 var(--font-clause); letter-spacing: 0; color: var(--ink); overflow-wrap: anywhere; text-wrap: balance; }
+.desk-sheet-title a { text-decoration: none; }
+.desk-sheet-title a:hover { text-decoration: underline; text-decoration-thickness: 1px; }
+.desk-sheet .parties { display: flex; flex-wrap: wrap; gap: 4px 16px; align-items: center; font-size: var(--t-sm); }
+.desk-sheet .parties .p { display: inline-flex; align-items: center; gap: 8px; }
+.desk-sheet .parties .by { color: var(--pen); font-weight: 600; overflow-wrap: anywhere; }
+.desk-sheet .parties .sep { color: var(--faint); }
+.desk-stages { margin-top: 24px; border-top: 1px solid var(--line-strong); }
+.desk-stages li { display: grid; grid-template-columns: 22px 88px minmax(0, 1fr); gap: 8px; align-items: center; min-height: 40px; border-bottom: 1px solid var(--line); font-size: var(--t-sm); }
+.desk-stages .mk { width: 10px; height: 10px; border: 1.5px solid var(--faint); justify-self: center; }
+.desk-stages .is-done .mk { background: var(--ink-2); border-color: var(--ink-2); }
+.desk-stages .is-now .mk { background: var(--ink); border-color: var(--ink); }
+.desk-stages .nm { font-weight: 500; color: var(--faint); }
+.desk-stages .is-done .nm { color: var(--ink-2); }
+.desk-stages .is-now .nm { color: var(--ink); font-weight: 700; }
+.desk-stages .fact { color: var(--muted); overflow-wrap: anywhere; }
+.desk-stages .is-now .fact { color: var(--ink); }
+.desk-sheet-next { margin-top: 16px; font-size: var(--t-sm); color: var(--ink-2); max-width: 52ch; }
+.desk-sheet-act { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--line); }
+.desk-sheet-act a:not(.btn) { display: inline-flex; align-items: center; min-height: 36px; font-size: var(--t-sm); font-weight: 600; }
+.desk-sheet-act .btn-sm { min-height: 36px; padding: 0 16px; font-size: var(--t-sm); }
+.desk-sheet-wait { font-size: var(--t-sm); color: var(--muted); }
+
+.desk-lower { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 0 48px; margin-top: 32px; align-items: start; }
+.desk-counts { margin-top: 32px; padding-top: 12px; border-top: 1px solid var(--line-strong); font-size: var(--t-xs); color: var(--ink-2); }
+
+/* Nothing at all: the six stages, empty, and one sentence. */
+.desk-alone { max-width: 760px; margin-top: 24px; }
+.desk-art { display: block; margin-bottom: 20px; max-width: 100%; height: auto; }
+.desk-art .a-sheet, .desk-art .a-note { fill: var(--paper-sunk); stroke: var(--line-strong); stroke-width: 1; }
+.desk-art .a-text { stroke: var(--line-strong); stroke-width: 2; fill: none; }
+.desk-art .a-hl { fill: color-mix(in srgb, var(--pen-blue) 16%, transparent); stroke: var(--pen-blue); stroke-width: 1.2; }
+.desk-art .a-leader { stroke: var(--pen-blue); stroke-width: 1.2; fill: none; }
+.desk-rail-empty { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 0 6px; margin-top: 20px; }
+.desk-rail-empty li { padding-top: 8px; box-shadow: inset 0 2px 0 var(--line-strong); font-size: var(--t-xs); font-weight: 500; color: var(--faint); overflow-wrap: anywhere; }
+.desk-sheet-foot { margin-top: 18px; padding-top: 12px; border-top: 1px solid var(--line); font-size: var(--t-sm); color: var(--muted); }
+
+/* Motion. Content arrives, chrome stays still. Transform and opacity only, 140 to 380ms, ease-out; the resting state is the
+   default (animations use backwards fill), so nothing is hidden if a rule or the browser fails. Picking a row replays only the sheet. */
 @media (prefers-reduced-motion: no-preference) {
-    .land-say { animation: land-settle 220ms var(--ease); }
-    @keyframes land-settle { from { transform: translateY(-8px); } 70% { transform: translateY(1.5px); } }
+    .desk:not(.is-reselect) .desk-arrive-in { animation: desk-settle 260ms var(--ease) backwards; }
+    .desk:not(.is-reselect) .desk-arrive-act { animation: desk-settle 260ms var(--ease) 60ms backwards; }
+    .desk-line i { animation: desk-draw 380ms var(--ease) backwards; }
+    .desk-line i:nth-child(2) { animation-delay: 50ms; } .desk-line i:nth-child(3) { animation-delay: 100ms; }
+    .desk-line i:nth-child(4) { animation-delay: 150ms; } .desk-line i:nth-child(5) { animation-delay: 200ms; } .desk-line i:nth-child(6) { animation-delay: 250ms; }
+    .desk:not(.is-reselect) .desk-rows > li, .desk:not(.is-reselect) .desk-ledger tbody tr, .desk:not(.is-reselect) .desk-empty { animation: desk-rise 300ms var(--ease) backwards; }
+    .desk-rows > li:nth-child(2), .desk-ledger tbody tr:nth-child(2) { animation-delay: 40ms; }
+    .desk-rows > li:nth-child(3), .desk-ledger tbody tr:nth-child(3) { animation-delay: 80ms; }
+    .desk-rows > li:nth-child(4), .desk-ledger tbody tr:nth-child(4) { animation-delay: 120ms; }
+    .desk-rows > li:nth-child(5), .desk-ledger tbody tr:nth-child(5) { animation-delay: 160ms; }
+    .desk-rows > li:nth-child(n+6), .desk-ledger tbody tr:nth-child(n+6) { animation-delay: 200ms; }
+    .desk-sheet { animation: desk-rise 280ms var(--ease) 120ms backwards; }
+    .desk.is-reselect .desk-sheet { animation-delay: 0ms; animation-duration: 220ms; }
+    .desk-stages li { animation: desk-rise 260ms var(--ease) backwards; }
+    .desk-stages li:nth-child(1) { animation-delay: 160ms; } .desk-stages li:nth-child(2) { animation-delay: 200ms; } .desk-stages li:nth-child(3) { animation-delay: 240ms; }
+    .desk-stages li:nth-child(4) { animation-delay: 280ms; } .desk-stages li:nth-child(5) { animation-delay: 320ms; } .desk-stages li:nth-child(6) { animation-delay: 360ms; }
+    .desk.is-reselect .desk-stages li { animation-delay: 0ms; }
+    .desk-art .a-leader { transform-origin: left center; animation: desk-draw 380ms var(--ease) 200ms backwards; }
+    .btn-lead:active { transform: translateY(1px); }
+    @keyframes desk-settle { from { opacity: 0; transform: translateY(8px); } }
+    @keyframes desk-rise { from { opacity: 0; transform: translateY(6px); } }
+    @keyframes desk-draw { from { transform: scaleX(0); } }
 }
+@media (prefers-reduced-motion: reduce) { .desk *, .desk *::before, .desk *::after { animation: none !important; transition: none !important; } }
 
-@media (max-width: 960px) {
-    .land-main { grid-template-columns: minmax(0, 1fr); align-items: start; }
+@media (max-width: 1100px) {
+    .desk-grid { grid-template-columns: minmax(0, 1fr); }
+    .desk-side { position: static; margin-top: 32px; }
+    .desk-ledger .pty-col { display: none; }
+    .desk-ledger .upd { padding-right: 0; }
+}
+@media (max-width: 900px) { .desk-ledger .stage-rail { display: none; } .desk-ledger td, .desk-ledger th { padding-right: 8px; } }
+@media (max-width: 860px) {
+    .desk-lower { grid-template-columns: minmax(0, 1fr); gap: 32px 0; }
+    .desk-arrive { grid-template-columns: minmax(0, 1fr); }
+    .desk-arrive-act { justify-content: flex-start; }
 }
 @media (max-width: 640px) {
-    .land { padding-bottom: 28px; }
-    .land-logo img { width: 84px; height: 84px; }
-    .land-say h1 { font-size: 32px; }
-    .land-act { gap: 4px 22px; }
-    .land-act .btn-lead { width: 100%; margin: 0 0 6px; }
-    .ls-rail { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px 8px; }
-    .ls-foot a { min-height: 44px; }
+    .desk-arrive h1 { font-size: 26px; }
+    .desk-arrive-act .btn-lead { width: 100%; min-height: 48px; }
+    .desk-rows > li { grid-template-columns: minmax(0, 1fr) auto; min-height: 60px; }
+    .desk-rows > li .e { grid-column: 1 / -1; text-align: left; margin-top: -4px; }
+    .desk-ledger thead .hide-p, .desk-ledger td.hide-p { display: none; }
+    .desk-ledger td { height: 60px; }
+    .desk-sheet { padding: 16px; }
+    .desk-stages li { grid-template-columns: 22px 78px minmax(0, 1fr); min-height: 44px; }
+    .desk-sheet-act .btn-sm, .desk-sheet-act a:not(.btn) { min-height: 44px; }
+    .desk-rail-empty { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px 6px; }
 }
