@@ -53,6 +53,9 @@
             body { margin: 0; font: 16px/1.5 system-ui, sans-serif; background: #eceeec; color: #15181b; }
             main { max-width: 640px; margin: 0 auto; padding: 48px 20px; }
             @media (prefers-color-scheme: dark) { body { background: #111416; color: #eceeed; } }
+            .brand-logo { display: inline-flex; } .brand-logo img { display: block; height: 46px; width: auto; }
+            .logo-on-dark { display: none; }
+            @media (prefers-color-scheme: dark) { .logo-on-light { display: none; } .logo-on-dark { display: block; } }
         </style>
     @endif
 </head>
@@ -62,8 +65,7 @@
     <header class="topbar">
         <div class="topbar-in">
             <a class="wordmark" href="/" aria-label="Dot.Engage, home">
-                <svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="12" fill="none" stroke="currentColor" stroke-width="2.4"/><circle cx="16" cy="16" r="6.2" fill="none" stroke="currentColor" stroke-width="1.4" opacity=".55"/><circle cx="25.5" cy="7.5" r="4" fill="var(--wax, #a3262a)"/></svg>
-                <span>Dot.<span class="sub">Engage</span></span>
+                <x-logo />
             </a>
             <div class="topbar-end">
                 @auth

@@ -1,1 +1,1 @@
-<a class="wordmark" href="/" aria-label="Dot.Engage"><x-mark /> <span>Dot.<span class="sub">Engage</span></span></a>
+<a href="/" aria-label="Dot.Engage" class="wordmark"><x-logo /></a>
