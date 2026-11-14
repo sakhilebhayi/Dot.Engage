@@ -1,6 +1,6 @@
 <div class="cl" @if($polling) wire:poll.5s.visible @endif>
     <div class="cl-search">
-        <input class="input" aria-label="Search conversations" wire:model.live.debounce.300ms="search" type="search" placeholder="Search conversations">
+        <x-dot.filter-search label="Search conversations" placeholder="Search conversations" :value="$search" wire:model.live.debounce.300ms="search" />
     </div>
     <div class="cl-head">
         <h2>Conversations</h2>

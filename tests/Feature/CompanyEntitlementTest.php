@@ -81,6 +81,12 @@ class CompanyEntitlementTest extends TestCase
         $team = Team::forceCreate(['user_id' => $owner->id, 'name' => $name, 'personal_team' => false, 'infodot_team_uuid' => $uuid]);
         $owner->switchTeam($team);
 
+        // The header's platform switcher (shared Dot UI) reads the same InfoDot endpoint under its own cache key. These
+        // tests count and sequence the ENTITLEMENT check's requests, so the switcher's answer is parked as a recent
+        // failure: it then asks nothing and the counts below stay the entitlement check's own. The switcher has its own
+        // tests (PlatformSwitcherHeaderTest).
+        Cache::put('infodot:platforms:engage:'.strtolower($uuid), ['ok' => false, 'personal' => false, 'rows' => []], 3600);
+
         return $team;
     }
 

@@ -41,12 +41,40 @@ img.logo-on-dark { display: none; }
     position: absolute; top: 3px; right: 2px; min-width: 16px; height: 16px; padding: 0 4px;
     background: var(--ink); color: var(--paper); border-radius: 8px; font: 500 10px/16px var(--font-fig); text-align: center;
 }
-.search { position: relative; }
-.search input {
-    width: 220px; height: 34px; padding: 0 10px 0 32px; border: 1px solid var(--line); background: var(--paper);
-    border-radius: var(--r); font-size: var(--t-sm);
+/* Header search: the shared Dot UI pill (<x-dot.search>, dot-ui/css/dot-search.css), identical to InfoDot's by design.
+   Only its slot is sized here. The pill needs room for its 104px right padding, so it is wider than the old 220px box. */
+.topbar-search { margin-left: auto; width: clamp(260px, 30vw, 400px); }
+.topbar-search .dsr { margin: 0; }
+.topbar-search + .topbar-end { margin-left: 0; }
+
+/* Host token mapping for the shared Dot UI. The pill itself is not mapped (it is the same cream pill in every platform);
+   the dropdown surfaces, the compact filter and the switcher button/focus follow Engage's own tokens, in light and dark.
+   Set on body, not :root, so they beat the package's own dark-scheme values on :root whatever the specificity. */
+body {
+    --dsr-panel: var(--paper);
+    --dsr-hover: var(--paper-sunk);
+    --dsr-rule: var(--line);
+    --dsr-rule-strong: var(--line-strong);
+    --dsr-text: var(--ink);
+    --dsr-text-2: var(--ink-2);
+    --dsr-text-3: var(--muted);
+    --dsr-radius-panel: var(--r);
+    /* the package derives these from the tokens above on :root, so they are restated here to follow the body values */
+    --dsr-filter-radius: var(--r);
+    --dsr-filter-bg: var(--paper);
+    --dsr-filter-ink: var(--ink);
+    --dsr-filter-placeholder: var(--muted);
+    --dsr-filter-border: var(--line-strong);
+    --dsr-filter-border-hover: var(--muted);
+    --dsr-filter-border-focus: var(--ink);
 }
-.search svg { position: absolute; left: 10px; top: 9px; color: var(--muted); }
+.topbar .dsw {
+    --dsw-btn-ink: var(--ink-2);
+    --dsw-btn-border: var(--line-strong);
+    --dsw-btn-bg-hover: var(--line);
+    --dsw-focus: var(--focus);
+    --dsw-radius: var(--r);
+}
 .menu { position: relative; }
 .menu > summary { list-style: none; }
 .menu > summary::-webkit-details-marker { display: none; }
@@ -83,9 +111,12 @@ img.logo-on-dark { display: none; }
 .foot a { color: inherit; }
 
 @media (max-width: 860px) {
-    .nav, .search { display: none; }
+    .nav { display: none; }
     .mobile-nav { display: block; }
-    .topbar-in { gap: 10px; }
+    .topbar-in { gap: 10px; flex-wrap: wrap; height: auto; min-height: 52px; padding-block: 4px; }
+    /* The search drops to its own full-width row under the logo and buttons (it used to be hidden here). */
+    .topbar-search + .topbar-end { margin-left: auto; }
+    .topbar-search { order: 3; flex: 1 0 100%; width: 100%; max-width: none; margin: 0 0 6px; }
     .page-head { align-items: flex-start; }
     h1 { font-size: 26px; }
 }
