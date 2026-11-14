@@ -34,8 +34,8 @@ final class Refusal
                 'message' => 'The company chooses who uses this platform. Ask whoever manages platforms for the company to add you in InfoDot.',
             ],
             'no_personal_access' => [
-                'title' => 'Dot.Engage needs a company',
-                'message' => 'A personal workspace does not include this platform. Open it from a company that has switched it on in InfoDot.',
+                'title' => 'Dot.Engage needs a company that has switched it on',
+                'message' => 'A personal workspace does not include this platform. Create or join a company in InfoDot and switch Dot.Engage on there. Nothing in your personal workspace has been removed.',
             ],
             'temporarily_unavailable', 'not_launched' => [
                 'title' => 'Dot.Engage is not available to '.$who.' right now',

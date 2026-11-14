@@ -367,4 +367,137 @@ class CompanyEntitlementTest extends TestCase
         $this->assertStringNotContainsString('Whoops', $html);
         $this->assertTrue(Cache::has('infodot:entitlement:engage:'.self::ACME));
     }
+
+    /** Sign in through InfoDot with an answer that says $personal about the personal workspace (null: no key). */
+    private function signInWithPersonal(?bool $personal, bool $withCompany = true): User
+    {
+        // A fresh guard each time, as a browser starting a new sign-in would have.
+        $this->app['auth']->shouldUse('web');
+        $this->app['auth']->forgetGuards();
+        auth()->logout();
+
+        $teams = [['id' => 1, 'uuid' => (string) Str::uuid(), 'name' => "Sam's Team", 'personal' => true, 'role' => 'owner']
+            + ($personal === null ? [] : ['entitled' => $personal, 'access' => $personal ? null : 'no_personal_access'])];
+
+        if ($withCompany) {
+            $teams[] = ['id' => 2, 'uuid' => self::ACME, 'name' => 'Acme Ltd', 'personal' => false, 'role' => 'owner'] + ($personal === null ? [] : ['entitled' => true, 'access' => null]);
+        }
+
+        $this->answer([
+            self::REDEEM => Http::response([
+                'platform' => 'engage',
+                'user' => ['id' => 1, 'uuid' => (string) Str::uuid(), 'name' => 'Sam', 'email' => 'sam@solo.test', 'email_verified' => true],
+                'teams' => $teams, 'current_team_id' => 2, 'current_team_uuid' => $withCompany ? self::ACME : null,
+            ]),
+            self::url(self::ACME) => Http::response(self::body(self::ACME, true, 'active')),
+        ]);
+
+        $this->post(route('ecosystem.auth'), ['token' => 'one-time'], ['Origin' => 'https://infodot.test'])->assertRedirect(route('dashboard'));
+
+        return User::where('email', 'sam@solo.test')->firstOrFail();
+    }
+
+    public function test_a_personal_workspace_infodot_refused_at_sign_in_is_not_a_way_round(): void
+    {
+        $user = $this->signInWithPersonal(false);
+        $personal = $user->personalTeam();
+        $local = Team::forceCreate(['user_id' => $user->id, 'name' => 'Local only', 'personal_team' => false]);
+        $mine = app(EngagementService::class)->create($personal, $user, 'Personal deal', EngagementKind::Supplier, 'Private terms', 'Quiet Partner');
+
+        $this->get('/dashboard')->assertOk();
+
+        foreach ([$personal, $local] as $team) {
+            $this->put('/current-team', ['team_id' => $team->id])->assertRedirect();
+
+            $this->get('/dashboard')->assertForbidden()
+                ->assertSee('Dot.Engage needs a company that has switched it on')
+                ->assertSee('https://infodot.co.za/platforms/engage', false)
+                ->assertSee('Acme Ltd')
+                ->assertDontSee('Local only')
+                ->assertDontSee('Personal deal');
+            $this->post('/engagements', ['title' => 'Should not exist', 'kind' => 'supplier', 'counterparty' => 'Nobody'])->assertForbidden();
+        }
+
+        // The engagement made in the personal workspace is closed to its owner too, and is still there.
+        $this->get(route('engagements.show', $mine))->assertForbidden()->assertDontSee('Quiet Partner');
+        $this->assertSame(1, Engagement::withoutGlobalScopes()->count());
+        $this->assertTrue($mine->fresh()->isOpen());
+
+        // InfoDot is only ever asked about the company, never about a team without an InfoDot uuid.
+        Http::assertSent(fn (OutgoingRequest $request) => str_contains($request->url(), '/companies/'.self::ACME.'/'));
+        Http::assertNotSent(fn (OutgoingRequest $request) => str_contains($request->url(), '/companies/') && ! str_contains($request->url(), self::ACME));
+
+        // Back to the company that holds it.
+        $this->put('/current-team', ['team_id' => Team::where('infodot_team_uuid', self::ACME)->value('id')])->assertRedirect();
+        $this->get('/dashboard')->assertOk();
+    }
+
+    public function test_a_personal_workspace_infodot_allowed_at_sign_in_carries_on(): void
+    {
+        $user = $this->signInWithPersonal(true);
+
+        $this->put('/current-team', ['team_id' => $user->personalTeam()->id])->assertRedirect();
+        $this->get('/dashboard')->assertOk();
+        $this->get('/engagements')->assertOk();
+    }
+
+    public function test_a_personal_workspace_carries_on_when_the_sign_in_answer_said_nothing_about_it(): void
+    {
+        $user = $this->signInWithPersonal(null);
+
+        $this->put('/current-team', ['team_id' => $user->personalTeam()->id])->assertRedirect();
+        $this->get('/dashboard')->assertOk();
+        $this->assertFalse(session()->has('ecosystem.personal_entitled'));
+    }
+
+    public function test_a_later_sign_in_replaces_what_was_remembered_and_the_flag_switches_it_off(): void
+    {
+        $user = $this->signInWithPersonal(false);
+        $this->put('/current-team', ['team_id' => $user->personalTeam()->id]);
+        $this->get('/dashboard')->assertForbidden();
+
+        config(['ecosystem.infodot.entitlement_check' => false]);
+        $this->get('/dashboard')->assertOk();
+        config(['ecosystem.infodot.entitlement_check' => true]);
+
+        $this->signInWithPersonal(null);
+        $this->put('/current-team', ['team_id' => $user->personalTeam()->id]);
+        $this->get('/dashboard')->assertOk();
+    }
+
+    public function test_a_guest_of_an_engagement_owned_by_a_personal_workspace_is_never_refused(): void
+    {
+        $owner = User::factory()->withPersonalTeam()->create();
+        $engagement = $this->makeEngagement($owner);
+        [$participant] = $this->inviteExternal($engagement);
+        $participant = $this->verifyParticipant($participant);
+        $this->answer([]);
+
+        // Even a browser that remembers a refused personal workspace: without a signed-in member there is no check.
+        $this->withSession([EngagementAccess::SESSION_KEY => [$engagement->id => $participant->id], 'ecosystem.personal_entitled' => false])
+            ->get(route('engagements.show', $engagement))->assertOk();
+
+        Http::assertNothingSent();
+    }
+
+    public function test_a_livewire_update_on_a_signed_in_page_is_refused_for_a_company_without_access(): void
+    {
+        $user = $this->ownerOfAcme();
+        $this->answer([self::url(self::ACME) => Http::sequence()
+            ->push(self::body(self::ACME, true, 'active'))
+            ->push(self::body(self::ACME, false, 'suspended'))]);
+
+        $html = $this->actingAs($user)->get('/notifications')->assertOk()->getContent();
+        $this->assertSame(1, preg_match('/wire:snapshot="([^"]+)"/', $html, $found), 'the page carries a Livewire component');
+        $update = ['components' => [['snapshot' => html_entity_decode($found[1], ENT_QUOTES), 'updates' => (object) [], 'calls' => []]]];
+
+        // While the company holds the platform the component answers.
+        $this->actingAs($user)->postJson('/livewire/update', $update)->assertOk();
+
+        // The company loses it (the cached answer runs out): the same update is refused and returns no component.
+        $this->travel(11)->minutes();
+        $this->actingAs($user)->postJson('/livewire/update', $update)
+            ->assertForbidden()
+            ->assertJsonMissingPath('components');
+    }
 }
