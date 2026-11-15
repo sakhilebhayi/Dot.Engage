@@ -46,6 +46,12 @@
 .seal-wait.is-in .seal-press { animation-play-state: running; }
 .lp-foot { padding: 34px 0 10px; display: flex; gap: 22px; flex-wrap: wrap; color: var(--muted); font-size: var(--t-sm); }
 .lp-foot a { color: inherit; }
+/* R-52 public tap targets: on touch and small screens the front-page links a thumb has to hit are 44px high. */
+@media (max-width: 1024px), (pointer: coarse) {
+    .btn, .btn-sm { min-height: 44px; }
+    .lp-foot { gap: 0 14px; }
+    .lp-foot a { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; min-width: 44px; padding-inline: 2px; }
+}
 @media (max-width: 900px) {
     .lp-hero, .lp-sec { grid-template-columns: 1fr; }
     .fig-margin { grid-template-columns: 1fr; }

@@ -8,7 +8,7 @@
     display: flex; align-items: center; gap: 20px;
     max-width: 1600px; margin: 0 auto; padding: 0 var(--gutter); height: 52px;
 }
-.wordmark { display: inline-flex; align-items: center; gap: 9px; font-weight: 650; letter-spacing: -.015em; text-decoration: none; font-size: 16px; }
+.wordmark { display: inline-flex; align-items: center; min-width: 44px; min-height: 44px; gap: 9px; font-weight: 650; letter-spacing: -.015em; text-decoration: none; font-size: 16px; }
 .wordmark:hover { text-decoration: none; }
 /* The original logo, untouched: only its size and the light or dark file are chosen here. The artwork is a square that
    carries its own wordmark, so it replaces the old drawn mark and the typed name together. */
