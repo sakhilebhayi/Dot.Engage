@@ -58,10 +58,8 @@
     <link rel="apple-touch-icon" href="{{ asset('apple-touch-icon.png') }}">
     {{-- Roboto, the type scale and the shared header, search and switcher (dot-ui), all served from this site's own public/dot-ui. Loaded before the app CSS so the host mapping blocks in shell.css win. --}}
     <x-dot-head ui />
-    <script src="{{ asset('dot-ui/js/dot-search.js') }}" defer></script>
-    <script src="{{ asset('dot-ui/js/dot-search-results.js') }}" defer></script>
-    <script src="{{ asset('dot-ui/js/dot-switcher.js') }}" defer></script>
-    <script src="{{ asset('dot-ui/js/dot-nav.js') }}" defer></script>
+    {{-- One script: the header, search, switcher and account menu. The results controller inside the search is lazy (it loads on the first focus in the search); this host only prints results-nav markup from Livewire and never calls DotSearchResults.attach(), so the core bundle is enough. --}}
+    <script src="{{ asset('dot-ui/js/dot-ui-core.min.js') }}" defer></script>
     @vite(['resources/css/engage.css', 'resources/css/signed-in.css', 'resources/js/app.js', 'resources/js/engage.js'])
     @livewireStyles
     @stack('head')

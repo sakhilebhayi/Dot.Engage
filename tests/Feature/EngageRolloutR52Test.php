@@ -171,7 +171,7 @@ class EngageRolloutR52Test extends TestCase
         foreach ($pages as $response) {
             $html = $response->getContent();
             $this->assertStringContainsString('class="dot-roboto"', $html);
-            $this->assertStringContainsString('dot-ui/css/dot-roboto.css', $html);
+            $this->assertMatchesRegularExpression('#dot-ui/css/dot-(ui|roboto)\.min\.css#', $html, 'Roboto comes from the minified dot-ui stylesheet (the bundle with the header, or roboto + type without it)');
             $this->assertStringContainsString('dot-ui/fonts/roboto/roboto-latin-wght-normal.woff2', $html);
             $this->assertDoesNotMatchRegularExpression('#(fonts\.googleapis|fonts\.gstatic|cdn)#i', $html);
             $this->assertStringNotContainsString('public-sans', $html);
