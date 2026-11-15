@@ -22,6 +22,8 @@
     .desk-sheet-title a { display: inline-flex; align-items: center; min-height: 44px; }
     a.nt-msg { display: flex; align-items: center; min-height: 44px; }
     .docbar .meta a, .docbar .meta .linkbtn { display: inline-flex; align-items: center; min-height: 44px; }
+    .door .door-actions .btn { min-height: 44px; }
+    .door-actions a { display: inline-flex; align-items: center; min-height: 44px; }
 }
 
 /* The engagement menu sits where its button sits: when the title wraps on a phone the button is at the left, so the panel opens to the right of it,
