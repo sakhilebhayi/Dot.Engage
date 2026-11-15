@@ -12,8 +12,8 @@ colors:
   pen-plum: "#7a3a74"
   pen-graphite: "#4f555c"
 typography:
-  display: { fontFamily: Public Sans, fontWeight: 600 }
-  clause: { fontFamily: Literata, fontWeight: 400 }
+  display: { fontFamily: Roboto, fontWeight: 600 }
+  clause: { fontFamily: Roboto, fontWeight: 400 }
   figure: { fontFamily: IBM Plex Mono, fontWeight: 400 }
 ---
 
@@ -62,8 +62,7 @@ Not used: cream with terracotta, near-black with acid accent, purple gradients, 
 
 ## Type
 
-Public Sans (variable, 400 to 700) for the interface: it was drawn for government forms, which is the right register.
-Literata for clause text (proposed wording, quoted clauses, the agreement title block): a book face for sustained reading.
+Roboto (variable, the shared dot-ui face, R-52) for the interface AND for clause text. R-52 replaced Public Sans, Literata (the serif of clause text) and Caveat (the typed-signature hand): the paper and ink look now comes from colour, rules and measure, not from a book face; a typed signature is set in Roboto.
 IBM Plex Mono for references, hashes, times and counts. Body 15/22, labels 13/18, display 30/34 at weight 600 with -0.01em.
 No tracked uppercase eyebrows over headings.
 
@@ -93,6 +92,6 @@ The top of the desk is where a person arrives from InfoDot. It carries the origi
 light variant on the night desk; the seal mark stays in the bar), the headline, a welcome from the person's first name and
 the business name, and exactly one solid-ink action marked `data-primary-action`: start an engagement, or see the
 engagements for a viewer who may not start one. Beside it the most recently changed engagement is shown as a sheet:
-reference, title in Literata, parties in their pens, the six stages, the next step. With no engagements the sheet says so
+reference, title in Roboto, parties in their pens, the six stages, the next step. With no engagements the sheet says so
 and shows the six stages empty; the page prints no count that is not a count of records. The links back to InfoDot and its
 Platforms page sit top right of the landing. One motion: the headline block settles onto the desk, position only.

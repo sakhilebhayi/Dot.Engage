@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="dot-roboto" data-dh-theme-key="engage-theme">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -46,8 +46,8 @@
         <link rel="icon" href="{{ asset($faviconPath) }}">
     @endif
     @if (! empty($viteEntries))
-        <link rel="preload" href="/fonts/public-sans-100_900-normal.woff2" as="font" type="font/woff2" crossorigin>
-        @vite($viteEntries)
+            <x-dot-head />
+            @vite($viteEntries)
     @else
         <style>
             body { margin: 0; font: 16px/1.5 system-ui, sans-serif; background: #eceeec; color: #15181b; }

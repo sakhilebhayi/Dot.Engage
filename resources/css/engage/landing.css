@@ -60,7 +60,7 @@
 
 /* The one sheet: paper is reserved for things that are documents, and this is the engagement as it stands. */
 .desk-sheet { min-width: 0; background: var(--paper); border: 1px solid var(--line-strong); box-shadow: 0 1px 0 var(--line); padding: 24px; }
-.desk-side { position: sticky; top: 68px; scroll-margin-top: 68px; }
+.desk-side { position: sticky; top: calc(var(--dot-header-offset, 52px) + 16px); scroll-margin-top: calc(var(--dot-header-offset, 52px) + 16px); }
 .desk-sheet-top { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; font-size: var(--t-sm); color: var(--muted); }
 .desk-sheet-title { margin: 12px 0; font: 400 var(--t-lg)/1.3 var(--font-clause); letter-spacing: 0; color: var(--ink); overflow-wrap: anywhere; text-wrap: balance; }
 .desk-sheet-title a { text-decoration: none; }

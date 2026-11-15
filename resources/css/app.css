@@ -64,7 +64,7 @@
 }
 
 /*
- * The two font stacks tailwind.config.js had (`sans` with Figtree in front;
+ * The two font stacks tailwind.config.js had (`sans` with Roboto in front, Figtree before R-52;
  * `mono` was Tailwind's default). Declared `inline` and NOT as plain --font-*
  * variables: guest.blade.php, welcome.blade.php and the error layout define their
  * own `--font-mono` on :root, which would otherwise replace this value under the
@@ -72,10 +72,10 @@
  * `font-display` utility, as in v3: the pages define `.font-display` themselves.
  */
 @theme inline {
-    --font-sans: 'Figtree', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+    --font-sans: 'Roboto', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
     --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
-    --default-font-family: 'Figtree', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+    --default-font-family: 'Roboto', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
     --default-mono-font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono',
         'Courier New', monospace;

@@ -102,13 +102,13 @@ class OriginalLogoTest extends TestCase
 
     private function assertShowsRealLogo(string $html): void
     {
-        $this->assertMatchesRegularExpression('#<img class="logo-on-light" src="[^"]*/images/logo\.png" alt="Dot\.Engage" width="\d+" height="\d+">#', $html);
-        $this->assertMatchesRegularExpression('#<img class="logo-on-dark" src="[^"]*/images/logo-light\.png"[^>]* width="\d+" height="\d+"[^>]*>#', $html);
+        $this->assertMatchesRegularExpression('#<img class="logo-on-light[^"]*" src="[^"]*/images/logo\.png" alt="Dot\.Engage" width="\d+" height="\d+">#', $html);
+        $this->assertMatchesRegularExpression('#<img class="logo-on-dark[^"]*"[^>]*src="[^"]*/images/logo-light\.png"[^>]* width="\d+" height="\d+"[^>]*>#', $html);
 
         // no drawn brand mark: the only inline <svg> elements allowed in a layout are the shared icon sprite and <use> references to it
         preg_match_all('#<svg\b[^>]*>(.*?)</svg>#s', $html, $svgs);
         foreach ($svgs[0] as $svg) {
-            if (str_contains($svg, '<symbol') || str_contains($svg, 'aria-label="Seal of')) {
+            if (str_contains($svg, 'class="dh-ic"') || str_contains($svg, '<symbol') || str_contains($svg, 'aria-label="Seal of')) {
                 continue; // the shared icon sprite and the agreement-evidence seal illustration, neither is the brand mark
             }
             $this->assertStringNotContainsString('<circle', $svg, 'A drawn circle mark is back in a layout.');
