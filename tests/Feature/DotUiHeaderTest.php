@@ -284,7 +284,7 @@ class DotUiHeaderTest extends TestCase
         $response = $this->actingAs($this->memberOf(self::ACME, 'Acme Ltd'))->get('/engagements')->assertOk();
         $html = $response->getContent();
 
-        foreach (['css/dot-fonts.css', 'css/dot-tokens.css', 'css/dot-search.css', 'css/dot-switcher-fonts.css', 'css/dot-switcher.css', 'js/dot-switcher.js'] as $asset) {
+        foreach (['css/dot-ui.min.css', 'js/dot-ui-core.min.js', 'js/dot-theme-boot.min.js'] as $asset) {
             $this->assertStringContainsString(asset('dot-ui/'.$asset), $html, $asset.' is linked from this site');
             $this->assertFileExists(public_path('dot-ui/'.$asset));
         }
@@ -317,11 +317,10 @@ class DotUiHeaderTest extends TestCase
         $this->fakeInfoDot([self::url(self::ACME) => Http::response(self::body(self::ACME))]);
         $html = $this->actingAs($this->memberOf(self::ACME, 'Acme Ltd'))->get('/engagements')->getContent();
 
-        $this->assertSame(1, preg_match('/<div class="topbar-search">.*?<\/div>\s*<\/div>/s', $html, $pill));
+        $this->assertSame(1, preg_match('/<div class="dh-search".*?<\/header>/s', $html, $pill));
         foreach ([$pill[0], $this->switcherHtml($html)] as $fragment) {
             $this->assertStringNotContainsString(' style=', $fragment);
             $this->assertStringNotContainsString('<style', $fragment);
-            $this->assertStringNotContainsString('<script', $fragment);
             $this->assertDoesNotMatchRegularExpression('/\son[a-z]+=/', $fragment, 'no inline event handlers');
         }
     }

@@ -59,14 +59,14 @@ export function captureSignature({ name = '', title = 'Your signature' } = {}) {
         }
 
         async function paintTyped() {
-            try { await document.fonts.load('600 88px Caveat'); } catch (e) { /* fallback font */ }
+            try { await document.fonts.load('500 88px Roboto'); } catch (e) { /* fallback font */ }
             const c = typedCanvas.getContext('2d');
             c.clearRect(0, 0, typedCanvas.width, typedCanvas.height);
             c.fillStyle = '#0b1a3a';
-            c.font = '600 88px Caveat, "Segoe Script", cursive';
+            c.font = '500 88px Roboto, system-ui, sans-serif';
             c.textBaseline = 'middle';
             let size = 88;
-            while (c.measureText(typed).width > typedCanvas.width - 40 && size > 28) { size -= 4; c.font = '600 ' + size + 'px Caveat, "Segoe Script", cursive'; }
+            while (c.measureText(typed).width > typedCanvas.width - 40 && size > 28) { size -= 4; c.font = '500 ' + size + 'px Roboto, system-ui, sans-serif'; }
             c.fillText(typed, 20, typedCanvas.height / 2);
         }
 
@@ -102,11 +102,11 @@ export function captureSignature({ name = '', title = 'Your signature' } = {}) {
 
 /** Initials typed as text and rendered in the same hand as a typed signature. */
 export async function initialsImage(text) {
-    try { await document.fonts.load('600 90px Caveat'); } catch (e) { /* fallback */ }
+    try { await document.fonts.load('500 90px Roboto'); } catch (e) { /* fallback */ }
     const c = document.createElement('canvas');
     c.width = 300; c.height = 140;
     const g = c.getContext('2d');
-    g.fillStyle = '#0b1a3a'; g.font = '600 90px Caveat, "Segoe Script", cursive'; g.textBaseline = 'middle'; g.textAlign = 'center';
+    g.fillStyle = '#0b1a3a'; g.font = '500 90px Roboto, system-ui, sans-serif'; g.textBaseline = 'middle'; g.textAlign = 'center';
     g.fillText(text.slice(0, 4), 150, 72);
     return trim(c);
 }

@@ -15,7 +15,7 @@
 .next .step b { font-weight: 600; color: var(--ink); }
 
 .ws { display: grid; grid-template-columns: var(--rail-w) minmax(0, 1fr); gap: 36px; align-items: start; }
-.rail { position: sticky; top: 72px; }
+.rail { position: sticky; top: calc(var(--dot-header-offset, 52px) + 20px); }
 .rail ol { counter-reset: st; border-left: 1px solid var(--line-strong); margin-left: 5px; }
 .stage { position: relative; padding: 0 0 22px 22px; }
 .stage::before {
@@ -168,12 +168,12 @@
 /* Signing */
 .ptools { display: flex; gap: 6px; flex-wrap: wrap; }
 .ptools [aria-pressed='true'] { --b-bg: var(--ink); --b-fg: var(--paper); --b-bd: var(--ink); }
-.pedit-bar { display: flex; gap: 14px 22px; flex-wrap: wrap; align-items: center; padding: 10px 0 14px; position: sticky; top: 52px; background: var(--desk); z-index: 5; border-bottom: 1px solid var(--line); margin-bottom: 18px; }
+.pedit-bar { display: flex; gap: 14px 22px; flex-wrap: wrap; align-items: center; padding: 10px 0 14px; position: sticky; top: var(--dot-header-offset, 52px); background: var(--desk); z-index: 5; border-bottom: 1px solid var(--line); margin-bottom: 18px; }
 .psigners { display: flex; gap: 8px; flex-wrap: wrap; }
 .schip { display: inline-flex; gap: 8px; align-items: center; padding: 5px 12px 5px 6px; border: 1px solid var(--line-strong); background: transparent; border-radius: 99px; font-size: var(--t-sm); }
 .schip[aria-checked='true'] { border-color: var(--pen); box-shadow: inset 0 0 0 1px var(--pen); }
 .pedit-grid { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 28px; align-items: start; }
-.pside { position: sticky; top: 130px; }
+.pside { position: sticky; top: calc(var(--dot-header-offset, 52px) + 78px); }
 .fsummary li { display: grid; grid-template-columns: 28px 1fr; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--line); align-items: center; }
 .fsummary .state { grid-column: 2; margin-top: -6px; font-size: var(--t-xs); }
 .pedit .layer { cursor: crosshair; }

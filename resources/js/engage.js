@@ -101,3 +101,41 @@ document.addEventListener('livewire:initialized', () => {
     }
 });
 window.engageLocalise = localise;
+
+// Desk: sort the ledger rows already in the page, and keep the scroll place when a row is picked on a wide screen
+// (the sheet is beside the ledger there, so the anchor must not jump the page).
+(() => {
+    const table = document.querySelector('.desk-ledger');
+    if (!table) { return; }
+    const body = table.tBodies[0];
+    table.querySelectorAll('th button').forEach((button) => {
+        button.addEventListener('click', () => {
+            const th = button.parentNode;
+            const col = th.cellIndex;
+            const dir = th.getAttribute('aria-sort') === 'ascending' ? 'descending' : 'ascending';
+            table.querySelectorAll('th').forEach((x) => x.removeAttribute('aria-sort'));
+            th.setAttribute('aria-sort', dir);
+            const key = (row) => row.cells[col].dataset.sort ?? row.cells[col].textContent.trim();
+            [...body.rows]
+                .sort((a, b) => {
+                    const x = key(a), y = key(b);
+                    const num = !Number.isNaN(Number(x)) && !Number.isNaN(Number(y));
+                    const cmp = num ? Number(x) - Number(y) : (x > y ? 1 : x < y ? -1 : 0);
+                    return cmp * (dir === 'ascending' ? 1 : -1);
+                })
+                .forEach((row) => body.appendChild(row));
+        });
+    });
+
+    const wide = matchMedia('(min-width: 1101px)');
+    try {
+        table.addEventListener('click', (event) => {
+            if (event.target.closest('a') && wide.matches) { sessionStorage.setItem('desk-y', String(window.scrollY)); }
+        });
+        const y = sessionStorage.getItem('desk-y');
+        if (y !== null) {
+            sessionStorage.removeItem('desk-y');
+            if (wide.matches && location.hash === '#selected') { window.scrollTo(0, Number(y)); }
+        }
+    } catch (e) { /* storage blocked: the page simply opens at the sheet */ }
+})();

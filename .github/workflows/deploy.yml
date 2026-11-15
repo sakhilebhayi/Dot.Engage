@@ -502,7 +502,7 @@ jobs:
           set -uo pipefail
           WORK="$(mktemp -d)"
           FAILED=0
-          for PAGE in "/" "/login" "/up" "/how-signing-works" "/verify" "/fonts/public-sans-100_900-normal.woff2" "/vendor/pdfjs/standard_fonts/LiberationSans-Regular.ttf"; do
+          for PAGE in "/" "/login" "/up" "/how-signing-works" "/verify" "/dot-ui/fonts/roboto/roboto-latin-wght-normal.woff2" "/vendor/pdfjs/standard_fonts/LiberationSans-Regular.ttf"; do
             CODE=$(curl -s --max-time 30 -o /dev/null -w '%{http_code}' "$SITE_URL$PAGE" || true)
             if [ "$CODE" = "200" ]; then echo "200 $SITE_URL$PAGE"; else echo "::error::$SITE_URL$PAGE answered ${CODE:-no response} (expected 200)"; FAILED=1; fi
           done

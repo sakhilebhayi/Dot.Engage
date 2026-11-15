@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\EngagementKind;
 use App\Enums\EngagementState;
 use App\Models\Concerns\HasTeamScope;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -38,6 +39,24 @@ class Engagement extends Model
     public function getRouteKeyName(): string
     {
         return 'reference';
+    }
+
+    /**
+     * The engagements search: the term is found in the title, the reference or the name of a party. LIKE wildcards in the
+     * term are escaped, so "50%" finds "50%" and not everything. One definition for the list page's ?q= and the header
+     * search's live results; both stay inside the signed-in person's current business (the team scope plus the caller's
+     * own where team_id).
+     */
+    public function scopeMatching(Builder $query, string $term): Builder
+    {
+        $term = trim($term);
+        if ($term === '') {
+            return $query;
+        }
+        $like = '%'.str_replace(['%', '_'], ['\\%', '\\_'], $term).'%';
+
+        return $query->where(fn ($w) => $w->where('title', 'like', $like)->orWhere('reference', 'like', $like)
+            ->orWhereHas('parties', fn ($p) => $p->where('name', 'like', $like)));
     }
 
     public function team(): BelongsTo

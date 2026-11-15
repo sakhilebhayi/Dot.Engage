@@ -106,8 +106,11 @@ class LandingExperienceTest extends TestCase
 
         $response = $this->actingAs($this->owner())->get('/dashboard')->assertOk();
 
+        // The bar carries the logo once (light file named, dark file decorative); the body no longer repeats it at 104px.
         $response->assertSee('src="'.asset('images/logo.png').'" alt="Dot.Engage"', false);
-        $response->assertSee('src="'.asset('images/logo-light.png').'" alt="Dot.Engage"', false);
+        $response->assertSee('src="'.asset('images/logo-light.png').'"', false);
+        $this->assertSame(1, substr_count((string) $response->getContent(), 'src="'.asset('images/logo.png').'"'), 'the logo is shown once, in the bar');
+        $this->assertStringNotContainsString('width="104"', (string) $response->getContent());
     }
 
     public function test_the_way_back_to_infodot_is_the_header_switcher_not_a_second_nav_on_the_landing(): void
@@ -155,10 +158,10 @@ class LandingExperienceTest extends TestCase
 
         $response = $this->actingAs($owner)->get('/dashboard')->assertOk();
 
-        // Waiting for you, meetings, active engagements, out for signature, changes to review: in page order.
-        $this->assertSame(['0', '0', '2', '0', '0'], $this->printedCounts($response));
+        // Waiting for you, active engagements, meetings, out for signature, completed, closed: in page order.
+        $this->assertSame(['0', '2', '0', '0', '0', '0'], $this->printedCounts($response));
         $response->assertSeeInOrder(['id="h-latest"', $latest->reference, 'Second retainer letter', 'Karoo Fresh Produce', $latest->state->nextStep()], false);
-        $this->assertMatchesRegularExpression('/<li class="is-now"\s+aria-current="step"\s*>Engage<\/li>/', (string) $response->getContent());
+        $this->assertMatchesRegularExpression('/<li class="is-now"\s+aria-current="step"\s*><span class="mk"><\/span><span class="nm">Engage<\/span>/', (string) $response->getContent());
         $response->assertDontSee('Not this business');
         $response->assertDontSee('No engagements yet.');
     }
