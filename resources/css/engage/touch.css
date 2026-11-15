@@ -1,0 +1,42 @@
+/* R-52: touch and small screens. Every control a thumb has to hit is 44px, inputs are 16px (iOS does not zoom the page into a smaller one),
+   the sticky offsets follow the shared header's height, and a menu never opens off the screen. Desktop (a fine pointer above 1024px) is unchanged. */
+@media (max-width: 1024px), (pointer: coarse) {
+    .btn, .btn-sm { min-height: 44px; }
+    .input, .select, .textarea { min-height: 44px; font-size: 16px; }
+    .textarea { min-height: 96px; }
+    .input.fig, .input-mono { font-size: 16px; }
+    .linkbtn { display: inline-flex; align-items: center; min-height: 44px; }
+    .tabs a, .tabs button { min-height: 44px; }
+    .checkline { min-height: 44px; align-items: center; }
+    .foot { gap: 0 14px; }
+    .foot a { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; min-width: 44px; padding-inline: 2px; }
+    .desk-head a, .desk-head .linkbtn { min-height: 44px; }
+    .desk-ledger th, .desk-ledger th button { min-height: 44px; height: 44px; }
+    .desk-ledger th button { min-width: 44px; }
+    .desk-ledger .eng a, .desk-rows .t a { display: flex; align-items: center; min-height: 44px; }
+    .menu-panel a, .menu-panel button { min-height: 44px; display: flex; align-items: center; }
+    select.vsel, #vsel { min-height: 44px; }
+    .pagebtn { min-height: 44px; }
+    .dsr-item { min-height: 44px; }
+    .desk-sheet-act .btn-sm, .desk-sheet-act a:not(.btn) { min-height: 44px; }
+    .desk-sheet-title a { display: inline-flex; align-items: center; min-height: 44px; }
+    a.nt-msg { display: flex; align-items: center; min-height: 44px; }
+    .docbar .meta a, .docbar .meta .linkbtn { display: inline-flex; align-items: center; min-height: 44px; }
+}
+
+/* The engagement menu sits where its button sits: when the title wraps on a phone the button is at the left, so the panel opens to the right of it,
+   not off the left edge of the screen. */
+@media (max-width: 640px) {
+    .ws-title { position: relative; }
+    .ws-title .menu { position: static; margin-left: 0 !important; }
+    .ws-title .menu .menu-panel { right: auto; left: 0; top: 100%; max-width: 100%; }
+}
+
+/* The signature and date boxes a signer taps are at least a thumb wide and high, however small the page is scaled. */
+@media (max-width: 1024px), (pointer: coarse) {
+    .sfld.mine { min-width: 44px; min-height: 44px; }
+    .sfld-input { font-size: 16px; }
+}
+
+/* A closed disclosure menu has no panel box at all (the browser keeps the hidden content laid out, which counted as an off-screen element). */
+.menu:not([open]) > .menu-panel { display: none; }

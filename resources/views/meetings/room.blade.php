@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="dot-roboto" data-dh-theme-key="engage-theme">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -7,6 +7,7 @@
     <meta name="robots" content="noindex, nofollow">
     <title>{{ $meeting->title }} · Dot.Engage</title>
     <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('favicon-32x32.png') }}">
+    <x-dot-head />
     @vite(['resources/css/engage-meeting.css', 'resources/js/engage.js', 'resources/js/meeting/room.js'])
 </head>
 <body class="room" data-state="lobby">

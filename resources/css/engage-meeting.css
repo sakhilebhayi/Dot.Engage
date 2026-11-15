@@ -283,3 +283,10 @@ body[data-state='live'] #room-root { overflow: hidden; }
     .tile[data-speaking='true'] .tile-speak { display: inline; }
     .tile[data-speaking='true'] .tile-speak::before { content: '· '; }
 }
+
+/* R-52: the lobby is the page an outside guest opens on a phone. 44px targets, 16px fields (no iOS zoom). */
+@media (max-width: 1024px), (pointer: coarse) {
+    .room-back { min-height: 44px; min-width: 44px; }
+    .lobby-form .select, .lobby-form .input { min-height: 44px; font-size: 16px; }
+    .room .btn { min-height: 44px; }
+}

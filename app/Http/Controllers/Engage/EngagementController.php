@@ -39,11 +39,7 @@ class EngagementController extends Controller
 
         $query = Engagement::where('team_id', $user->currentTeam->id)->with('parties');
         $q = trim((string) $request->query('q', ''));
-        if ($q !== '') {
-            $like = '%'.str_replace(['%', '_'], ['\\%', '\\_'], $q).'%';
-            $query->where(fn ($w) => $w->where('title', 'like', $like)->orWhere('reference', 'like', $like)
-                ->orWhereHas('parties', fn ($p) => $p->where('name', 'like', $like)));
-        }
+        $query->matching($q);
 
         $filter = $request->query('show', 'open');
         if ($filter === 'open') {

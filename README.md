@@ -37,7 +37,7 @@ What it does **not** do: it provides a *basic* electronic signature (email-confi
 |---|---|
 | Framework | Laravel 13, PHP 8.4, Jetstream teams, InfoDot sign-in (`/auth/ecosystem`) |
 | Interface | Blade, Livewire 3 (chat, notifications, account pages), vanilla JS modules built by Vite for the document viewer, signing and meetings, pdf.js 6 |
-| Design | "The Margin", see [`DESIGN.md`](DESIGN.md). Self-hosted Public Sans, Literata, IBM Plex Mono, Caveat. No CDN. |
+| Design | "The Margin", see [`DESIGN.md`](DESIGN.md). Self-hosted Roboto (dot-ui, R-52) for all text, IBM Plex Mono for references and figures. No CDN. |
 | PDF | `app/Services/Pdf`: a reader and incremental writer for xref tables, xref streams and object streams. No external PDF library or binary. DomPDF generates the certificate and schedules. |
 | Database | SQLite in production (WAL, immediate transactions); MySQL works. |
 | Queue and schedule | Database queue, cron every minute (`schedule:run`, `queue:work`). `engage:housekeeping`, `engage:finalise-pending`, `engage:meetings-clean`, `engage:verify-audit`. |

@@ -41,17 +41,25 @@ img.logo-on-dark { display: none; }
     position: absolute; top: 3px; right: 2px; min-width: 16px; height: 16px; padding: 0 4px;
     background: var(--ink); color: var(--paper); border-radius: 8px; font: 500 10px/16px var(--font-fig); text-align: center;
 }
-/* Header search: the shared Dot UI pill (<x-dot.search>, dot-ui/css/dot-search.css), identical to InfoDot's by design.
-   Only its slot is sized here. With no hint the pill reserves just its circle on the right (.dsr--nohint). */
-.topbar-search { margin-left: auto; width: clamp(260px, 30vw, 400px); }
-.topbar-search .dsr { margin: 0; }
-.topbar-search + .topbar-end { margin-left: 0; }
-
-/* Host token mapping for the shared Dot UI. The pill itself is not mapped (it is the same cream pill in every platform);
-   the dropdown surfaces, the compact filter and the switcher button/focus follow Engage's own tokens, in light and dark.
-   The package defaults are all under :where() (zero specificity) and the filter tokens fall back to these surface tokens
-   where they are used, so a plain :root mapping is enough in either theme. */
+/* Host token mapping for the shared Dot UI (dot-ui 0.6). The header is the shared grid: logo and items on the left, the search truly centred, the switcher,
+   the bell and the account on the right. The search pill itself is not mapped (it is the same cream pill in every platform); the bar, the dropdown
+   surfaces, the compact filter and the switcher follow Engage's own tokens, in light and dark. The mapping sits on plain :root and is UNLAYERED. */
 :root {
+    --dh-bg: var(--desk);
+    --dh-ink: var(--ink);
+    --dh-ink-2: var(--ink-2);
+    --dh-rule: var(--line);
+    --dh-hover: var(--line);
+    --dh-accent: var(--ink);
+    --dh-focus: var(--focus);
+    --dh-radius: var(--r);
+    --dh-avatar-bg: var(--ink);
+    --dh-avatar-ink: var(--paper);
+    --dh-badge-bg: var(--ink);
+    --dh-badge-ink: var(--paper);
+    --dh-logo-h: 40px;
+    --dh-search-w: clamp(280px, 24vw, 420px);
+
     --dsr-panel: var(--paper);
     --dsr-hover: var(--paper-sunk);
     --dsr-rule: var(--line);
@@ -61,14 +69,12 @@ img.logo-on-dark { display: none; }
     --dsr-text-3: var(--muted);
     --dsr-radius-panel: var(--r);
     --dsr-filter-radius: var(--r);
+    --dsr-focus-ring: var(--focus);
 }
-.topbar .dsw {
-    --dsw-btn-ink: var(--ink-2);
-    --dsw-btn-border: var(--line-strong);
-    --dsw-btn-bg-hover: var(--line);
-    --dsw-focus: var(--focus);
-    --dsw-radius: var(--r);
-}
+.dh .dsw { --dsw-radius: var(--r); --dsw-focus: var(--focus); }
+/* The logo is the original artwork, a square that carries its own wordmark; only its height is chosen here. */
+.dh .dh-brand .brand-logo { margin: 0; }
+.dh .dh-brand .brand-logo img { height: var(--dh-logo-h); width: auto; }
 .menu { position: relative; }
 .menu > summary { list-style: none; }
 .menu > summary::-webkit-details-marker { display: none; }
@@ -84,7 +90,6 @@ img.logo-on-dark { display: none; }
 .menu-panel .who { padding: 8px 10px 10px; border-bottom: 1px solid var(--line); margin-bottom: 4px; }
 .menu-panel .who b { display: block; font-weight: 600; }
 .menu-panel .who span { color: var(--muted); font-size: var(--t-xs); }
-.mobile-nav { display: none; }
 
 .frame { max-width: 1600px; margin: 0 auto; padding: 28px var(--gutter) 80px; }
 .frame-narrow { max-width: 880px; }
@@ -106,13 +111,12 @@ img.logo-on-dark { display: none; }
 
 @media (max-width: 860px) {
     .nav { display: none; }
-    .mobile-nav { display: block; }
-    .topbar-in { gap: 10px; flex-wrap: wrap; height: auto; min-height: 52px; padding-block: 4px; }
-    /* The search drops to its own full-width row under the logo and buttons (it used to be hidden here). */
-    .topbar-search + .topbar-end { margin-left: auto; }
-    .topbar-search { order: 3; flex: 1 0 100%; width: 100%; max-width: none; margin: 0 0 6px; }
     .page-head { align-items: flex-start; }
     h1 { font-size: 26px; }
+}
+/* Touch: every icon button is a 44px target. */
+@media (max-width: 1024px), (pointer: coarse) {
+    .iconbtn { width: 44px; height: 44px; }
 }
 
 .dash-split { display: grid; grid-template-columns: 1fr 1fr; gap: 0 56px; }
