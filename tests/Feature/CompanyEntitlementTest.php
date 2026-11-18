@@ -392,7 +392,7 @@ class CompanyEntitlementTest extends TestCase
         $this->answer([
             self::REDEEM => Http::response([
                 'platform' => 'engage',
-                'user' => ['id' => 1, 'uuid' => (string) Str::uuid(), 'name' => 'Sam', 'email' => 'sam@solo.test', 'email_verified' => true],
+                'user' => ['id' => 1, 'uuid' => 'infodot-sam', 'name' => 'Sam', 'email' => 'sam@solo.test', 'email_verified' => true],
                 'teams' => $teams, 'current_team_id' => 2, 'current_team_uuid' => $withCompany ? self::ACME : null,
             ]),
             self::url(self::ACME) => Http::response(self::body(self::ACME, true, 'active')),

@@ -319,3 +319,18 @@ a.nt-msg:hover { text-decoration: underline; text-underline-offset: 3px; }
     .perm-grid { grid-template-columns: minmax(0, 1fr); }
     .codes { grid-template-columns: minmax(0, 1fr); }
 }
+
+/* ---------- R-54: the claim and sign-in error pages (inside the front door sheet) ---------- */
+.claim-status { margin: 0 0 14px; padding: 10px 12px; background: var(--paper-sunk); border-left: 3px solid var(--ok); font-size: var(--t-sm); }
+.claim-form .claim-code { width: 100%; min-height: 48px; font-size: var(--t-xl); font-weight: 600; letter-spacing: .3em; text-align: center; font-variant-numeric: tabular-nums; font-family: var(--font-fig); }
+.claim-code[aria-invalid='true'] { border-color: var(--wax); }
+.claim-help { margin-top: 6px; font-size: var(--t-xs); color: var(--muted); }
+.claim-error { margin: 6px 0 0; font-size: var(--t-sm); color: var(--wax); font-weight: 500; }
+.claim-error:empty { display: none; }
+.claim-submit { margin-top: 14px; }
+.claim-form .claim-submit { width: 100%; min-height: 44px; }
+.claim-actions { display: grid; gap: 10px; margin-top: 18px; }
+.claim-actions .btn { width: 100%; min-height: 44px; }
+.claim-aside { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px; margin-top: 10px; }
+.claim-link { min-height: 44px; padding: 0 4px; background: none; border: 0; color: var(--ink); font: inherit; font-size: var(--t-sm); text-decoration: underline; cursor: pointer; }
+.claim-link:focus-visible, .claim-code:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
