@@ -22,7 +22,7 @@
         <nav class="nav" aria-label="Main"><a href="{{ route('legal.signatures') }}">How signing works</a><a href="{{ route('verify.show') }}">Check a signed agreement</a></nav>
         <div class="topbar-end">
             @auth<a class="btn btn-sm" href="{{ route('dashboard') }}"><span>Open your desk</span></a>
-            @else<a class="btn btn-sm" href="{{ route('login') }}"><span>Sign in</span></a>@endauth
+            @else<a class="btn btn-sm" href="{{ \App\Support\CentralSignIn::login() }}"><span>Sign in</span></a>@endauth
         </div>
     </div></header>
 
@@ -33,7 +33,9 @@
                 <p class="sub">Invite the other business, talk the contract through, change it, approve it and sign it. Everything said about a clause stays beside that clause, and the signed result can be checked by anyone holding the file.</p>
                 <div class="lp-cta">
                     @auth<a class="btn" href="{{ route('dashboard') }}"><span>Open your desk</span></a>
-                    @else<a class="btn" href="{{ route('login') }}"><span>Sign in to start an engagement</span></a>@endauth
+                    @else<a class="btn" href="{{ \App\Support\CentralSignIn::login() }}"><span>Sign in to start an engagement</span></a>
+                    @if (\App\Support\CentralSignIn::active())<a class="btn btn-quiet" href="{{ \App\Support\CentralSignIn::register(route('login')) }}"><span>Create an account</span></a>@endif
+                    @endauth
                     <a class="btn btn-quiet" href="{{ route('verify.show') }}"><span>Check a signed agreement</span></a>
                 </div>
             </div>

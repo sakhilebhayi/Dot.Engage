@@ -9,7 +9,7 @@
         <a class="btn btn-quiet" href="{{ route('dashboard') }}"><span>Go to your desk</span></a>
     @else
         @if (Route::has('login'))
-            <a class="btn btn-quiet" href="{{ route('login') }}"><span>Sign in</span></a>
+            <a class="btn btn-quiet" href="{{ \App\Support\CentralSignIn::login() }}"><span>Sign in</span></a>
         @endif
     @endauth
 @endsection

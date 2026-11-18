@@ -76,7 +76,7 @@
                     @endif
                 @else
                     @if (Route::has('login'))
-                        <a class="btn btn-quiet btn-sm" href="{{ route('login') }}"><span>Sign in</span></a>
+                        <a class="btn btn-quiet btn-sm" href="{{ \App\Support\CentralSignIn::login() }}"><span>Sign in</span></a>
                     @endif
                 @endauth
             </div>
