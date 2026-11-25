@@ -23,8 +23,11 @@ use Symfony\Component\HttpFoundation\Response;
  *    A guest holding an invitation, a signer, a meeting guest, or a signed-in person from another business is an
  *    outside party and is never asked about: their link keeps working.
  *
- * Only a clear "this company does not hold the platform" refuses. No answer (outage, wrong secret, unreadable body,
- * a company InfoDot does not know) carries on exactly as before. A personal team, or any team that is not an InfoDot
+ * Only a clear answer stops anyone: "this company does not hold the platform" refuses with a 403, and (R-61) "InfoDot
+ * has this platform switched off" (maintenance, unavailable) answers 503 "temporarily unavailable" with Retry-After,
+ * checked first because it is a different question and holds for every company. Nothing is deleted or changed in
+ * either case. No answer (outage, wrong secret, unreadable body, a company InfoDot does not know, and no earlier
+ * answer remembered) carries on exactly as before. A personal team, or any team that is not an InfoDot
  * company, follows what the sign-in answer said about the personal workspace: refused only on an exact "no".
  */
 class EnsureCompanyHoldsPlatform
@@ -63,6 +66,10 @@ class EnsureCompanyHoldsPlatform
 
         $answer = $this->entitlement->for($team);
 
+        if ($answer['state'] !== CompanyEntitlement::UNKNOWN && ! $answer['available']) {
+            return $this->unavailable($request, $answer['message']);
+        }
+
         if ($answer['state'] !== CompanyEntitlement::NOT_HELD) {
             return $next($request);
         }
@@ -74,6 +81,24 @@ class EnsureCompanyHoldsPlatform
     private function personalWorkspaceRefused(Request $request): bool
     {
         return $request->hasSession() && $request->session()->get(self::PERSONAL_KEY) === false;
+    }
+
+    /** InfoDot has switched the platform off: 503 with Retry-After, as JSON for a script or a Livewire update. */
+    private function unavailable(Request $request, ?string $message): Response
+    {
+        $message ??= 'Dot.Engage is temporarily unavailable.';
+
+        // Livewire throws away any response that is not a redirect, so only an exception stops the update.
+        if (app(HandleRequests::class)->isLivewireRoute()) {
+            abort(503, $message, ['Retry-After' => '60']);
+        }
+
+        if ($request->expectsJson() || $request->is('livewire/*')) {
+            return response()->json(['message' => $message, 'reason' => 'platform_unavailable'], 503)->header('Retry-After', '60');
+        }
+
+        return response()->view('errors.platform-unavailable', ['message' => $message], 503)
+            ->header('Cache-Control', 'no-store, private')->header('Retry-After', '60');
     }
 
     private function refuse(Request $request, User $user, ?string $reason, ?string $company): Response

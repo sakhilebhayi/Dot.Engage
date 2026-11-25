@@ -212,30 +212,32 @@ class CompanyEntitlementTest extends TestCase
         Http::assertNothingSent();
     }
 
-    public function test_the_answer_is_cached_per_company_for_ten_minutes_and_a_failure_for_one(): void
+    public function test_the_answer_is_cached_per_company_for_a_minute_and_a_failure_for_a_minute(): void
     {
         $user = $this->ownerOfAcme();
         $this->answer([self::url(self::ACME) => Http::sequence()
+            ->push(self::body(self::ACME, false, 'suspended'))
             ->push(self::body(self::ACME, true, 'active'))
             ->push('', 503)
-            ->push(self::body(self::ACME, false, 'suspended'))]);
+            ->push(self::body(self::GLOBEX, true, 'active'))]);
 
-        $this->actingAs($user)->get('/dashboard')->assertOk();
-        $this->actingAs($user)->get('/engagements')->assertOk();
+        $this->actingAs($user)->get('/dashboard')->assertForbidden();
+        $this->actingAs($user)->get('/engagements')->assertForbidden();
         Http::assertSentCount(1);
 
-        $this->travel(9)->minutes();
-        $this->actingAs($user)->get('/dashboard')->assertOk();
+        // A switch made at InfoDot takes effect within about a minute.
+        $this->travel(59)->seconds();
+        $this->actingAs($user)->get('/dashboard')->assertForbidden();
         Http::assertSentCount(1);
 
-        // The ten minutes are up: InfoDot is down, which is cached for a minute and lets the person through.
-        $this->travel(2)->minutes();
-        $this->actingAs($user)->get('/dashboard')->assertOk();
+        $this->travel(2)->seconds();
         $this->actingAs($user)->get('/dashboard')->assertOk();
         Http::assertSentCount(2);
 
+        // InfoDot goes down: the last clear answer is used, and the failure is asked about once a minute.
         $this->travel(61)->seconds();
-        $this->actingAs($user)->get('/dashboard')->assertForbidden();
+        $this->actingAs($user)->get('/dashboard')->assertOk();
+        $this->actingAs($user)->get('/dashboard')->assertOk();
         Http::assertSentCount(3);
     }
 
@@ -505,5 +507,299 @@ class CompanyEntitlementTest extends TestCase
         $this->actingAs($user)->postJson('/livewire/update', $update)
             ->assertForbidden()
             ->assertJsonMissingPath('components');
+    }
+
+    // ---- R-61: availability (InfoDot has the platform switched off) ----
+
+    /** The answer body with contract v2 fields on this platform's own row. */
+    private static function v2Body(string $uuid, bool $entitled, string $status, bool $available, ?string $message = null): array
+    {
+        $body = self::body($uuid, $entitled, $status);
+        $body['platforms'][0] += ['available' => $available, 'message' => $message, 'features' => ['signing' => ['state' => 'available', 'message' => null]]];
+
+        return $body;
+    }
+
+    public function test_a_platform_infodot_has_switched_off_shows_a_503_page_and_reads_no_data(): void
+    {
+        $user = $this->ownerOfAcme();
+        $engagement = $this->engagementFor($user);
+        $this->answer([self::url(self::ACME) => Http::response(self::v2Body(self::ACME, true, 'active', false, 'Dot.Engage is in maintenance until 18:00.'))]);
+
+        foreach (['/dashboard', '/engagements', '/agreements', '/meetings', '/chat', '/notifications', route('engagements.show', $engagement), route('engagements.discussion', $engagement)] as $page) {
+            $this->actingAs($user)->get($page)
+                ->assertStatus(503)
+                ->assertHeader('Retry-After', '60')
+                ->assertSee('Dot.Engage is not available right now')
+                ->assertSee('Dot.Engage is in maintenance until 18:00.')
+                ->assertSee('Sign out')
+                ->assertDontSee('Open Platforms in InfoDot')
+                ->assertDontSee('Supply agreement 2026')
+                ->assertDontSee('Borrowdale Traders')
+                ->assertDontSee($engagement->reference);
+        }
+
+        // Nothing is changed behind it.
+        $this->actingAs($user)->post('/engagements', ['title' => 'Should not exist', 'kind' => 'supplier', 'counterparty' => 'Nobody'])->assertStatus(503);
+        $this->assertSame(1, Engagement::withoutGlobalScopes()->count());
+        $this->assertTrue($engagement->fresh()->isOpen());
+    }
+
+    public function test_the_unavailable_page_has_a_default_sentence_when_infodot_sends_no_message(): void
+    {
+        $user = $this->ownerOfAcme();
+        $this->answer([self::url(self::ACME) => Http::response(self::v2Body(self::ACME, true, 'active', false))]);
+
+        $this->actingAs($user)->get('/dashboard')->assertStatus(503)->assertSee('Dot.Engage is temporarily unavailable.');
+    }
+
+    public function test_an_unavailable_platform_answers_json_503_with_retry_after_for_scripts(): void
+    {
+        $user = $this->ownerOfAcme();
+        $engagement = $this->engagementFor($user);
+        $this->answer([self::url(self::ACME) => Http::response(self::v2Body(self::ACME, true, 'active', false, 'Back soon.'))]);
+
+        $this->actingAs($user)->getJson('/dashboard')
+            ->assertStatus(503)->assertHeader('Retry-After', '60')
+            ->assertExactJson(['message' => 'Back soon.', 'reason' => 'platform_unavailable']);
+        $this->actingAs($user)->postJson(route('engagements.post', $engagement), ['body' => 'hello'])
+            ->assertStatus(503)->assertJsonPath('reason', 'platform_unavailable');
+    }
+
+    public function test_unavailable_is_asked_before_not_held_and_applies_to_a_company_that_does_not_hold_it_too(): void
+    {
+        $user = $this->ownerOfAcme();
+        $this->answer([self::url(self::ACME) => Http::response(self::v2Body(self::ACME, false, 'suspended', false, 'Maintenance.'))]);
+
+        $this->actingAs($user)->get('/dashboard')->assertStatus(503)->assertSee('Maintenance.')->assertDontSee('is suspended for Acme Ltd');
+    }
+
+    public function test_an_answer_with_available_true_or_no_available_key_behaves_as_before(): void
+    {
+        $user = $this->ownerOfAcme();
+        $this->answer([self::url(self::ACME) => Http::sequence()
+            ->push(self::v2Body(self::ACME, true, 'active', true))
+            ->push(self::body(self::ACME, true, 'active'))
+            ->push(self::body(self::ACME, false, 'suspended'))]);
+
+        $this->actingAs($user)->get('/dashboard')->assertOk();
+        $this->travel(61)->seconds();
+        $this->actingAs($user)->get('/dashboard')->assertOk();
+        $this->travel(61)->seconds();
+        $this->actingAs($user)->get('/dashboard')->assertForbidden()->assertSee('is suspended for Acme Ltd');
+    }
+
+    public function test_a_platform_switched_back_on_is_open_again_within_a_minute(): void
+    {
+        $user = $this->ownerOfAcme();
+        $this->answer([self::url(self::ACME) => Http::sequence()
+            ->push(self::v2Body(self::ACME, true, 'active', false))
+            ->push(self::v2Body(self::ACME, true, 'active', true))]);
+
+        $this->actingAs($user)->get('/dashboard')->assertStatus(503);
+        $this->travel(61)->seconds();
+        $this->actingAs($user)->get('/dashboard')->assertOk();
+    }
+
+    public static function lastKnownAnswers(): array
+    {
+        return [
+            'unavailable stays unavailable' => [fn () => self::v2Body(self::ACME, true, 'active', false, 'Maintenance.'), 503],
+            'a refusal stays a refusal' => [fn () => self::body(self::ACME, false, 'suspended'), 403],
+            'access stays access' => [fn () => self::v2Body(self::ACME, true, 'active', true), 200],
+        ];
+    }
+
+    #[DataProvider('lastKnownAnswers')]
+    public function test_the_last_clear_answer_is_used_while_infodot_cannot_be_reached(callable $first, int $expected): void
+    {
+        $user = $this->ownerOfAcme();
+        $this->answer([self::url(self::ACME) => Http::sequence()->push($first())->push('', 503)->push(['nonsense' => true])->pushFailedConnection()]);
+
+        $this->actingAs($user)->get('/dashboard')->assertStatus($expected);
+
+        // Down for hours, in each of the ways InfoDot can fail: still the last clear answer.
+        foreach ([61, 61, 61] as $seconds) {
+            $this->travel($seconds)->seconds();
+            $this->actingAs($user)->get('/dashboard')->assertStatus($expected);
+        }
+
+        Http::assertSentCount(4);
+    }
+
+    public function test_the_last_clear_answer_is_forgotten_after_six_hours_and_the_person_carries_on(): void
+    {
+        $user = $this->ownerOfAcme();
+        $this->answer([self::url(self::ACME) => Http::sequence()
+            ->push(self::v2Body(self::ACME, true, 'active', false, 'Maintenance.'))
+            ->push('', 503)
+            ->push('', 503)]);
+
+        $this->actingAs($user)->get('/dashboard')->assertStatus(503);
+
+        $this->travel(5)->hours();
+        $this->actingAs($user)->get('/dashboard')->assertStatus(503);
+
+        $this->travel(61)->minutes();
+        $this->actingAs($user)->get('/dashboard')->assertOk();
+    }
+
+    public function test_a_newer_clear_answer_replaces_the_remembered_one(): void
+    {
+        $user = $this->ownerOfAcme();
+        $this->answer([self::url(self::ACME) => Http::sequence()
+            ->push(self::v2Body(self::ACME, true, 'active', false))
+            ->push(self::v2Body(self::ACME, true, 'active', true))
+            ->push('', 503)]);
+
+        $this->actingAs($user)->get('/dashboard')->assertStatus(503);
+        $this->travel(61)->seconds();
+        $this->actingAs($user)->get('/dashboard')->assertOk();
+        $this->travel(61)->seconds();
+        $this->actingAs($user)->get('/dashboard')->assertOk();
+    }
+
+    public function test_with_no_answer_ever_the_person_carries_on(): void
+    {
+        $user = $this->ownerOfAcme();
+        $this->answer([self::url(self::ACME) => Http::response('', 503)]);
+
+        $this->actingAs($user)->get('/dashboard')->assertOk();
+        $this->travel(2)->minutes();
+        $this->actingAs($user)->get('/dashboard')->assertOk();
+    }
+
+    public function test_the_answers_are_kept_per_company(): void
+    {
+        $user = $this->ownerOfAcme();
+        $globex = $this->company($user, self::GLOBEX, 'Globex Ltd');
+        $this->answer([
+            self::url(self::ACME) => Http::response(self::v2Body(self::ACME, true, 'active', false)),
+            self::url(self::GLOBEX) => Http::response(self::v2Body(self::GLOBEX, true, 'active', true)),
+        ]);
+
+        $this->actingAs($user->fresh())->get('/dashboard')->assertOk();
+        $user->switchTeam(Team::where('infodot_team_uuid', self::ACME)->firstOrFail());
+        $this->actingAs($user->fresh())->get('/dashboard')->assertStatus(503);
+        $this->assertNotNull($globex);
+    }
+
+    public function test_a_personal_workspace_is_never_asked_about_and_never_shown_the_unavailable_page(): void
+    {
+        $user = User::factory()->withPersonalTeam()->create();
+        $local = Team::forceCreate(['user_id' => $user->id, 'name' => 'Local only', 'personal_team' => false]);
+        $this->answer([]);
+
+        $this->actingAs($user)->get('/dashboard')->assertOk();
+        $user->switchTeam($local);
+        $this->actingAs($user->fresh())->get('/dashboard')->assertOk();
+
+        Http::assertNothingSent();
+    }
+
+    public function test_a_personal_workspace_infodot_refused_at_sign_in_still_gets_the_403_not_the_503(): void
+    {
+        $user = $this->signInWithPersonal(false);
+        $this->put('/current-team', ['team_id' => $user->personalTeam()->id])->assertRedirect();
+
+        // Even though the company would be answered "unavailable", a personal workspace is never asked.
+        $this->answer([self::url(self::ACME) => Http::response(self::v2Body(self::ACME, true, 'active', false))]);
+        $this->get('/dashboard')->assertForbidden()->assertSee('Dot.Engage needs a company that has switched it on');
+        Http::assertNothingSent();
+    }
+
+    public static function stoppedAnswers(): array
+    {
+        return [
+            'unavailable' => [fn () => self::v2Body(self::ACME, true, 'active', false, 'Maintenance.')],
+            'refused' => [fn () => self::body(self::ACME, false, 'suspended')],
+        ];
+    }
+
+    #[DataProvider('stoppedAnswers')]
+    public function test_the_always_open_routes_stay_reachable_while_unavailable_or_refused(callable $stopped): void
+    {
+
+        $body = $stopped();
+        $user = $this->ownerOfAcme();
+        $other = $this->company($user, self::GLOBEX, 'Globex Ltd');
+        $user->switchTeam(Team::where('infodot_team_uuid', self::ACME)->firstOrFail());
+        $this->answer([
+            self::url(self::ACME) => Http::response($body),
+            self::url(self::GLOBEX) => Http::response(self::body(self::GLOBEX, true, 'active')),
+        ]);
+
+        // Moving to another company, signing out, health and the handoff receiver are not guarded.
+        $this->actingAs($user->fresh())->put('/current-team', ['team_id' => $other->id])->assertRedirect();
+        $this->assertSame($other->id, $user->fresh()->current_team_id);
+        $this->get('/up')->assertSuccessful();
+        $this->post('/auth/ecosystem', ['token' => 'x'])->assertRedirect('/login');
+        $this->actingAs($user->fresh())->post('/logout')->assertRedirect();
+        $this->assertGuest();
+
+    }
+
+    public function test_public_pages_and_outside_parties_are_not_stopped_while_the_platform_is_unavailable(): void
+    {
+        $owner = $this->ownerOfAcme();
+        $engagement = $this->engagementFor($owner);
+        [$participant] = $this->inviteExternal($engagement);
+        $participant = $this->verifyParticipant($participant);
+        $meeting = app(MeetingService::class)->create($engagement, EngagementAccess::forUser($engagement, $owner), 'Kick-off', null, 30);
+        $this->answer([self::url(self::ACME) => Http::response(self::v2Body(self::ACME, true, 'active', false, 'Maintenance.'))]);
+        $held = [EngagementAccess::SESSION_KEY => [$engagement->id => $participant->id]];
+
+        foreach (['/', '/login', '/how-signing-works', '/verify', '/cookies', '/terms-of-service', '/privacy-policy'] as $page) {
+            $this->assertLessThan(400, $this->get($page)->getStatusCode(), $page);
+        }
+        $this->withSession($held)->get(route('engagements.show', $engagement))->assertOk()->assertDontSee('not available right now');
+        $this->withSession($held)->get(route('engagements.signing', $engagement))->assertOk();
+        $this->withSession($held)->get(route('meetings.room', $meeting->room_key))->assertOk();
+        $this->actingAs($owner, 'sanctum')->getJson('/api/user')->assertOk();
+
+        Http::assertNothingSent();
+    }
+
+    public function test_a_member_reaching_a_meeting_room_while_unavailable_gets_the_503(): void
+    {
+        $owner = $this->ownerOfAcme();
+        $engagement = $this->engagementFor($owner);
+        $meeting = app(MeetingService::class)->create($engagement, EngagementAccess::forUser($engagement, $owner), 'Kick-off', null, 30);
+        $this->answer([self::url(self::ACME) => Http::response(self::v2Body(self::ACME, true, 'active', false, 'Maintenance.'))]);
+
+        $this->actingAs($owner)->get(route('meetings.room', $meeting->room_key))->assertStatus(503)->assertDontSee('Kick-off');
+        $this->actingAs($owner)->getJson(route('meetings.poll', $meeting->room_key))->assertStatus(503)->assertHeader('Retry-After', '60');
+    }
+
+    public function test_a_livewire_update_is_stopped_with_a_503_while_the_platform_is_unavailable(): void
+    {
+        $user = $this->ownerOfAcme();
+        $this->answer([self::url(self::ACME) => Http::sequence()
+            ->push(self::v2Body(self::ACME, true, 'active', true))
+            ->push(self::v2Body(self::ACME, true, 'active', false, 'Maintenance.'))]);
+
+        $html = $this->actingAs($user)->get('/notifications')->assertOk()->getContent();
+        $this->assertSame(1, preg_match('/wire:snapshot="([^"]+)"/', $html, $found));
+        $update = ['components' => [['snapshot' => html_entity_decode($found[1], ENT_QUOTES), 'updates' => (object) [], 'calls' => []]]];
+
+        $this->actingAs($user)->postJson('/livewire/update', $update)->assertOk();
+
+        $this->travel(61)->seconds();
+        $this->actingAs($user)->postJson('/livewire/update', $update)
+            ->assertStatus(503)
+            ->assertHeader('Retry-After', '60')
+            ->assertJsonMissingPath('components');
+    }
+
+    public function test_the_entitlement_url_and_timeout_can_be_set_and_the_uuid_is_filled_in(): void
+    {
+        $user = $this->ownerOfAcme();
+        config(['ecosystem.entitlement.url' => 'https://read.infodot.test/co/{uuid}/platforms', 'ecosystem.entitlement.timeout' => 7]);
+        $this->answer(['https://read.infodot.test/co/'.self::ACME.'/platforms*' => Http::response(self::body(self::ACME, true, 'active'))]);
+
+        $this->actingAs($user)->get('/dashboard')->assertOk();
+
+        Http::assertSent(fn (OutgoingRequest $request) => str_starts_with($request->url(), 'https://read.infodot.test/co/'.self::ACME.'/platforms?')
+            && $request->hasHeader('X-Dot-Platform', 'engage'));
     }
 }

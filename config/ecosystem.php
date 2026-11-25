@@ -86,4 +86,13 @@ return [
         'entitlement_check' => (bool) env('ENGAGE_ENTITLEMENT_CHECK', true),
     ],
 
+    /*
+    | R-50/R-61: where, and how patiently, the signed-in check asks InfoDot about a company. The address is InfoDot's
+    | read endpoint; leave it empty to use the host of INFODOT_REDEEM_URL. `{uuid}` is replaced with the company's.
+    */
+    'entitlement' => [
+        'url' => env('ENGAGE_ENTITLEMENT_URL'),
+        'timeout' => (int) env('ENGAGE_ENTITLEMENT_TIMEOUT', 3),
+    ],
+
 ];
