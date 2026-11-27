@@ -13,6 +13,7 @@ use App\Policies\ContractPolicy;
 use App\Policies\ContractTemplatePolicy;
 use App\Policies\ConversationPolicy;
 use App\Policies\MessagePolicy;
+use App\Support\EssentialCron;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Foundation\Events\DiagnosingHealth;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider;
@@ -58,6 +59,8 @@ class AppServiceProvider extends AuthServiceProvider
      */
     public function boot(): void
     {
+        EssentialCron::listen();
+
         // R-50: a Livewire component on a signed-in page keeps asking the same entitlement question on its updates.
         Livewire::addPersistentMiddleware([EnsureCompanyHoldsPlatform::class]);
 
